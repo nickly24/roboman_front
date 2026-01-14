@@ -4,9 +4,6 @@ import { API_BASE_URL } from '../config/api';
 // Создаём экземпляр axios с базовой конфигурацией
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // Интерсептор для добавления токена авторизации
@@ -15,6 +12,12 @@ apiClient.interceptors.request.use(
     const token = localStorage.getItem('auth_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (!config.headers['Content-Type'] && config.data !== undefined) {
+      const isFormData = typeof FormData !== 'undefined' && config.data instanceof FormData;
+      if (!isFormData) {
+        config.headers['Content-Type'] = 'application/json';
+      }
     }
     return config;
   },

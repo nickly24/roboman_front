@@ -12,6 +12,8 @@ import Select from '../../components/Select/Select';
 import InstructionDetailsModal from './InstructionDetailsModal';
 import './Instructions.css';
 
+const MAX_PDF_BYTES = 10 * 1024 * 1024; // 10 MB
+
 const Instructions = () => {
   const [tab, setTab] = useState('instructions'); // instructions | topics
   const [loading, setLoading] = useState(true);
@@ -289,27 +291,18 @@ const Instructions = () => {
                     setSaving(false);
                     return;
                   }
-                  const base64 = await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      const res = reader.result;
-                      if (!res || typeof res !== 'string') return reject(new Error('read error'));
-                      // data:application/pdf;base64,....
-                      const idx = res.indexOf('base64,');
-                      resolve(idx >= 0 ? res.slice(idx + 7) : res);
-                    };
-                    reader.onerror = () => reject(reader.error || new Error('read error'));
-                    reader.readAsDataURL(file);
-                  });
+                  if (file.size > MAX_PDF_BYTES) {
+                    setCreateError('Файл слишком большой. Максимум 10 MB');
+                    setSaving(false);
+                    return;
+                  }
+                  const formData = new FormData();
+                  formData.append('section_id', String(instrForm.section_id));
+                  formData.append('name', instrForm.name.trim());
+                  formData.append('description', instrForm.description?.trim() || '');
+                  formData.append('file', file, file.name);
 
-                  await apiClient.post(API_ENDPOINTS.INSTRUCTIONS, {
-                    section_id: Number(instrForm.section_id),
-                    name: instrForm.name.trim(),
-                    description: instrForm.description?.trim() || '',
-                    pdf_base64: base64,
-                    pdf_filename: file.name,
-                    pdf_mime: file.type,
-                  });
+                  await apiClient.post(API_ENDPOINTS.INSTRUCTIONS, formData);
 
                   setInstrForm({ section_id: '', name: '', description: '', file: null });
                   setCreateOpen(false);
@@ -349,6 +342,9 @@ const Instructions = () => {
                 <label className="input-label">
                   PDF файл <span style={{ color: '#dc2626' }}>*</span>
                 </label>
+                <div style={{ color: '#dc2626', fontSize: 12, marginBottom: 6 }}>
+                  Файлы не больше 10 MB
+                </div>
                 <input
                   type="file"
                   accept="application/pdf"
