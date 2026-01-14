@@ -1,0 +1,17 @@
+.departments-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.departments-header {
+  margin-bottom: 8px;
+}
+
+.departments-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
