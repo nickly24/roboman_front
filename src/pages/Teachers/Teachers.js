@@ -80,6 +80,22 @@ const Teachers = () => {
     }
   };
 
+  const toggleSalaryFree = async (teacher) => {
+    const makeFree = !teacher.is_salary_free;
+    const message = makeFree
+      ? `Сделать преподавателя "${teacher.full_name}" бесплатным?`
+      : `Сделать преподавателя "${teacher.full_name}" платным?`;
+    if (!window.confirm(message)) return;
+    try {
+      await apiClient.put(API_ENDPOINTS.TEACHER(teacher.id), { is_salary_free: makeFree });
+      loadTeachers();
+    } catch (error) {
+      alert('Не удалось изменить настройку оплаты');
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
+  };
+
   const columnsActive = [
     { key: 'full_name', title: 'ФИО' },
     {
@@ -106,10 +122,21 @@ const Teachers = () => {
       width: 140,
     },
     {
+      key: 'is_salary_free',
+      title: 'Оплата',
+      render: (value) => (
+        <span className={`teacher-badge ${value ? 'teacher-badge-free' : 'teacher-badge-paid'}`}>
+          {value ? 'Бесплатно' : 'Платно'}
+        </span>
+      ),
+      align: 'center',
+      width: 140,
+    },
+    {
       key: 'actions',
       title: '',
       align: 'right',
-      width: 220,
+      width: 280,
       render: (_, row) => (
         <div className="row-actions">
           <Button size="small" variant="secondary" onClick={() => openEdit(row)}>
@@ -117,6 +144,11 @@ const Teachers = () => {
           </Button>
           <ActionMenu
             items={[
+              {
+                label: row.is_salary_free ? 'Сделать платным' : 'Сделать бесплатным',
+                icon: row.is_salary_free ? '💳' : '🆓',
+                onClick: () => toggleSalaryFree(row),
+              },
               { label: 'В отпуск', icon: '🏖️', onClick: () => setStatus(row.id, 'vacation') },
               { label: 'В архив', icon: '📦', danger: true, onClick: () => setStatus(row.id, 'fired') },
             ]}
@@ -152,10 +184,21 @@ const Teachers = () => {
       width: 140,
     },
     {
+      key: 'is_salary_free',
+      title: 'Оплата',
+      render: (value) => (
+        <span className={`teacher-badge ${value ? 'teacher-badge-free' : 'teacher-badge-paid'}`}>
+          {value ? 'Бесплатно' : 'Платно'}
+        </span>
+      ),
+      align: 'center',
+      width: 140,
+    },
+    {
       key: 'actions',
       title: '',
       align: 'right',
-      width: 220,
+      width: 260,
       render: (_, row) => (
         <div className="row-actions">
           <Button size="small" variant="primary" onClick={() => setStatus(row.id, 'working')}>
@@ -164,6 +207,11 @@ const Teachers = () => {
           <ActionMenu
             items={[
               { label: 'Редактировать', icon: '✏️', onClick: () => openEdit(row) },
+              {
+                label: row.is_salary_free ? 'Сделать платным' : 'Сделать бесплатным',
+                icon: row.is_salary_free ? '💳' : '🆓',
+                onClick: () => toggleSalaryFree(row),
+              },
             ]}
           />
         </div>

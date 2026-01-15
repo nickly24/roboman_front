@@ -32,6 +32,27 @@
   width: 100%;
 }
 
+.teacher-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.teacher-badge-free {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.teacher-badge-paid {
+  background: #ecfdf3;
+  color: #065f46;
+}
+
 .teacher-form {
   display: flex;
   flex-direction: column;

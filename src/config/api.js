@@ -1,5 +1,6 @@
 // API конфигурация
-export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://nickly24-roboman-back-ca9a.twc1.net/api';
+//export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://nickly24-roboman-back-ca9a.twc1.net/api';
+export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:80/api';
 
 export const API_ENDPOINTS = {
   // Auth
@@ -15,6 +16,8 @@ export const API_ENDPOINTS = {
   LESSONS: '/lessons',
   LESSON: (id) => `/lessons/${id}`,
   LESSON_REPRICE: (id) => `/lessons/${id}/reprice`,
+  LESSON_SALARY_FREE: (id) => `/lessons/${id}/salary-free`,
+  LESSON_SALARY_PAID: (id) => `/lessons/${id}/salary-paid`,
   LESSONS_EXPORT: '/lessons/export.csv',
   
   // Branches
