@@ -16,9 +16,11 @@ const Sidebar = ({ isOpen = false, onClose }) => {
   const ownerMenuItems = [
     { path: '/dashboard', label: 'Дашборд', icon: '📊' },
     { path: '/lessons', label: 'Занятия', icon: '📚' },
+    { path: '/schedule', label: 'Расписание', icon: '🗓️' },
     { path: '/branches', label: 'Филиалы', icon: '🏢' },
     { path: '/departments', label: 'Отделы', icon: '🏛️' },
     { path: '/teachers', label: 'Преподаватели', icon: '👥' },
+    { path: '/teacher-accounts', label: 'Создание учеток', icon: '🧾' },
     { path: '/instructions', label: 'Инструкции', icon: '📖' },
     { path: '/settings', label: 'Настройки', icon: '⚙️' },
   ];
@@ -26,6 +28,8 @@ const Sidebar = ({ isOpen = false, onClose }) => {
   const teacherMenuItems = [
     { path: '/dashboard', label: 'Дашборд', icon: '📊' },
     { path: '/lessons', label: 'Мои занятия', icon: '📚' },
+    { path: '/schedule', label: 'Расписание', icon: '🗓️' },
+    { path: '/instructions', label: 'Инструкции', icon: '📖' },
   ];
 
   const menuItems = isOwner ? ownerMenuItems : teacherMenuItems;

@@ -1,0 +1,255 @@
+.schedule-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.schedule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.schedule-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.schedule-filters-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.schedule-timeline {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  position: relative;
+}
+
+.schedule-time-column {
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background: #ffffff;
+  padding-right: 4px;
+}
+
+.schedule-time-header {
+  font-size: calc(12px * var(--zoom, 1));
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.schedule-time-grid {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.schedule-time-cell {
+  font-size: calc(12px * var(--zoom, 1));
+  color: #6b7280;
+  padding: calc(6px * var(--zoom, 1)) calc(8px * var(--zoom, 1));
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  align-items: flex-start;
+}
+
+.schedule-days {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 1800px;
+}
+
+.schedule-day-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 240px;
+}
+
+.schedule-day-header {
+  font-size: calc(12px * var(--zoom, 1));
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.schedule-day-grid {
+  position: relative;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: repeating-linear-gradient(
+    to bottom,
+    #ffffff,
+    #ffffff calc(var(--hour-height) - 1px),
+    #f3f4f6 var(--hour-height)
+  );
+  overflow: visible;
+  padding: 4px;
+}
+
+.schedule-empty {
+  font-size: 12px;
+  color: #9ca3af;
+  padding: 8px;
+}
+
+.schedule-slot {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  padding: calc(8px * var(--zoom, 1)) calc(12px * var(--zoom, 1));
+  display: flex;
+  flex-direction: column;
+  gap: calc(6px * var(--zoom, 1));
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+}
+
+.schedule-slot-absolute {
+  position: absolute;
+  box-shadow: 0 4px 10px rgba(17, 24, 39, 0.08);
+}
+
+.schedule-slot-time {
+  font-size: calc(12px * var(--zoom, 1));
+  font-weight: 600;
+  color: #111827;
+}
+
+.schedule-slot-branch {
+  font-size: calc(12px * var(--zoom, 1));
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.schedule-slot-teachers {
+  display: flex;
+  flex-direction: column;
+  gap: calc(4px * var(--zoom, 1));
+  font-size: calc(11px * var(--zoom, 1));
+  color: #6b7280;
+}
+
+.schedule-slot-teacher {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.schedule-slot-teacher-dot {
+  width: calc(8px * var(--zoom, 1));
+  height: calc(8px * var(--zoom, 1));
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.schedule-slot-teacher-empty {
+  font-size: calc(12px * var(--zoom, 1));
+  color: #9ca3af;
+}
+
+.schedule-slot-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.schedule-slot-back-list {
+  display: flex;
+  flex-direction: column;
+  gap: calc(4px * var(--zoom, 1));
+  font-size: calc(11px * var(--zoom, 1));
+  color: #6b7280;
+  overflow: auto;
+  padding-top: 2px;
+}
+
+.schedule-day-switcher {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.schedule-zoom-controls {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  padding: 6px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  z-index: 999;
+}
+
+.schedule-zoom-value {
+  font-size: 12px;
+  color: #6b7280;
+  min-width: 44px;
+  text-align: center;
+}
+
+.schedule-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.schedule-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+@media (max-width: 720px) {
+  .schedule-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .schedule-title {
+    font-size: 22px;
+  }
+
+  .schedule-filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-timeline {
+    grid-template-columns: 1fr;
+    overflow-x: visible;
+  }
+
+  .schedule-time-column {
+    display: none;
+  }
+
+  .schedule-days {
+    min-width: 0;
+  }
+
+  .schedule-day-column {
+    min-width: 0;
+  }
+}

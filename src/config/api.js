@@ -33,6 +33,7 @@ export const API_ENDPOINTS = {
   TEACHER: (id) => `/teachers/${id}`,
   TEACHER_STATUS: (id) => `/teachers/${id}/status`,
   TEACHER_BRANCHES: (id) => `/teachers/${id}/branches`,
+  TEACHER_ACCOUNTS: '/teacher-accounts',
   
   // Departments
   DEPARTMENTS: '/departments',
@@ -48,6 +49,7 @@ export const API_ENDPOINTS = {
   INSTRUCTIONS: '/instructions',
   INSTRUCTION: (id) => `/instructions/${id}`,
   INSTRUCTION_PDF: (id) => `/instructions/${id}/pdf`,
+  INSTRUCTION_PHOTO: (id) => `/instructions/${id}/photo`,
   
   // Settings
   SETTINGS: '/settings',
@@ -57,4 +59,8 @@ export const API_ENDPOINTS = {
   // Lookup
   LOOKUP_BRANCHES: '/lookup/branches',
   LOOKUP_TEACHERS: '/lookup/teachers',
+
+  // Schedule
+  SCHEDULES: '/schedules',
+  SCHEDULE: (id) => `/schedules/${id}`,
 };

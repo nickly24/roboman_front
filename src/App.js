@@ -6,9 +6,11 @@ import Login from './pages/Login/Login';
 import OwnerDashboard from './pages/Dashboard/OwnerDashboard';
 import TeacherDashboard from './pages/Dashboard/TeacherDashboard';
 import Lessons from './pages/Lessons/Lessons';
+import Schedule from './pages/Schedule/Schedule';
 import Branches from './pages/Branches/Branches';
 import Departments from './pages/Departments/Departments';
 import Teachers from './pages/Teachers/Teachers';
+import TeacherAccounts from './pages/TeacherAccounts/TeacherAccounts';
 import Instructions from './pages/Instructions/Instructions';
 import Settings from './pages/Settings/Settings';
 import './App.css';
@@ -42,6 +44,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/schedule"
+            element={
+              <ProtectedRoute>
+                <Schedule />
+              </ProtectedRoute>
+            }
+          />
           
           <Route
             path="/branches"
@@ -69,11 +80,20 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/teacher-accounts"
+            element={
+              <ProtectedRoute requireRole="OWNER">
+                <TeacherAccounts />
+              </ProtectedRoute>
+            }
+          />
           
           <Route
             path="/instructions"
             element={
-              <ProtectedRoute requireRole="OWNER">
+              <ProtectedRoute>
                 <Instructions />
               </ProtectedRoute>
             }

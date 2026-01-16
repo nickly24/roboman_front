@@ -132,3 +132,12 @@
     justify-content: flex-start;
   }
 }
+
+.instruction-photo-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  object-fit: cover;
+  background: #ffffff;
+}

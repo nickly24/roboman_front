@@ -10,7 +10,10 @@ const InstructionDetailsModal = ({ isOpen, onClose, instruction }) => {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState('');
   const [pdfUrl, setPdfUrl] = useState('');
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [photoLoading, setPhotoLoading] = useState(false);
+  const [photoError, setPhotoError] = useState('');
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [openError, setOpenError] = useState('');
 
   const title = instruction?.name ? `Инструкция: ${instruction.name}` : 'Инструкция';
 
@@ -18,10 +21,14 @@ const InstructionDetailsModal = ({ isOpen, onClose, instruction }) => {
   useEffect(() => {
     if (!isOpen) {
       if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+      if (photoUrl) URL.revokeObjectURL(photoUrl);
       setPdfUrl('');
       setPdfError('');
       setPdfLoading(false);
-      setIsFullscreen(false);
+      setPhotoUrl('');
+      setPhotoError('');
+      setPhotoLoading(false);
+      setOpenError('');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
@@ -61,7 +68,47 @@ const InstructionDetailsModal = ({ isOpen, onClose, instruction }) => {
     }
   };
 
+  const loadPhoto = async () => {
+    if (!instruction?.id || !instruction?.has_photo) return;
+    setPhotoError('');
+    setPhotoLoading(true);
+    try {
+      if (photoUrl) URL.revokeObjectURL(photoUrl);
+      setPhotoUrl('');
+      const resp = await apiClient.get(API_ENDPOINTS.INSTRUCTION_PHOTO(instruction.id), {
+        responseType: 'blob',
+        headers: { Accept: 'image/*' },
+      });
+      const blob = new Blob([resp.data], { type: resp.data?.type || 'image/jpeg' });
+      const url = URL.createObjectURL(blob);
+      setPhotoUrl(url);
+    } catch (e) {
+      const msg = e?.response?.data?.error?.message || e?.response?.data?.message;
+      setPhotoError(msg || 'Не удалось загрузить фото');
+      // eslint-disable-next-line no-console
+      console.error(e);
+    } finally {
+      setPhotoLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && instruction?.has_photo) {
+      loadPhoto();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, instruction?.id]);
+
   const handleClose = () => onClose?.();
+  const handleOpenInNewTab = () => {
+    if (!pdfUrl) return;
+    const win = window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+    if (!win) {
+      setOpenError('Не удалось открыть вкладку. Разрешите всплывающие окна.');
+    } else {
+      setOpenError('');
+    }
+  };
 
   if (!isOpen || !instruction) return null;
 
@@ -78,6 +125,19 @@ const InstructionDetailsModal = ({ isOpen, onClose, instruction }) => {
             <span className="instruction-meta-label">Описание</span>
             <span className="instruction-meta-value">{meta?.description}</span>
           </div>
+          <div className="instruction-meta-row">
+            <span className="instruction-meta-label">Фото</span>
+            <span className="instruction-meta-value">
+              {photoLoading && 'Загрузка...'}
+              {!photoLoading && photoUrl && (
+                <img className="instruction-photo-preview" src={photoUrl} alt="Фото инструкции" />
+              )}
+              {!photoLoading && !photoUrl && instruction?.has_photo && photoError && (
+                <span className="instruction-photo-error">{photoError}</span>
+              )}
+              {!photoLoading && !photoUrl && !instruction?.has_photo && '—'}
+            </span>
+          </div>
         </div>
 
         <div className="instruction-actions">
@@ -86,11 +146,11 @@ const InstructionDetailsModal = ({ isOpen, onClose, instruction }) => {
           </Button>
           <Button
             variant="secondary"
-            onClick={() => setIsFullscreen(true)}
+            onClick={handleOpenInNewTab}
             disabled={!pdfUrl}
-            title={!pdfUrl ? 'Сначала нажмите «Смотреть инструкцию»' : 'Открыть на весь экран'}
+            title={!pdfUrl ? 'Сначала нажмите «Смотреть инструкцию»' : 'Открыть в новой вкладке'}
           >
-            Развернуть
+            Открыть в новой вкладке
           </Button>
           <Button variant="secondary" onClick={handleClose}>
             Закрыть
@@ -105,6 +165,7 @@ const InstructionDetailsModal = ({ isOpen, onClose, instruction }) => {
           )}
           {pdfLoading && <LoadingSpinner size="medium" text="Загрузка PDF..." />}
           {pdfError && <div className="instruction-pdf-error">{pdfError}</div>}
+          {openError && <div className="instruction-pdf-error">{openError}</div>}
           {pdfUrl && (
             <iframe
               title="instruction-pdf"
@@ -114,23 +175,6 @@ const InstructionDetailsModal = ({ isOpen, onClose, instruction }) => {
           )}
         </div>
       </div>
-      </Modal>
-
-      <Modal
-        isOpen={isFullscreen}
-        onClose={() => setIsFullscreen(false)}
-        title={title}
-        size="fullscreen"
-      >
-        <div className="instruction-fullscreen">
-          {pdfUrl ? (
-            <iframe title="instruction-pdf-fullscreen" className="instruction-pdf-frame-full" src={pdfUrl} />
-          ) : (
-            <div style={{ padding: 24 }}>
-              <LoadingSpinner size="medium" text="PDF ещё не загружен..." />
-            </div>
-          )}
-        </div>
       </Modal>
     </>
   );

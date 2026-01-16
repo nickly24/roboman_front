@@ -1,0 +1,51 @@
+.teacher-accounts-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.teacher-accounts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.teacher-accounts-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.teacher-accounts-subtitle {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.teacher-accounts-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.teacher-accounts-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.teacher-accounts-note {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.teacher-accounts-empty {
+  padding: 16px;
+  border-radius: 12px;
+  background: #f9fafb;
+  color: #6b7280;
+  text-align: center;
+}

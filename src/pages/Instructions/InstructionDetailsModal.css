@@ -85,3 +85,16 @@
   background: #ffffff;
 }
 
+.instruction-photo-preview {
+  display: inline-block;
+  max-width: 120px;
+  max-height: 120px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  object-fit: cover;
+}
+
+.instruction-photo-error {
+  color: #dc2626;
+  font-size: 12px;
+}
