@@ -13,6 +13,7 @@ import Teachers from './pages/Teachers/Teachers';
 import TeacherAccounts from './pages/TeacherAccounts/TeacherAccounts';
 import Instructions from './pages/Instructions/Instructions';
 import Settings from './pages/Settings/Settings';
+import Salary from './pages/Salary/Salary';
 import './App.css';
 
 const DashboardRoute = () => {
@@ -68,6 +69,15 @@ function App() {
             element={
               <ProtectedRoute requireRole="OWNER">
                 <Departments />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/salary"
+            element={
+              <ProtectedRoute requireRole="OWNER">
+                <Salary />
               </ProtectedRoute>
             }
           />

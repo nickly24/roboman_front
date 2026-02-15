@@ -144,6 +144,52 @@
   color: #6b7280;
 }
 
+.salary-split-by-dept {
+  margin: 12px 0 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 10px;
+}
+
+.salary-split-by-dept li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  color: #374151;
+}
+
+.salary-split-dept-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.salary-split-dept-value {
+  font-weight: 600;
+  color: #059669;
+  white-space: nowrap;
+}
+
+.dashboard-lessons-filter {
+  margin-bottom: 16px;
+  max-width: 280px;
+}
+
+.dashboard-lessons-total {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+  font-size: 15px;
+  color: #374151;
+}
+
+.dashboard-lessons-total strong {
+  color: #059669;
+}
+
 @media (max-width: 900px) {
   .salary-split {
     grid-template-columns: 1fr;

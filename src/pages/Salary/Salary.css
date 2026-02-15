@@ -1,0 +1,71 @@
+.salary-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.salary-header {
+  margin-bottom: 8px;
+}
+
+.salary-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
+}
+
+.salary-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.salary-filters {
+  max-width: 400px;
+}
+
+.salary-filters-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.salary-filters-actions {
+  display: flex;
+  align-items: center;
+}
+
+.salary-departments {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.salary-empty,
+.salary-department-empty {
+  color: #6b7280;
+  font-size: 14px;
+  padding: 16px 0;
+}
+
+.salary-period-cell,
+.salary-total-cell {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.salary-period-meta {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.salary-total-cell {
+  font-weight: 600;
+  color: #059669;
+}

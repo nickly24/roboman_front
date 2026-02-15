@@ -8,6 +8,7 @@ import Card from '../../components/Card/Card';
 import Table from '../../components/Table/Table';
 import Button from '../../components/Button/Button';
 import Input from '../../components/Input/Input';
+import Select from '../../components/Select/Select';
 import Modal from '../../components/Modal/Modal';
 import DepartmentSelector from '../../components/DepartmentSelector/DepartmentSelector';
 import LoadingSpinner from '../../components/Loading/LoadingSpinner';
@@ -16,7 +17,7 @@ import LessonForm from './LessonForm';
 import './Lessons.css';
 
 const Lessons = () => {
-  const { isOwner } = useAuth();
+  const { isOwner, user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [lessons, setLessons] = useState([]);
   const [month, setMonth] = useState(getCurrentMonth());
@@ -31,10 +32,24 @@ const Lessons = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLesson, setEditingLesson] = useState(null);
   const [invoiceData, setInvoiceData] = useState(null);
+  const [teacherBranches, setTeacherBranches] = useState([]);
+  const [collapsedBranchIds, setCollapsedBranchIds] = useState(new Set());
 
   useEffect(() => {
     loadLessons();
   }, [month, filters, selectedDepartment]);
+
+  useEffect(() => {
+    if (!isOwner && user?.profile?.id) {
+      apiClient.get(API_ENDPOINTS.TEACHER_BRANCHES(user.profile.id)).then((resp) => {
+        if (resp.data?.ok) {
+          const data = resp.data.data;
+          const list = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
+          setTeacherBranches(list);
+        }
+      }).catch(() => setTeacherBranches([]));
+    }
+  }, [isOwner, user?.profile?.id]);
 
   useEffect(() => {
     setWeekOffset(0);
@@ -200,6 +215,24 @@ const Lessons = () => {
       profit: revenueSum - salarySum,
     };
   };
+
+  // Для преподавателя — уникальные отделы: названия из занятий (department_name), затем из филиалов
+  const teacherDepartments = React.useMemo(() => {
+    const map = new Map();
+    lessons.forEach((l) => {
+      if (l.department_id != null && !map.has(l.department_id)) {
+        const name = l.department_name && String(l.department_name).trim();
+        map.set(l.department_id, { value: String(l.department_id), label: name || `Отдел #${l.department_id}` });
+      }
+    });
+    teacherBranches.forEach((b) => {
+      if (b.department_id != null && !map.has(b.department_id)) {
+        const name = (b.department_name && String(b.department_name).trim()) || null;
+        map.set(b.department_id, { value: String(b.department_id), label: name || `Отдел #${b.department_id}` });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => (a.label || '').localeCompare(b.label || ''));
+  }, [lessons, teacherBranches]);
 
   // Группируем занятия по филиалам для кнопок "Выставить счет"
   const branchesWithLessons = React.useMemo(() => {
@@ -441,6 +474,17 @@ const Lessons = () => {
                 />
               </>
             )}
+            {!isOwner && teacherDepartments.length > 0 && (
+              <div className="department-selector">
+                <Select
+                  label="Отдел"
+                  value={selectedDepartment}
+                  onChange={(e) => setSelectedDepartment(e.target.value)}
+                  options={teacherDepartments}
+                  placeholder="Все отделы"
+                />
+              </div>
+            )}
             <div className="filters-actions">
               <Button onClick={loadLessons} variant="primary">Применить</Button>
               <Button
@@ -603,20 +647,42 @@ const Lessons = () => {
                   Календарь
                 </Button>
               </div>
-              {groupedLessons.map((group) => (
-                <div key={String(group.id)} className="lessons-group">
-                  <div className="lessons-group-header">
-                    <span className="lessons-group-title">{group.name}</span>
-                    <span className="lessons-group-count">{group.lessons.length} занятий</span>
+              {groupedLessons.map((group) => {
+                const groupKey = String(group.id);
+                const isCollapsed = collapsedBranchIds.has(groupKey);
+                const groupSalary = group.lessons.reduce((s, l) => s + Number(l.teacher_salary ?? 0), 0);
+                return (
+                  <div key={groupKey} className="lessons-group">
+                    <button
+                      type="button"
+                      className={`lessons-group-header lessons-group-header-clickable ${isCollapsed ? 'lessons-group-header-collapsed' : ''}`}
+                      onClick={() => setCollapsedBranchIds((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(groupKey)) next.delete(groupKey);
+                        else next.add(groupKey);
+                        return next;
+                      })}
+                    >
+                      <span className="lessons-group-title">{group.name}</span>
+                      <span className="lessons-group-meta">
+                        <span className="lessons-group-count">{group.lessons.length} занятий</span>
+                        {!isOwner && groupSalary > 0 && (
+                          <span className="lessons-group-salary">{formatCurrency(groupSalary)}</span>
+                        )}
+                        <span className="lessons-group-toggle" aria-hidden>{isCollapsed ? '▼' : '▲'}</span>
+                      </span>
+                    </button>
+                    {!isCollapsed && (
+                      <Table
+                        columns={groupedColumns}
+                        data={group.lessons}
+                        loading={false}
+                        emptyMessage="Нет занятий"
+                      />
+                    )}
                   </div>
-                  <Table
-                    columns={groupedColumns}
-                    data={group.lessons}
-                    loading={false}
-                    emptyMessage="Нет занятий"
-                  />
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </Card>

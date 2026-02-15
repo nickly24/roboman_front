@@ -273,15 +273,49 @@
   border-radius: 6px;
 }
 
+.lessons-group-header-clickable {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: background 0.15s;
+}
+
+.lessons-group-header-clickable:hover {
+  background: #e5e7eb;
+}
+
+.lessons-group-header-collapsed {
+  margin-bottom: 0;
+}
+
 .lessons-group-title {
   font-size: 15px;
   font-weight: 600;
   color: #111827;
 }
 
+.lessons-group-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
 .lessons-group-count {
   font-size: 12px;
   color: #6b7280;
+}
+
+.lessons-group-salary {
+  font-weight: 600;
+  color: #059669;
+}
+
+.lessons-group-toggle {
+  font-size: 10px;
+  color: #9ca3af;
 }
 
 .branch-invoice-item {

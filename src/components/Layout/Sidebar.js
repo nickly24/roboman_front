@@ -19,6 +19,7 @@ const Sidebar = ({ isOpen = false, onClose }) => {
     { path: '/schedule', label: 'Расписание', icon: '🗓️' },
     { path: '/branches', label: 'Филиалы', icon: '🏢' },
     { path: '/departments', label: 'Отделы', icon: '🏛️' },
+    { path: '/salary', label: 'Зарплата', icon: '💰' },
     { path: '/teachers', label: 'Преподаватели', icon: '👥' },
     { path: '/teacher-accounts', label: 'Создание учеток', icon: '🧾' },
     { path: '/instructions', label: 'Инструкции', icon: '📖' },

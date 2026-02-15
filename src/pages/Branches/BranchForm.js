@@ -14,7 +14,8 @@ const BranchForm = ({ branch, onSuccess, onCancel }) => {
     name: branch?.name || '',
     address: branch?.address || '',
     metro: branch?.metro || '',
-    price_per_child: branch?.price_per_child || 0,
+    price_per_child: branch?.price_per_child ?? 0,
+    teacher_base_rate: branch?.teacher_base_rate ?? 1200,
     is_active: branch?.is_active !== undefined ? branch.is_active : true,
   });
 
@@ -50,6 +51,7 @@ const BranchForm = ({ branch, onSuccess, onCancel }) => {
         ...formData,
         department_id: parseInt(formData.department_id),
         price_per_child: parseFloat(formData.price_per_child),
+        teacher_base_rate: parseInt(formData.teacher_base_rate, 10) || 1200,
       };
 
       if (branch) {
@@ -107,6 +109,15 @@ const BranchForm = ({ branch, onSuccess, onCancel }) => {
         onChange={(e) => setFormData({ ...formData, price_per_child: e.target.value })}
         min="0"
         step="0.01"
+        required
+      />
+
+      <Input
+        type="number"
+        label="Базовая ставка за занятие (₽)"
+        value={formData.teacher_base_rate}
+        onChange={(e) => setFormData({ ...formData, teacher_base_rate: e.target.value })}
+        min="0"
         required
       />
 
