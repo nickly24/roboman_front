@@ -64,6 +64,10 @@ export const API_ENDPOINTS = {
   SCHEDULES: '/schedules',
   SCHEDULE: (id) => `/schedules/${id}`,
 
+  // Teacher slots (свободные часы)
+  SLOTS: '/slots',
+  SLOT: (id) => `/slots/${id}`,
+
   // Salary by department
   SALARY_TEACHER_BY_DEPARTMENT: '/salary/teacher-by-department',
   SALARY_OWNER_BY_DEPARTMENT: '/salary/owner-by-department',

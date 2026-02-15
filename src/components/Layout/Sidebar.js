@@ -17,6 +17,7 @@ const Sidebar = ({ isOpen = false, onClose }) => {
     { path: '/dashboard', label: 'Дашборд', icon: '📊' },
     { path: '/lessons', label: 'Занятия', icon: '📚' },
     { path: '/schedule', label: 'Расписание', icon: '🗓️' },
+    { path: '/slots', label: 'Слоты', icon: '🕐' },
     { path: '/branches', label: 'Филиалы', icon: '🏢' },
     { path: '/departments', label: 'Отделы', icon: '🏛️' },
     { path: '/salary', label: 'Зарплата', icon: '💰' },
@@ -30,6 +31,7 @@ const Sidebar = ({ isOpen = false, onClose }) => {
     { path: '/dashboard', label: 'Дашборд', icon: '📊' },
     { path: '/lessons', label: 'Мои занятия', icon: '📚' },
     { path: '/schedule', label: 'Расписание', icon: '🗓️' },
+    { path: '/slots', label: 'Слоты', icon: '🕐' },
     { path: '/instructions', label: 'Инструкции', icon: '📖' },
   ];
 

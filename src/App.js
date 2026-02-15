@@ -14,6 +14,7 @@ import TeacherAccounts from './pages/TeacherAccounts/TeacherAccounts';
 import Instructions from './pages/Instructions/Instructions';
 import Settings from './pages/Settings/Settings';
 import Salary from './pages/Salary/Salary';
+import Slots from './pages/Slots/Slots';
 import './App.css';
 
 const DashboardRoute = () => {
@@ -51,6 +52,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <Schedule />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/slots"
+            element={
+              <ProtectedRoute>
+                <Slots />
               </ProtectedRoute>
             }
           />
