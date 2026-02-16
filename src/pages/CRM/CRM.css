@@ -1,0 +1,423 @@
+.crm-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.crm-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.crm-page-header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.crm-page-header-with-back {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.crm-empty,
+.crm-messages-empty,
+.crm-comments-empty {
+  color: #6b7280;
+  margin: 0;
+}
+
+.crm-branch-list,
+.crm-chat-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.crm-branch-item,
+.crm-chat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  background: #fff;
+}
+
+.crm-branch-info,
+.crm-chat-link {
+  flex: 1;
+}
+
+.crm-branch-name {
+  font-weight: 600;
+  color: #1f2937;
+  text-decoration: none;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.crm-branch-name:hover {
+  color: #111827;
+}
+
+.crm-branch-address {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.crm-branch-actions,
+.crm-chat-item .crm-branch-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.crm-chat-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.crm-chat-link:hover {
+  text-decoration: none;
+}
+
+.crm-chat-name {
+  font-weight: 600;
+  color: #1f2937;
+  display: block;
+}
+
+.crm-chat-id {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.crm-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  justify-content: flex-end;
+}
+
+.crm-help {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0 0 16px 0;
+}
+
+.crm-settings-env {
+  margin-bottom: 20px;
+}
+
+.crm-settings-env-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.crm-settings-env-options {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.crm-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #1f2937;
+}
+
+.crm-radio input {
+  margin: 0;
+}
+
+.crm-settings-status {
+  margin: 16px 0 0 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Chat view */
+.crm-chat-page {
+  max-width: none;
+}
+
+.crm-chat-page .crm-page-header-with-back {
+  margin-bottom: 16px;
+}
+
+.crm-chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.crm-comments-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 14px;
+  color: #374151;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.crm-comments-btn:hover {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+
+.crm-comments-btn-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.crm-comments-btn-count {
+  font-size: 12px;
+  color: #6b7280;
+  margin-left: 2px;
+}
+
+.crm-chat-fullwidth {
+  width: 100%;
+}
+
+.crm-messages-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+}
+
+.crm-messages-list {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 60vh;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.crm-messages-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 120px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.crm-messages-loading p {
+  margin: 0;
+}
+
+.crm-msg {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  align-self: flex-start;
+}
+
+.crm-msg.out {
+  align-self: flex-end;
+  background: #3b82f6;
+  color: #fff;
+}
+
+.crm-msg.in {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.crm-msg-meta {
+  font-size: 11px;
+  opacity: 0.85;
+  margin-bottom: 4px;
+}
+
+.crm-msg-text {
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.crm-send-row {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.crm-send-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.crm-send-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.crm-comments-modal .crm-comments-title {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+}
+
+.crm-comments-list {
+  max-height: 50vh;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+
+.crm-comment {
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.crm-comment:last-child {
+  border-bottom: none;
+}
+
+.crm-comment-meta {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.crm-comment-text {
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+
+.crm-comment-form {
+  display: flex;
+  gap: 8px;
+}
+
+.crm-comment-form .crm-send-input {
+  flex: 1;
+}
+
+.crm-comments-modal .crm-comment-form {
+  margin-top: 12px;
+}
+
+.crm-subscribers-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.crm-subscriber-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.crm-subscriber-item:last-child {
+  border-bottom: none;
+}
+
+/* Список чатов как в мессенджере */
+.crm-chats-filter {
+  margin-bottom: 20px;
+  max-width: 280px;
+}
+
+.crm-chat-list-messenger .crm-chat-item-messenger {
+  padding: 12px 16px;
+}
+
+.crm-chat-item-messenger .crm-chat-link {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.crm-chat-item-dots {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+  padding-top: 6px;
+}
+
+.crm-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.crm-dot-blue {
+  background: #3b82f6;
+}
+
+.crm-dot-green {
+  background: #22c55e;
+}
+
+.crm-chat-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.crm-chat-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.crm-chat-item-time {
+  font-size: 12px;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.crm-chat-item-meta {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.crm-chat-item-preview {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 4px 0 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.crm-msg-read {
+  margin-left: 4px;
+  opacity: 0.9;
+}

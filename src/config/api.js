@@ -71,4 +71,17 @@ export const API_ENDPOINTS = {
   // Salary by department
   SALARY_TEACHER_BY_DEPARTMENT: '/salary/teacher-by-department',
   SALARY_OWNER_BY_DEPARTMENT: '/salary/owner-by-department',
+
+  // CRM (Telegram)
+  CRM_BRANCHES: '/crm/branches',
+  CRM_BRANCH: (branchId) => `/crm/branches/${branchId}`,
+  CRM_BRANCH_CHATS: (branchId) => `/crm/branches/${branchId}/chats`,
+  CRM_CHATS: '/crm/chats',
+  CRM_CHAT: (chatId) => `/crm/chats/${chatId}`,
+  CRM_CHAT_READ: (chatId) => `/crm/chats/${chatId}/read`,
+  CRM_CHAT_MESSAGES: (chatId) => `/crm/chats/${chatId}/messages`,
+  CRM_CHAT_COMMENTS: (chatId) => `/crm/chats/${chatId}/comments`,
+  CRM_NOTIFICATION_SUBSCRIBERS: '/crm/notification-subscribers',
+  CRM_NOTIFICATION_SUBSCRIBER: (id) => `/crm/notification-subscribers/${id}`,
+  CRM_SETTINGS: '/crm/settings',
 };

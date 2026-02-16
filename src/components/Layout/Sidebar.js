@@ -6,7 +6,7 @@ import './Sidebar.css';
 const Sidebar = ({ isOpen = false, onClose }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, isOwner, isTeacher } = useAuth();
+  const { user, logout, isOwner, isTeacher, crmAccess } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -23,6 +23,7 @@ const Sidebar = ({ isOpen = false, onClose }) => {
     { path: '/salary', label: 'Зарплата', icon: '💰' },
     { path: '/teachers', label: 'Преподаватели', icon: '👥' },
     { path: '/teacher-accounts', label: 'Создание учеток', icon: '🧾' },
+    ...(crmAccess ? [{ path: '/crm', label: 'CRM', icon: '💬' }] : []),
     { path: '/instructions', label: 'Инструкции', icon: '📖' },
     { path: '/settings', label: 'Настройки', icon: '⚙️' },
   ];

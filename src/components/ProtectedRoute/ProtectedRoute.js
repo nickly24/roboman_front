@@ -2,8 +2,8 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const ProtectedRoute = ({ children, requireRole }) => {
-  const { isAuthenticated, loading, user } = useAuth();
+const ProtectedRoute = ({ children, requireRole, requireCrmAccess }) => {
+  const { isAuthenticated, loading, user, crmAccess } = useAuth();
 
   if (loading) {
     return <div style={{ padding: '48px', textAlign: 'center' }}>Загрузка...</div>;
@@ -14,6 +14,10 @@ const ProtectedRoute = ({ children, requireRole }) => {
   }
 
   if (requireRole && user?.role !== requireRole) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  if (requireCrmAccess && !crmAccess) {
     return <Navigate to="/dashboard" replace />;
   }
 

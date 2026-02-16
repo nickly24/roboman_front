@@ -47,6 +47,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!user,
     isOwner: user?.role === 'OWNER',
     isTeacher: user?.role === 'TEACHER',
+    crmAccess: !!(user?.user?.crm_access === 1 || user?.user?.crm_access === true),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

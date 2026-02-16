@@ -15,6 +15,12 @@ import Instructions from './pages/Instructions/Instructions';
 import Settings from './pages/Settings/Settings';
 import Salary from './pages/Salary/Salary';
 import Slots from './pages/Slots/Slots';
+import CRMBranches from './pages/CRM/CRMBranches';
+import CRMBranchChats from './pages/CRM/CRMBranchChats';
+import CRMAllChats from './pages/CRM/CRMAllChats';
+import CRMChatView from './pages/CRM/CRMChatView';
+import CRMNotifications from './pages/CRM/CRMNotifications';
+import CRMSettings from './pages/CRM/CRMSettings';
 import './App.css';
 
 const DashboardRoute = () => {
@@ -128,6 +134,55 @@ function App() {
             }
           />
           
+          <Route
+            path="/crm"
+            element={
+              <ProtectedRoute requireCrmAccess>
+                <CRMBranches />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/crm/notifications"
+            element={
+              <ProtectedRoute requireCrmAccess>
+                <CRMNotifications />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/crm/settings"
+            element={
+              <ProtectedRoute requireCrmAccess>
+                <CRMSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/crm/branches/:branchId/chats"
+            element={
+              <ProtectedRoute requireCrmAccess>
+                <CRMBranchChats />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/crm/chats"
+            element={
+              <ProtectedRoute requireCrmAccess>
+                <CRMAllChats />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/crm/chats/:chatId"
+            element={
+              <ProtectedRoute requireCrmAccess>
+                <CRMChatView />
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Router>
