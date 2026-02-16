@@ -123,6 +123,7 @@ const Slots = () => {
   const [createDefaultDay, setCreateDefaultDay] = useState(null);
   const [savingSlot, setSavingSlot] = useState(false);
   const [teachers, setTeachers] = useState([]);
+  const [departments, setDepartments] = useState([]);
 
   const loadSlots = async () => {
     setLoading(true);
@@ -151,6 +152,9 @@ const Slots = () => {
     if (isOwner) {
       apiClient.get(`${API_ENDPOINTS.TEACHERS}?limit=500&offset=0`).then((r) => {
         if (r.data?.ok && r.data?.data?.items) setTeachers(r.data.data.items);
+      }).catch(() => {});
+      apiClient.get(API_ENDPOINTS.DEPARTMENTS).then((r) => {
+        if (r.data?.ok && r.data?.data?.items) setDepartments(r.data.data.items);
       }).catch(() => {});
     }
   }, [isOwner]);
@@ -203,6 +207,24 @@ const Slots = () => {
     } catch (err) {
       alert('Не удалось удалить слот');
     }
+  };
+
+  const handleStatusChange = async (slotId, status, occupiedByDepartmentId = null) => {
+    try {
+      const body = { status };
+      if (isOwner && occupiedByDepartmentId !== undefined) body.occupied_by_department_id = occupiedByDepartmentId || null;
+      await apiClient.patch(API_ENDPOINTS.SLOT(slotId), body);
+      loadSlots();
+    } catch (err) {
+      alert(err.response?.data?.description || 'Не удалось изменить статус');
+    }
+  };
+
+  const slotStatusLabel = (slot) => {
+    if (slot.status === 'occupied') {
+      return slot.occupied_by_department_name ? `Занят (${slot.occupied_by_department_name})` : 'Занят';
+    }
+    return 'Свободен';
   };
 
   const slotsForDay = useMemo(() => {
@@ -310,9 +332,23 @@ const Slots = () => {
                                         style={{ borderLeftColor: s.teacher_color || '#64748b' }}
                                       >
                                         {s.teacher_name}
+                                        <span className={`slots-status-badge slots-status-${s.status || 'free'}`}>
+                                          {slotStatusLabel(s)}
+                                        </span>
                                       </span>
                                       <ActionMenu
                                         items={[
+                                          ...(s.status === 'occupied'
+                                            ? [{ label: 'Освободить', icon: '🟢', onClick: () => handleStatusChange(s.id, 'free') }]
+                                            : [
+                                                { label: 'Занять (без привязки)', icon: '🔴', onClick: () => handleStatusChange(s.id, 'occupied', null) },
+                                                ...departments.map((d) => ({
+                                                  label: `Занять (${d.name})`,
+                                                  icon: '🔴',
+                                                  onClick: () => handleStatusChange(s.id, 'occupied', d.id),
+                                                })),
+                                              ]
+                                          ),
                                           { label: 'Редактировать', icon: '✏️', onClick: () => openEdit(s) },
                                           { label: 'Удалить', icon: '🗑️', danger: true, onClick: () => handleDelete(s.id) },
                                         ]}
@@ -343,9 +379,23 @@ const Slots = () => {
                               style={{ borderLeftColor: s.teacher_color || '#64748b' }}
                             >
                               {s.teacher_name}
+                              <span className={`slots-status-badge slots-status-${s.status || 'free'}`}>
+                                {slotStatusLabel(s)}
+                              </span>
                             </span>
                             <ActionMenu
                               items={[
+                                ...(s.status === 'occupied'
+                                  ? [{ label: 'Освободить', icon: '🟢', onClick: () => handleStatusChange(s.id, 'free') }]
+                                  : [
+                                      { label: 'Занять (без привязки)', icon: '🔴', onClick: () => handleStatusChange(s.id, 'occupied', null) },
+                                      ...departments.map((d) => ({
+                                        label: `Занять (${d.name})`,
+                                        icon: '🔴',
+                                        onClick: () => handleStatusChange(s.id, 'occupied', d.id),
+                                      })),
+                                    ]
+                                ),
                                 { label: 'Редактировать', icon: '✏️', onClick: () => openEdit(s) },
                                 { label: 'Удалить', icon: '🗑️', danger: true, onClick: () => handleDelete(s.id) },
                               ]}
@@ -382,9 +432,16 @@ const Slots = () => {
                               {daySlots.map((slot) => (
                                 <li key={slot.id} className="slots-my-item">
                                   <span className="slots-my-time">{formatTimeRange(slot.start_time)}</span>
+                                  <span className={`slots-status-badge slots-status-${slot.status || 'free'}`}>
+                                    {slotStatusLabel(slot)}
+                                  </span>
                                   <div className="slots-my-actions">
                                     <ActionMenu
                                       items={[
+                                        ...(slot.status === 'occupied'
+                                          ? [{ label: 'Освободить', icon: '🟢', onClick: () => handleStatusChange(slot.id, 'free') }]
+                                          : [{ label: 'Занять', icon: '🔴', onClick: () => handleStatusChange(slot.id, 'occupied', null) }]
+                                        ),
                                         { label: 'Редактировать', icon: '✏️', onClick: () => openEdit(slot) },
                                         { label: 'Удалить', icon: '🗑️', danger: true, onClick: () => handleDelete(slot.id) },
                                       ]}
@@ -412,9 +469,16 @@ const Slots = () => {
                     {slotsForDay.map((slot) => (
                       <li key={slot.id} className="slots-my-item">
                         <span className="slots-my-time">{formatTimeRange(slot.start_time)}</span>
+                        <span className={`slots-status-badge slots-status-${slot.status || 'free'}`}>
+                          {slotStatusLabel(slot)}
+                        </span>
                         <div className="slots-my-actions">
                           <ActionMenu
                             items={[
+                              ...(slot.status === 'occupied'
+                                ? [{ label: 'Освободить', icon: '🟢', onClick: () => handleStatusChange(slot.id, 'free') }]
+                                : [{ label: 'Занять', icon: '🔴', onClick: () => handleStatusChange(slot.id, 'occupied', null) }]
+                              ),
                               { label: 'Редактировать', icon: '✏️', onClick: () => openEdit(slot) },
                               { label: 'Удалить', icon: '🗑️', danger: true, onClick: () => handleDelete(slot.id) },
                             ]}
