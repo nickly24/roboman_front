@@ -35,7 +35,16 @@
 
 .kpi-card-icon {
   font-size: 20px;
-  opacity: 0.6;
+  opacity: 0.85;
+  color: var(--accent-color, #0369a1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kpi-card-icon svg {
+  width: 20px;
+  height: 20px;
 }
 
 .kpi-card-value {

@@ -30,8 +30,74 @@
   font-size: 16px;
 }
 
-.dashboard-filters {
+.dashboard-filters-wrap {
   margin-bottom: 8px;
+}
+
+.dashboard-filters-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #374151;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-filters-toggle:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #1f2937;
+}
+
+.dashboard-filters-toggle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0369a1;
+}
+
+.dashboard-filters-toggle-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.dashboard-filters-toggle-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  transition: transform 0.2s;
+}
+
+.dashboard-filters-toggle-chevron svg {
+  width: 18px;
+  height: 18px;
+}
+
+.dashboard-filters-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease-out;
+}
+
+.dashboard-filters-content.open {
+  max-height: 600px;
+  transition: max-height 0.35s ease-in;
+}
+
+.dashboard-filters-content.open .dashboard-filters {
+  margin-top: 12px;
+}
+
+.dashboard-filters {
+  margin-bottom: 0;
 }
 
 .filters-grid {
@@ -188,6 +254,116 @@
 
 .dashboard-lessons-total strong {
   color: #059669;
+}
+
+/* Занятия по филиалам (раскрывающиеся блоки) */
+.lessons-by-branch {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.lessons-branch-group {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.lessons-branch-group:last-child {
+  margin-bottom: 0;
+}
+
+.lessons-branch-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2937;
+  background: #f9fafb;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.lessons-branch-header:hover {
+  background: #f3f4f6;
+}
+
+.lessons-branch-header.open {
+  background: #eff6ff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.lessons-branch-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.lessons-branch-chevron svg {
+  width: 20px;
+  height: 20px;
+}
+
+.lessons-branch-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.lessons-branch-stats {
+  display: flex;
+  align-items: stretch;
+  gap: 32px;
+  flex-shrink: 0;
+}
+
+.lessons-branch-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 100px;
+}
+
+.lessons-branch-stat-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 2px;
+}
+
+.lessons-branch-stat-value {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.lessons-branch-revenue {
+  color: #059669;
+}
+
+.lessons-branch-profit.positive {
+  color: #059669;
+}
+
+.lessons-branch-profit.negative {
+  color: #dc2626;
+}
+
+.lessons-branch-body {
+  padding: 12px 16px 16px;
+  background: #ffffff;
+}
+
+.lessons-branch-body .table-container {
+  margin: 0;
 }
 
 @media (max-width: 900px) {

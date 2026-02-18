@@ -1,7 +1,12 @@
+/* CRM pages — use theme variables from CRMLayout */
+
 .crm-page {
   padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  color: var(--crm-text);
+  box-sizing: border-box;
 }
 
 .crm-page-header {
@@ -17,6 +22,7 @@
   margin: 0;
   font-size: 22px;
   font-weight: 600;
+  color: var(--crm-text);
 }
 
 .crm-page-header-with-back {
@@ -28,7 +34,7 @@
 .crm-empty,
 .crm-messages-empty,
 .crm-comments-empty {
-  color: #6b7280;
+  color: var(--crm-text-muted);
   margin: 0;
 }
 
@@ -45,10 +51,17 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: 1px solid var(--crm-border);
+  border-radius: 12px;
   margin-bottom: 8px;
-  background: #fff;
+  background: var(--crm-panel);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.crm-branch-item:hover,
+.crm-chat-item:hover {
+  border-color: var(--crm-border);
+  background: var(--crm-panel-elevated);
 }
 
 .crm-branch-info,
@@ -58,19 +71,19 @@
 
 .crm-branch-name {
   font-weight: 600;
-  color: #1f2937;
+  color: var(--crm-text);
   text-decoration: none;
   display: block;
   margin-bottom: 4px;
 }
 
 .crm-branch-name:hover {
-  color: #111827;
+  color: var(--crm-accent);
 }
 
 .crm-branch-address {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--crm-text-muted);
 }
 
 .crm-branch-actions,
@@ -90,13 +103,13 @@
 
 .crm-chat-name {
   font-weight: 600;
-  color: #1f2937;
+  color: var(--crm-text);
   display: block;
 }
 
 .crm-chat-id {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--crm-text-muted);
 }
 
 .crm-modal-actions {
@@ -107,7 +120,7 @@
 }
 
 .crm-help {
-  color: #6b7280;
+  color: var(--crm-text-secondary);
   font-size: 14px;
   margin: 0 0 16px 0;
 }
@@ -120,7 +133,7 @@
   display: block;
   font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: var(--crm-text);
   margin-bottom: 8px;
 }
 
@@ -136,7 +149,7 @@
   gap: 8px;
   cursor: pointer;
   font-size: 14px;
-  color: #1f2937;
+  color: var(--crm-text);
 }
 
 .crm-radio input {
@@ -146,12 +159,73 @@
 .crm-settings-status {
   margin: 16px 0 0 0;
   font-size: 14px;
-  color: #6b7280;
+  color: var(--crm-text-muted);
 }
 
-/* Chat view */
+/* ========== Chat view ========== */
 .crm-chat-page {
+  width: 100%;
   max-width: none;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+}
+
+.crm-chat-view-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--crm-border);
+  background: var(--crm-bg);
+}
+
+.crm-chat-back-btn {
+  flex-shrink: 0;
+}
+
+.crm-chat-view-header-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.crm-chat-view-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--crm-accent-muted);
+  color: var(--crm-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.crm-chat-view-title-wrap {
+  min-width: 0;
+}
+
+.crm-chat-view-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--crm-text);
+  display: block;
+}
+
+.crm-chat-view-status {
+  font-size: 13px;
+  color: var(--crm-text-muted);
 }
 
 .crm-chat-page .crm-page-header-with-back {
@@ -171,17 +245,18 @@
   gap: 8px;
   padding: 8px 14px;
   font-size: 14px;
-  color: #374151;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
+  color: var(--crm-text-secondary);
+  background: var(--crm-panel-elevated);
+  border: 1px solid var(--crm-border);
   border-radius: 8px;
   cursor: pointer;
   text-decoration: none;
+  transition: background 0.15s, color 0.15s;
 }
 
 .crm-comments-btn:hover {
-  background: #e5e7eb;
-  color: #1f2937;
+  background: var(--crm-accent-muted);
+  color: var(--crm-accent);
 }
 
 .crm-comments-btn-icon {
@@ -191,25 +266,31 @@
 
 .crm-comments-btn-count {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--crm-text-muted);
   margin-left: 2px;
 }
 
 .crm-chat-fullwidth {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   width: 100%;
 }
 
-.crm-messages-card {
+.crm-chat-body {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  min-height: 400px;
+  background: var(--crm-bg);
 }
 
 .crm-messages-list {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  max-height: 60vh;
-  padding: 16px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -222,7 +303,7 @@
   justify-content: center;
   gap: 12px;
   min-height: 120px;
-  color: #6b7280;
+  color: var(--crm-text-muted);
   font-size: 14px;
 }
 
@@ -232,26 +313,35 @@
 
 .crm-msg {
   max-width: 85%;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-radius: 12px;
   align-self: flex-start;
 }
 
 .crm-msg.out {
   align-self: flex-end;
-  background: #3b82f6;
-  color: #fff;
+  background: var(--crm-accent);
+  color: #0a0a0a;
 }
 
 .crm-msg.in {
-  background: #f3f4f6;
-  color: #1f2937;
+  background: var(--crm-panel-elevated);
+  color: var(--crm-text);
+  border: 1px solid var(--crm-border);
 }
 
 .crm-msg-meta {
   font-size: 11px;
-  opacity: 0.85;
+  opacity: 0.9;
   margin-bottom: 4px;
+}
+
+.crm-msg.out .crm-msg-meta {
+  color: rgba(10, 10, 10, 0.75);
+}
+
+.crm-msg.in .crm-msg-meta {
+  color: var(--crm-text-muted);
 }
 
 .crm-msg-text {
@@ -261,24 +351,72 @@
 }
 
 .crm-send-row {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
   display: flex;
-  gap: 8px;
-  padding: 12px 16px;
-  border-top: 1px solid #e5e7eb;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--crm-border);
+  background: var(--crm-bg);
+  flex-shrink: 0;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.crm-layout[data-theme="dark"] .crm-send-row {
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.3);
 }
 
 .crm-send-input {
   flex: 1;
-  padding: 10px 14px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  padding: 12px 16px;
+  border: 1px solid var(--crm-input-border);
+  border-radius: 10px;
   font-size: 14px;
+  background: var(--crm-input-bg);
+  color: var(--crm-text);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.crm-send-input::placeholder {
+  color: var(--crm-text-muted);
 }
 
 .crm-send-input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  border-color: var(--crm-accent);
+  box-shadow: 0 0 0 2px var(--crm-accent-muted);
+}
+
+.crm-send-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--crm-accent);
+  color: #0a0a0a;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.crm-send-btn:hover:not(:disabled) {
+  background: var(--crm-accent-hover);
+}
+
+.crm-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.crm-send-btn-icon {
+  font-size: 16px;
+  margin-left: 2px;
 }
 
 .crm-comments-modal .crm-comments-title {
@@ -294,7 +432,7 @@
 
 .crm-comment {
   padding: 10px 0;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--crm-border-subtle);
 }
 
 .crm-comment:last-child {
@@ -303,13 +441,14 @@
 
 .crm-comment-meta {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--crm-text-muted);
   margin-bottom: 4px;
 }
 
 .crm-comment-text {
   font-size: 14px;
   white-space: pre-wrap;
+  color: var(--crm-text);
 }
 
 .crm-comment-form {
@@ -336,29 +475,47 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 0;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--crm-border-subtle);
 }
 
 .crm-subscriber-item:last-child {
   border-bottom: none;
 }
 
-/* Список чатов как в мессенджере */
+.crm-subscriber-item span {
+  color: var(--crm-text);
+}
+
+/* ========== Chat list (messenger style) ========== */
 .crm-chats-filter {
   margin-bottom: 20px;
   max-width: 280px;
 }
 
 .crm-chat-list-messenger .crm-chat-item-messenger {
-  padding: 12px 16px;
+  padding: 14px 16px;
 }
 
 .crm-chat-item-messenger .crm-chat-link {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 14px;
   flex: 1;
   min-width: 0;
+}
+
+.crm-chat-item-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--crm-accent-muted);
+  color: var(--crm-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 .crm-chat-item-dots {
@@ -377,11 +534,25 @@
 }
 
 .crm-dot-blue {
-  background: #3b82f6;
+  background: var(--crm-accent);
 }
 
 .crm-dot-green {
   background: #22c55e;
+}
+
+.crm-chat-item-unread {
+  background: var(--crm-accent);
+  color: #0a0a0a;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
 }
 
 .crm-chat-item-body {
@@ -396,21 +567,27 @@
   gap: 8px;
 }
 
+.crm-chat-item-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .crm-chat-item-time {
   font-size: 12px;
-  color: #9ca3af;
-  flex-shrink: 0;
+  color: var(--crm-text-muted);
 }
 
 .crm-chat-item-meta {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--crm-text-muted);
   margin-top: 2px;
 }
 
 .crm-chat-item-preview {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--crm-text-secondary);
   margin: 4px 0 0 0;
   white-space: nowrap;
   overflow: hidden;
@@ -420,4 +597,147 @@
 .crm-msg-read {
   margin-left: 4px;
   opacity: 0.9;
+}
+
+/* ========== Overrides for global components inside CRM ========== */
+.crm-layout .btn-primary {
+  background: var(--crm-accent);
+  color: #0a0a0a;
+  border-color: var(--crm-accent);
+}
+
+.crm-layout .btn-primary:hover:not(:disabled) {
+  background: var(--crm-accent-hover);
+  border-color: var(--crm-accent-hover);
+  color: #0a0a0a;
+}
+
+.crm-layout .btn-secondary {
+  background: var(--crm-panel-elevated);
+  color: var(--crm-text);
+  border-color: var(--crm-border);
+}
+
+.crm-layout .btn-secondary:hover:not(:disabled) {
+  background: var(--crm-accent-muted);
+  border-color: var(--crm-accent);
+  color: var(--crm-accent);
+}
+
+.crm-layout .card {
+  background: var(--crm-panel);
+  border: 1px solid var(--crm-border);
+  border-radius: 12px;
+  box-shadow: var(--crm-shadow);
+}
+
+.crm-layout .card-title,
+.crm-layout .card-subtitle {
+  color: var(--crm-text);
+}
+
+.crm-layout .card-subtitle {
+  color: var(--crm-text-secondary);
+}
+
+.crm-layout .card-header {
+  border-bottom-color: var(--crm-border);
+}
+
+.crm-layout .card-body {
+  color: var(--crm-text);
+}
+
+/* Select inside CRM */
+.crm-layout .select-label {
+  color: var(--crm-text-secondary);
+}
+
+.crm-layout .select {
+  background: var(--crm-input-bg);
+  border-color: var(--crm-input-border);
+  color: var(--crm-text);
+}
+
+.crm-layout .select:focus {
+  border-color: var(--crm-accent);
+  box-shadow: 0 0 0 2px var(--crm-accent-muted);
+}
+
+/* Modal inside CRM (portal: theme on html for open modals from CRM) */
+html[data-crm-theme="dark"] .modal-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+html[data-crm-theme="dark"] .modal {
+  background: #222222;
+  border: 1px solid #333333;
+}
+
+html[data-crm-theme="dark"] .modal-title {
+  color: #ffffff;
+}
+
+html[data-crm-theme="dark"] .modal-header {
+  border-bottom-color: #333333;
+}
+
+html[data-crm-theme="dark"] .modal-close {
+  color: #8a8a8a;
+}
+
+html[data-crm-theme="dark"] .modal-close:hover {
+  background: #282828;
+  color: #ffffff;
+}
+
+html[data-crm-theme="dark"] .modal-body {
+  color: #ffffff;
+}
+
+html[data-crm-theme="light"] .modal {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+}
+
+html[data-crm-theme="light"] .modal-title {
+  color: #1a1a1a;
+}
+
+html[data-crm-theme="light"] .modal-body {
+  color: #1a1a1a;
+}
+
+/* Input inside CRM */
+.crm-layout .input-group label,
+.crm-layout .input-label {
+  color: var(--crm-text-secondary);
+}
+
+.crm-layout input[type="text"],
+.crm-layout input[type="number"] {
+  background: var(--crm-input-bg);
+  border-color: var(--crm-input-border);
+  color: var(--crm-text);
+}
+
+.crm-layout input:focus {
+  border-color: var(--crm-accent);
+  box-shadow: 0 0 0 2px var(--crm-accent-muted);
+}
+
+/* LoadingSpinner in CRM */
+.crm-layout .loading-spinner-text {
+  color: var(--crm-text-muted);
+}
+
+.crm-layout .spinner-ring {
+  border-top-color: var(--crm-accent);
+}
+
+.crm-layout .spinner-ring:nth-child(1),
+.crm-layout .spinner-ring:nth-child(2),
+.crm-layout .spinner-ring:nth-child(3),
+.crm-layout .spinner-ring:nth-child(4) {
+  border-top-color: var(--crm-accent);
 }

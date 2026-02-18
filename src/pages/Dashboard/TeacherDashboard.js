@@ -12,6 +12,7 @@ import Select from '../../components/Select/Select';
 import LoadingSpinner from '../../components/Loading/LoadingSpinner';
 import { useAuth } from '../../context/AuthContext';
 import useMediaQuery from '../../hooks/useMediaQuery';
+import { IconRevenue, IconLessons, IconPeople, IconStar } from '../../components/Icons/SidebarIcons';
 import './Dashboard.css';
 
 const TeacherDashboard = () => {
@@ -242,19 +243,19 @@ const TeacherDashboard = () => {
                 title="Зарплата за период"
                 value={formatCurrency(kpi.salary_sum)}
                 subtitle="Предварительный расчёт"
-                icon="💰"
+                icon={<IconRevenue />}
                 color="#059669"
               />
               <KPICard
                 title="Занятий за период"
                 value={formatNumber(kpi.lessons_count)}
-                icon="📚"
+                icon={<IconLessons />}
                 color="#0369a1"
               />
               <KPICard
                 title="Всего детей"
                 value={formatNumber(kpi.total_children_sum)}
-                icon="👥"
+                icon={<IconPeople />}
                 color="#7c3aed"
               />
             </>
@@ -264,7 +265,7 @@ const TeacherDashboard = () => {
               title="Всего занятий проведено"
               value={formatNumber(total.total_lessons_count)}
               subtitle="Накопительно"
-              icon="⭐"
+              icon={<IconStar />}
               color="#ea580c"
             />
           )}

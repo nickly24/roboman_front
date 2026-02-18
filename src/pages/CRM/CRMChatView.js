@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../../services/api';
 import { API_ENDPOINTS } from '../../config/api';
 import CRMLayout from '../../components/CRMLayout/CRMLayout';
-import Card from '../../components/Card/Card';
 import Button from '../../components/Button/Button';
 import Modal from '../../components/Modal/Modal';
 import LoadingSpinner from '../../components/Loading/LoadingSpinner';
@@ -142,33 +141,42 @@ const CRMChatView = () => {
 
   const title = chat ? (chat.display_name || `Chat ${chat.telegram_chat_id}`) : '';
   const branchName = chat ? chat.branch_name : '';
+  const chatInitial = title ? title.trim()[0].toUpperCase() : '?';
 
   return (
     <CRMLayout>
       <div className="crm-page crm-chat-page">
-        <div className="crm-page-header crm-page-header-with-back">
-          <Button variant="secondary" onClick={() => navigate(chat ? `/crm/branches/${chat.branch_id}/chats` : '/crm')}>← Чаты</Button>
-          <h2>{title} {branchName ? `— ${branchName}` : ''}</h2>
+        <div className="crm-chat-view-header">
+          <Button variant="secondary" className="crm-chat-back-btn" onClick={() => navigate(chat ? `/crm/branches/${chat.branch_id}/chats` : '/crm')}>
+            ← Чаты
+          </Button>
           {chat && (
-            <div className="crm-chat-header-actions">
-              <button
-                type="button"
-                className="crm-comments-btn"
-                onClick={() => { setCommentsModalOpen(true); loadComments(); }}
-              >
-                <span className="crm-comments-btn-icon" aria-hidden>💬</span>
-                Смотреть комментарии
-                {comments.length > 0 && (
-                  <span className="crm-comments-btn-count">({comments.length})</span>
-                )}
-              </button>
+            <div className="crm-chat-view-header-main">
+              <div className="crm-chat-view-avatar" aria-hidden>{chatInitial}</div>
+              <div className="crm-chat-view-title-wrap">
+                <h2 className="crm-chat-view-title">{title} {branchName ? `— ${branchName}` : ''}</h2>
+                <span className="crm-chat-view-status">Чат с клиентом</span>
+              </div>
+              <div className="crm-chat-header-actions">
+                <button
+                  type="button"
+                  className="crm-comments-btn"
+                  onClick={() => { setCommentsModalOpen(true); loadComments(); }}
+                >
+                  <span className="crm-comments-btn-icon" aria-hidden>💬</span>
+                  Комментарии
+                  {comments.length > 0 && (
+                    <span className="crm-comments-btn-count">({comments.length})</span>
+                  )}
+                </button>
+              </div>
             </div>
           )}
         </div>
 
         {chat && (
           <div className="crm-chat-fullwidth">
-            <Card className="crm-messages-card">
+            <div className="crm-chat-body">
               <div className="crm-messages-list">
                 {messagesLoading ? (
                   <div className="crm-messages-loading">
@@ -201,16 +209,23 @@ const CRMChatView = () => {
                 <input
                   type="text"
                   className="crm-send-input"
-                  placeholder="Сообщение..."
+                  placeholder="Введите сообщение..."
                   value={sendText}
                   onChange={(e) => setSendText(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
                 />
-                <Button variant="primary" onClick={handleSend} disabled={!sendText.trim() || sending}>
-                  {sending ? '…' : 'Отправить'}
-                </Button>
+                <button
+                  type="button"
+                  className="crm-send-btn"
+                  onClick={handleSend}
+                  disabled={!sendText.trim() || sending}
+                  title="Отправить"
+                  aria-label="Отправить"
+                >
+                  <span className="crm-send-btn-icon" aria-hidden>▶</span>
+                </button>
               </div>
-            </Card>
+            </div>
           </div>
         )}
 

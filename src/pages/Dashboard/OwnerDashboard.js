@@ -12,6 +12,18 @@ import DepartmentSelector from '../../components/DepartmentSelector/DepartmentSe
 import LoadingSpinner from '../../components/Loading/LoadingSpinner';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import {
+  IconRevenue,
+  IconProfit,
+  IconPeople,
+  IconTarget,
+  IconChartBar,
+  IconLessons,
+  IconChartLine,
+  IconFilter,
+  IconChevronDown,
+  IconChevronUp,
+} from '../../components/Icons/SidebarIcons';
+import {
   Line,
   ComposedChart,
   BarChart,
@@ -76,6 +88,8 @@ const OwnerDashboard = () => {
     teacher_id: '',
   });
   const [selectedDepartment, setSelectedDepartment] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [expandedBranches, setExpandedBranches] = useState(new Set());
 
   useEffect(() => {
     loadDashboard();
@@ -92,72 +106,85 @@ const OwnerDashboard = () => {
       ? lessonsFromData
       : [];
 
-  const seriesChartData = useMemo(() => {
-    const normalizePeriod = (p) => {
-      const s = String(p || '').trim();
-      // YYYY-MM-... -> YYYY-MM
-      const m1 = s.match(/^(\d{4})-(\d{1,2})/);
-      if (m1) {
-        const yy = m1[1];
-        const mm = String(m1[2]).padStart(2, '0');
-        return `${yy}-${mm}`;
+  // Группировка занятий по филиалам с выручкой и прибылью (хук должен вызываться до любых return)
+  const lessonsByBranch = useMemo(() => {
+    if (!lessons || lessons.length === 0) return [];
+    const map = new Map();
+    lessons.forEach((lesson) => {
+      const branchId = lesson.branch_id ?? '';
+      const branchName = lesson.branch_name || 'Без филиала';
+      const branchKey = String(branchId || branchName);
+      if (!map.has(branchKey)) {
+        map.set(branchKey, { branchId, branchName, lessons: [], revenue: 0, profit: 0 });
       }
-      return s;
+      const row = map.get(branchKey);
+      row.lessons.push(lesson);
+      const rev = Number(lesson.revenue) || (lesson.price_snapshot && lesson.paid_children ? lesson.price_snapshot * (lesson.paid_children || 0) : 0);
+      const sal = Number(lesson.teacher_salary) || 0;
+      row.revenue += rev;
+      row.profit += rev - sal;
+    });
+    return Array.from(map.values()).sort((a, b) => (a.branchName || '').localeCompare(b.branchName || ''));
+  }, [lessons]);
+
+  // Линейный график роста выручки, зарплат и прибыли по дням (с первого по последний)
+  const revenueSalaryProfitChartData = useMemo(() => {
+    if (!lessons || lessons.length === 0) return [];
+
+    const getDateKey = (dateStr) => {
+      if (!dateStr) return null;
+      const d = new Date(dateStr);
+      if (Number.isNaN(d.getTime())) return null;
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
     };
 
-    const raw = (series_by_month || []).map((item) => {
-      const period = normalizePeriod(item.period || item.month || '');
+    // Суммы по каждому дню
+    const byDay = new Map(); // dateKey -> { revenue, salary, profit }
+
+    lessons.forEach((lesson) => {
+      const dateKey = getDateKey(lesson.starts_at || lesson.date || lesson.scheduled_at);
+      if (!dateKey) return;
+
+      const revenue = Number(lesson.revenue) || (lesson.price_snapshot && lesson.paid_children
+        ? lesson.price_snapshot * (lesson.paid_children || 0)
+        : 0);
+      const salary = Number(lesson.teacher_salary) || 0;
+      const profit = revenue - salary;
+
+      if (!byDay.has(dateKey)) {
+        byDay.set(dateKey, { dateKey, revenue: 0, salary: 0, profit: 0 });
+      }
+      const row = byDay.get(dateKey);
+      row.revenue += revenue;
+      row.salary += salary;
+      row.profit += profit;
+    });
+
+    const sortedDays = Array.from(byDay.keys()).sort();
+    if (sortedDays.length === 0) return [];
+
+    // Нарастающий итог: для каждого дня — сумма с начала по этот день
+    let cumRevenue = 0;
+    let cumSalary = 0;
+    let cumProfit = 0;
+    const result = sortedDays.map((dateKey) => {
+      const day = byDay.get(dateKey);
+      cumRevenue += day.revenue;
+      cumSalary += day.salary;
+      cumProfit += day.profit;
       return {
-        period,
-        revenue: Number(item.revenue_sum ?? item.revenue ?? 0) || 0,
-        total_children: Number(item.total_children_sum ?? item.total_children ?? 0) || 0,
-        lessons_count: Number(item.lessons_count ?? 0) || 0,
+        dateKey,
+        revenue: cumRevenue,
+        salary: cumSalary,
+        profit: cumProfit,
       };
     });
 
-    const byPeriod = new Map(raw.map((x) => [normalizePeriod(x.period), x]));
-
-    const buildMonths = (startYm, endYm) => {
-      if (!startYm || !endYm) return [];
-      const [sy, sm] = startYm.split('-').map(Number);
-      const [ey, em] = endYm.split('-').map(Number);
-      if (!sy || !sm || !ey || !em) return [];
-
-      const start = new Date(Date.UTC(sy, sm - 1, 1));
-      const end = new Date(Date.UTC(ey, em - 1, 1));
-      if (start > end) return [];
-
-      const res = [];
-      const cur = new Date(start);
-      while (cur <= end) {
-        const y = cur.getUTCFullYear();
-        const m = String(cur.getUTCMonth() + 1).padStart(2, '0');
-        res.push(normalizePeriod(`${y}-${m}`));
-        cur.setUTCMonth(cur.getUTCMonth() + 1);
-      }
-      return res;
-    };
-
-    // Если выбран диапазон месяцев — показываем ВСЕ месяцы диапазона (в т.ч. с нулями)
-    if (periodMode === 'range' && rangeStartMonth && rangeEndMonth) {
-      const months = buildMonths(normalizePeriod(rangeStartMonth), normalizePeriod(rangeEndMonth));
-      return months.map((p) => {
-        const hit = byPeriod.get(normalizePeriod(p));
-        return (
-          hit || {
-            period: normalizePeriod(p),
-            revenue: 0,
-            total_children: 0,
-            lessons_count: 0,
-          }
-        );
-      });
-    }
-
-    // Месячный режим — как пришло с бэка (или 1 точка)
-    raw.sort((a, b) => String(a.period).localeCompare(String(b.period)));
-    return raw;
-  }, [series_by_month, periodMode, rangeStartMonth, rangeEndMonth]);
+    return result;
+  }, [lessons]);
 
   const formatPeriodLabel = (period) => {
     const s = String(period || '');
@@ -165,6 +192,15 @@ const OwnerDashboard = () => {
     if (!y || !m) return s;
     const d = new Date(Date.UTC(y, m - 1, 1));
     return d.toLocaleDateString('ru-RU', { month: 'short', year: '2-digit' });
+  };
+
+  const formatChartDateLabel = (dateKey) => {
+    const s = String(dateKey || '');
+    const parts = s.split('-').map(Number);
+    if (parts.length < 3) return s;
+    const [y, m, day] = parts;
+    const d = new Date(y, m - 1, day);
+    return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
   };
 
   const buildPeriodParams = () => {
@@ -293,6 +329,15 @@ const OwnerDashboard = () => {
   
   const profit = calculateProfit();
 
+  const toggleBranch = (branchKey) => {
+    setExpandedBranches((prev) => {
+      const next = new Set(prev);
+      if (next.has(branchKey)) next.delete(branchKey);
+      else next.add(branchKey);
+      return next;
+    });
+  };
+
   const tableColumns = [
     { key: 'starts_at', title: 'Дата/Время', render: (value) => new Date(value).toLocaleString('ru-RU') },
     { key: 'branch_name', title: 'Филиал' },
@@ -326,6 +371,9 @@ const OwnerDashboard = () => {
     },
   ];
 
+  // Колонки таблицы без филиала (для блока внутри филиала)
+  const tableColumnsWithoutBranch = tableColumns.filter((col) => col.key !== 'branch_name');
+
   return (
     <Layout>
       <div className="dashboard">
@@ -333,9 +381,24 @@ const OwnerDashboard = () => {
           <h1 className="dashboard-title">Дашборд</h1>
         </div>
 
-        <Card className="dashboard-filters">
-          <div className="filters-grid">
-            <div className="period-mode">
+        <div className="dashboard-filters-wrap">
+          <button
+            type="button"
+            className="dashboard-filters-toggle"
+            onClick={() => setFiltersOpen((v) => !v)}
+            aria-expanded={filtersOpen}
+            aria-controls="dashboard-filters-content"
+          >
+            <span className="dashboard-filters-toggle-icon"><IconFilter /></span>
+            <span className="dashboard-filters-toggle-label">Фильтр</span>
+            <span className={`dashboard-filters-toggle-chevron ${filtersOpen ? 'open' : ''}`}>
+              {filtersOpen ? <IconChevronUp /> : <IconChevronDown />}
+            </span>
+          </button>
+          <div id="dashboard-filters-content" className={`dashboard-filters-content ${filtersOpen ? 'open' : ''}`}>
+            <Card className="dashboard-filters">
+              <div className="filters-grid">
+                <div className="period-mode">
               <div className="period-mode-label">Период</div>
               <div className="period-mode-buttons">
                 <button
@@ -413,46 +476,48 @@ const OwnerDashboard = () => {
                 Сбросить
               </Button>
             </div>
+              </div>
+            </Card>
           </div>
-        </Card>
+        </div>
 
         {kpi && (
           <div className="dashboard-kpi">
             <KPICard
               title="Выручка"
               value={formatCurrency(kpi.revenue_sum || kpi.revenue || 0)}
-              icon="💰"
+              icon={<IconRevenue />}
               color="#059669"
             />
             <KPICard
               title="Прибыль"
               value={formatCurrency(profit)}
               subtitle={profit >= 0 ? 'Выручка - зарплаты' : 'Отрицательная'}
-              icon="💵"
+              icon={<IconProfit />}
               color={profit >= 0 ? "#10b981" : "#ef4444"}
             />
             <KPICard
               title="Платные дети"
               value={formatNumber(kpi.paid_sum || kpi.paid_children_sum || kpi.paid_children || 0)}
-              icon="👥"
+              icon={<IconPeople />}
               color="#0369a1"
             />
             <KPICard
               title="Пробные дети"
               value={formatNumber(kpi.trial_sum || kpi.trial_children_sum || kpi.trial_children || 0)}
-              icon="🎯"
+              icon={<IconTarget />}
               color="#7c3aed"
             />
             <KPICard
               title="Всего детей"
               value={formatNumber(kpi.total_children_sum || kpi.total_children || 0)}
-              icon="📊"
+              icon={<IconChartBar />}
               color="#dc2626"
             />
             <KPICard
               title="Занятий"
               value={formatNumber(kpi.lessons_count || 0)}
-              icon="📚"
+              icon={<IconLessons />}
               color="#ea580c"
             />
             <KPICard
@@ -460,28 +525,32 @@ const OwnerDashboard = () => {
               value={kpi.avg_children_per_lesson ? formatNumber(kpi.avg_children_per_lesson.toFixed(1)) : 
                      (kpi.lessons_count && kpi.lessons_count > 0 && kpi.total_children_sum ? 
                       formatNumber((kpi.total_children_sum / kpi.lessons_count).toFixed(1)) : '0')}
-              icon="📈"
+              icon={<IconChartLine />}
               color="#0891b2"
             />
           </div>
         )}
 
-        {seriesChartData && seriesChartData.length > 0 && (
-          <Card title="Динамика по месяцам">
+        {revenueSalaryProfitChartData.length > 0 && (
+          <Card title="Рост выручки, зарплат и прибыли">
             <ResponsiveContainer width="100%" height={isMobile ? 240 : 300}>
-              <ComposedChart data={seriesChartData}>
+              <ComposedChart data={revenueSalaryProfitChartData} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
-                  dataKey="period"
-                  tickFormatter={formatPeriodLabel}
+                  dataKey="dateKey"
+                  tickFormatter={formatChartDateLabel}
                   interval="preserveStartEnd"
-                  minTickGap={12}
+                  minTickGap={24}
                 />
-                <YAxis />
-                <Tooltip />
+                <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                <Tooltip
+                  formatter={(value, name) => [formatCurrency(value), name]}
+                  labelFormatter={formatChartDateLabel}
+                />
                 {!isMobile && <Legend />}
-                <Bar dataKey="revenue" fill="#059669" name="Выручка" radius={[6, 6, 0, 0]} />
-                <Line type="monotone" dataKey="total_children" stroke="#0369a1" name="Всего детей" />
+                <Line type="monotone" dataKey="revenue" stroke="#059669" name="Выручка" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="salary" stroke="#ea580c" name="Зарплаты" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="profit" stroke="#0369a1" name="Прибыль" strokeWidth={2} dot={{ r: 3 }} />
               </ComposedChart>
             </ResponsiveContainer>
           </Card>
@@ -523,9 +592,48 @@ const OwnerDashboard = () => {
           )}
         </div>
 
-        {lessons && lessons.length > 0 && (
+        {lessonsByBranch.length > 0 && (
           <Card title="Занятия за период">
-            <Table columns={tableColumns} data={lessons} />
+            <div className="lessons-by-branch">
+              {lessonsByBranch.map((group) => {
+                const branchKey = String(group.branchId || group.branchName);
+                const isOpen = expandedBranches.has(branchKey);
+                return (
+                  <div key={branchKey} className="lessons-branch-group">
+                    <button
+                      type="button"
+                      className={`lessons-branch-header ${isOpen ? 'open' : ''}`}
+                      onClick={() => toggleBranch(branchKey)}
+                      aria-expanded={isOpen}
+                    >
+                      <span className="lessons-branch-chevron">
+                        {isOpen ? <IconChevronUp /> : <IconChevronDown />}
+                      </span>
+                      <span className="lessons-branch-name">{group.branchName}</span>
+                      <span className="lessons-branch-stats">
+                        <span className="lessons-branch-stat">
+                          <span className="lessons-branch-stat-label">Выручка</span>
+                          <span className="lessons-branch-stat-value lessons-branch-revenue">
+                            {formatCurrency(group.revenue)}
+                          </span>
+                        </span>
+                        <span className="lessons-branch-stat">
+                          <span className="lessons-branch-stat-label">Прибыль</span>
+                          <span className={`lessons-branch-stat-value lessons-branch-profit ${group.profit >= 0 ? 'positive' : 'negative'}`}>
+                            {formatCurrency(group.profit)}
+                          </span>
+                        </span>
+                      </span>
+                    </button>
+                    {isOpen && (
+                      <div className="lessons-branch-body">
+                        <Table columns={tableColumnsWithoutBranch} data={group.lessons} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </Card>
         )}
       </div>

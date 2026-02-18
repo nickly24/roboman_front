@@ -16,6 +16,11 @@
   flex: 1;
   margin-left: 260px;
   min-height: 100vh;
+  transition: margin-left 0.2s ease;
+}
+
+.layout-main.sidebar-collapsed {
+  margin-left: 80px;
 }
 
 .layout-content {
@@ -73,6 +78,14 @@
     color: #111827;
     font-size: 22px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .layout-burger svg {
+    width: 22px;
+    height: 22px;
   }
 
   .layout-mobile-title {

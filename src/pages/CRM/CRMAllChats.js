@@ -75,6 +75,14 @@ const CRMAllChats = () => {
     return d.toLocaleDateString('ru', { day: '2-digit', month: '2-digit' });
   };
 
+  const getInitial = (name) => {
+    if (!name || name.startsWith('Chat ')) return '?';
+    const n = name.trim();
+    return n[0].toUpperCase();
+  };
+
+  const unreadCount = (c) => (Number(c.unread_from_client) || 0) + (Number(c.unread_from_team) || 0);
+
   return (
     <CRMLayout>
       <div className="crm-page crm-all-chats-page">
@@ -100,16 +108,20 @@ const CRMAllChats = () => {
             {chats.map((c) => (
               <li key={c.id} className="crm-chat-item crm-chat-item-messenger">
                 <Link to={`/crm/chats/${c.id}`} className="crm-chat-link">
-                  <div className="crm-chat-item-dots">
-                    {Number(c.unread_from_client) > 0 && <span className="crm-dot crm-dot-blue" title="Непрочитанные от клиента" />}
-                    {Number(c.unread_from_team) > 0 && <span className="crm-dot crm-dot-green" title="Непрочитанные от коллег" />}
+                  <div className="crm-chat-item-avatar" aria-hidden>
+                    {getInitial(c.display_name || '')}
                   </div>
                   <div className="crm-chat-item-body">
                     <div className="crm-chat-item-top">
                       <span className="crm-chat-name">{c.display_name || `Chat ${c.telegram_chat_id}`}</span>
-                      {c.last_message?.created_at && (
-                        <span className="crm-chat-item-time">{formatTime(c.last_message.created_at)}</span>
-                      )}
+                      <span className="crm-chat-item-right">
+                        {c.last_message?.created_at && (
+                          <span className="crm-chat-item-time">{formatTime(c.last_message.created_at)}</span>
+                        )}
+                        {unreadCount(c) > 0 && (
+                          <span className="crm-chat-item-unread" title="Непрочитанные">{unreadCount(c)}</span>
+                        )}
+                      </span>
                     </div>
                     <div className="crm-chat-item-meta">{c.branch_name}</div>
                     {c.last_message && (
