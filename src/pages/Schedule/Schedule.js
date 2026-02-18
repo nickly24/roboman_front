@@ -26,14 +26,17 @@ const WEEKDAYS = [
 
 const START_HOUR = 9;
 const END_HOUR = 20;
-const BASE_HOUR_HEIGHT = 90;
-const MIN_ZOOM = 0.6;
-const MAX_ZOOM = 1.6;
 
 const formatTimeShort = (value) => {
   if (!value) return '';
   const parts = String(value).split(':');
   return parts.length >= 2 ? `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}` : String(value);
+};
+
+const minutesToStr = (min) => {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 };
 
 const parseTimeToMinutes = (value) => {
@@ -44,21 +47,47 @@ const parseTimeToMinutes = (value) => {
   return hours * 60 + minutes;
 };
 
-const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-
 const ScheduleForm = ({ branches, initialData, onSubmit, onCancel }) => {
   const [form, setForm] = useState({
     branch_id: initialData?.branch_id ? String(initialData.branch_id) : '',
     weekday: initialData?.weekday ? String(initialData.weekday) : '',
     starts_at: initialData?.starts_at ? formatTimeShort(initialData.starts_at) : '',
     duration_minutes: initialData?.duration_minutes ? String(initialData.duration_minutes) : '60',
+    teacher_id: initialData?.teacher_id != null && initialData?.teacher_id !== '' ? String(initialData.teacher_id) : '',
   });
+  const [branchTeachers, setBranchTeachers] = useState([]);
+
+  useEffect(() => {
+    if (!form.branch_id) {
+      setBranchTeachers([]);
+      return;
+    }
+    let cancelled = false;
+    apiClient
+      .get(API_ENDPOINTS.BRANCH_TEACHERS(form.branch_id))
+      .then((res) => {
+        if (cancelled || !res.data?.ok) return;
+        const list = res.data.data?.items ?? [];
+        setBranchTeachers(Array.isArray(list) ? list : []);
+      })
+      .catch(() => setBranchTeachers([]));
+    return () => { cancelled = true; };
+  }, [form.branch_id]);
 
   const branchOptions = branches.map((b) => ({ value: String(b.id), label: b.name }));
   const weekdayOptions = WEEKDAYS.map((d) => ({ value: String(d.value), label: d.label }));
+  const teacherOptions = [
+    { value: '', label: 'Не назначен' },
+    ...branchTeachers.map((t) => ({ value: String(t.id), label: t.full_name || `ID ${t.id}` })),
+  ];
 
   const handleChange = (field) => (e) => {
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+    const value = e.target.value;
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      if (field === 'branch_id') next.teacher_id = '';
+      return next;
+    });
   };
 
   const handleSubmit = (e) => {
@@ -68,6 +97,7 @@ const ScheduleForm = ({ branches, initialData, onSubmit, onCancel }) => {
       weekday: form.weekday,
       starts_at: form.starts_at,
       duration_minutes: form.duration_minutes,
+      teacher_id: form.teacher_id || undefined,
     });
   };
 
@@ -80,6 +110,13 @@ const ScheduleForm = ({ branches, initialData, onSubmit, onCancel }) => {
         options={branchOptions}
         placeholder="Выберите филиал"
         required
+      />
+      <Select
+        label="Преподаватель"
+        value={form.teacher_id}
+        onChange={handleChange('teacher_id')}
+        options={teacherOptions}
+        placeholder="Выберите преподавателя филиала"
       />
       <Select
         label="День недели"
@@ -118,6 +155,44 @@ const ScheduleForm = ({ branches, initialData, onSubmit, onCancel }) => {
   );
 };
 
+/** По дням строим сегменты: свободные слоты + группы занятий (по одному времени начала) */
+function buildDaySegments(daySlots) {
+  const dayStart = START_HOUR * 60;
+  const dayEnd = END_HOUR * 60;
+  if (!daySlots.length) {
+    return [{ type: 'free', startMin: dayStart, endMin: dayEnd }];
+  }
+  const withMin = daySlots.map((s) => ({
+    ...s,
+    startMin: parseTimeToMinutes(s.starts_at),
+    endMin: parseTimeToMinutes(s.starts_at) + Number(s.duration_minutes || 0),
+  }));
+  withMin.sort((a, b) => a.startMin - b.startMin);
+
+  const byStart = new Map();
+  withMin.forEach((s) => {
+    if (!byStart.has(s.startMin)) byStart.set(s.startMin, []);
+    byStart.get(s.startMin).push(s);
+  });
+  const sortedStarts = Array.from(byStart.keys()).sort((a, b) => a - b);
+
+  const segments = [];
+  let current = dayStart;
+  for (const startMin of sortedStarts) {
+    if (current < startMin) {
+      segments.push({ type: 'free', startMin: current, endMin: startMin });
+    }
+    const slots = byStart.get(startMin);
+    const endMin = Math.max(...slots.map((s) => s.endMin));
+    segments.push({ type: 'group', startMin, endMin, slots });
+    current = endMin;
+  }
+  if (current < dayEnd) {
+    segments.push({ type: 'free', startMin: current, endMin: dayEnd });
+  }
+  return segments;
+}
+
 const Schedule = () => {
   const { isOwner } = useAuth();
   const isMobile = useMediaQuery('(max-width: 720px)');
@@ -129,8 +204,7 @@ const Schedule = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [activeDay, setActiveDay] = useState(1);
-  const [flippedSlots, setFlippedSlots] = useState({});
-  const [zoom, setZoom] = useState(1);
+  const [expandedGroups, setExpandedGroups] = useState({});
 
   useEffect(() => {
     loadSchedules();
@@ -192,7 +266,8 @@ const Schedule = () => {
     setIsModalOpen(true);
   };
 
-  const openEdit = (schedule) => {
+  const openEdit = (schedule, e) => {
+    if (e) e.stopPropagation();
     setEditingSchedule(schedule);
     setIsModalOpen(true);
   };
@@ -209,6 +284,7 @@ const Schedule = () => {
         weekday: payload.weekday,
         starts_at: payload.starts_at,
         duration_minutes: payload.duration_minutes,
+        teacher_id: payload.teacher_id ?? null,
       };
       if (editingSchedule) {
         await apiClient.put(API_ENDPOINTS.SCHEDULE(editingSchedule.id), body);
@@ -224,7 +300,8 @@ const Schedule = () => {
     }
   };
 
-  const handleDelete = async (scheduleId) => {
+  const handleDelete = async (scheduleId, e) => {
+    if (e) e.stopPropagation();
     if (!window.confirm('Удалить этот слот расписания?')) return;
     try {
       await apiClient.delete(API_ENDPOINTS.SCHEDULE(scheduleId));
@@ -248,91 +325,13 @@ const Schedule = () => {
     return map;
   }, [schedules]);
 
-  const scheduleLayouts = useMemo(() => {
-    const layouts = new Map();
-    const dayMinutesStart = START_HOUR * 60;
-    const dayMinutesEnd = END_HOUR * 60;
-
-    WEEKDAYS.forEach((day) => {
-      const slots = schedulesByDay.get(day.value) || [];
-      const items = slots
-        .map((slot) => {
-          const startMin = parseTimeToMinutes(slot.starts_at);
-          const duration = Number(slot.duration_minutes || 0);
-          const endMin = startMin + duration;
-          const displayStart = clamp(startMin, dayMinutesStart, dayMinutesEnd);
-          const displayEnd = clamp(endMin, dayMinutesStart, dayMinutesEnd);
-          if (displayEnd <= dayMinutesStart || displayStart >= dayMinutesEnd || duration <= 0) {
-            return null;
-          }
-          return {
-            slot,
-            startMin,
-            endMin,
-            displayStart,
-            displayEnd,
-          };
-        })
-        .filter(Boolean);
-
-      items.sort((a, b) => a.startMin - b.startMin);
-
-      const groups = [];
-      let currentGroup = [];
-      let currentGroupEnd = null;
-
-      items.forEach((item) => {
-        if (currentGroup.length === 0) {
-          currentGroup = [item];
-          currentGroupEnd = item.endMin;
-          return;
-        }
-        if (item.startMin >= currentGroupEnd) {
-          groups.push(currentGroup);
-          currentGroup = [item];
-          currentGroupEnd = item.endMin;
-        } else {
-          currentGroup.push(item);
-          currentGroupEnd = Math.max(currentGroupEnd, item.endMin);
-        }
-      });
-      if (currentGroup.length) groups.push(currentGroup);
-
-      groups.forEach((group) => {
-        const active = [];
-        const usedCols = [];
-        let maxCols = 1;
-
-        group.forEach((item) => {
-          for (let i = active.length - 1; i >= 0; i -= 1) {
-            if (active[i].endMin <= item.startMin) {
-              usedCols[active[i].col] = false;
-              active.splice(i, 1);
-            }
-          }
-
-          let colIndex = usedCols.findIndex((v) => !v);
-          if (colIndex === -1) {
-            colIndex = usedCols.length;
-            usedCols.push(true);
-          } else {
-            usedCols[colIndex] = true;
-          }
-
-          active.push({ endMin: item.endMin, col: colIndex });
-          maxCols = Math.max(maxCols, usedCols.length);
-          item.col = colIndex;
-        });
-
-        group.forEach((item) => {
-          item.colCount = maxCols;
-        });
-      });
-
-      layouts.set(day.value, items);
+  const daySegments = useMemo(() => {
+    const map = new Map();
+    WEEKDAYS.forEach((d) => {
+      const slots = schedulesByDay.get(d.value) || [];
+      map.set(d.value, buildDaySegments(slots));
     });
-
-    return layouts;
+    return map;
   }, [schedulesByDay]);
 
   const branchOptions = [
@@ -340,25 +339,55 @@ const Schedule = () => {
     ...branches.map((b) => ({ value: String(b.id), label: b.name })),
   ];
 
-  const hourHeight = Math.round(BASE_HOUR_HEIGHT * zoom);
-  const hours = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
-  const gridHeight = (END_HOUR - START_HOUR) * hourHeight;
   const visibleDays = isMobile ? WEEKDAYS.filter((d) => d.value === activeDay) : WEEKDAYS;
-  const dayColumnWidth = (dayValue) => {
-    const daySlots = scheduleLayouts.get(dayValue) || [];
-    const maxCols = daySlots.reduce((max, item) => Math.max(max, item.colCount || 1), 1);
-    return Math.round((280 + (maxCols - 1) * 180) * zoom);
-  };
-  const totalDaysWidth = isMobile
-    ? 0
-    : visibleDays.reduce((sum, d) => sum + dayColumnWidth(d.value), 0) + (visibleDays.length - 1) * 12;
 
-  const toggleSlotDetails = (slotId) => {
-    setFlippedSlots((prev) => ({ ...prev, [slotId]: !prev[slotId] }));
+  const toggleGroup = (dayValue, startMin) => {
+    const key = `${dayValue}-${startMin}`;
+    setExpandedGroups((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const zoomIn = () => setZoom((prev) => Math.min(MAX_ZOOM, Math.round((prev + 0.1) * 10) / 10));
-  const zoomOut = () => setZoom((prev) => Math.max(MIN_ZOOM, Math.round((prev - 0.1) * 10) / 10));
+  const renderSlotCard = (slot, compact = false) => {
+    const assigned = slot.assigned_teacher;
+    return (
+      <div
+        key={slot.id}
+        className="schedule-slot-card"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="schedule-slot-card-main">
+          <span className="schedule-slot-card-time">
+            {formatTimeShort(slot.starts_at)} · {slot.duration_minutes} мин
+          </span>
+          <span className="schedule-slot-card-branch">{slot.branch_name || 'Филиал'}</span>
+          {!compact && (
+            <div className="schedule-slot-card-teachers">
+              {assigned ? (
+                <span className="schedule-slot-teacher">
+                  <span
+                    className="schedule-slot-teacher-dot"
+                    style={{ backgroundColor: assigned.color || '#94a3b8' }}
+                  />
+                  {assigned.full_name}
+                </span>
+              ) : (
+                <span className="schedule-slot-teacher-empty">Преподаватель не назначен</span>
+              )}
+            </div>
+          )}
+        </div>
+        {isOwner && (
+          <div className="schedule-slot-card-actions">
+            <ActionMenu
+              items={[
+                { label: 'Редактировать', icon: '✏️', onClick: (e) => openEdit(slot, e) },
+                { label: 'Удалить', icon: '🗑️', danger: true, onClick: (e) => handleDelete(slot.id, e) },
+              ]}
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <Layout>
@@ -391,139 +420,104 @@ const Schedule = () => {
           </div>
         </Card>
 
-        <Card>
+        <Card className="schedule-card">
           {loading ? (
             <LoadingSpinner size="medium" text="Загрузка расписания..." />
           ) : (
-            <div
-              className="schedule-timeline"
-              style={{
-                '--hour-height': `${hourHeight}px`,
-                '--zoom': zoom,
-                gridTemplateColumns: `${Math.round(90 * zoom)}px 1fr`,
-              }}
-            >
-              <div className="schedule-zoom-controls">
-                <Button size="small" variant="secondary" onClick={zoomOut} disabled={zoom <= MIN_ZOOM}>
-                  −
-                </Button>
-                <div className="schedule-zoom-value">{Math.round(zoom * 100)}%</div>
-                <Button size="small" variant="secondary" onClick={zoomIn} disabled={zoom >= MAX_ZOOM}>
-                  +
-                </Button>
-              </div>
+            <>
               {isMobile && (
-                <div className="schedule-day-switcher">
+                <div className="schedule-day-tabs">
                   {WEEKDAYS.map((day) => (
-                    <Button
+                    <button
                       key={day.value}
-                      size="small"
-                      variant={day.value === activeDay ? 'primary' : 'secondary'}
+                      type="button"
+                      className={`schedule-day-tab ${day.value === activeDay ? 'active' : ''}`}
                       onClick={() => setActiveDay(day.value)}
                     >
                       {day.label}
-                    </Button>
+                    </button>
                   ))}
                 </div>
               )}
-              <div className="schedule-time-column">
-                <div className="schedule-time-header">Время</div>
-                <div className="schedule-time-grid" style={{ height: gridHeight }}>
-                  {hours.map((h) => (
-                    <div key={h} className="schedule-time-cell" style={{ height: hourHeight }}>
-                      {`${String(h).padStart(2, '0')}:00`}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="schedule-days" style={{ height: gridHeight + 32, minWidth: totalDaysWidth }}>
+              <div className="schedule-days-list">
                 {visibleDays.map((day) => {
-                  const daySlots = scheduleLayouts.get(day.value) || [];
-                  const columnWidth = dayColumnWidth(day.value);
+                  const segments = daySegments.get(day.value) || [];
                   return (
-                    <div key={day.value} className="schedule-day-column" style={{ minWidth: `${columnWidth}px` }}>
-                      <div className="schedule-day-header">{day.label}</div>
-                      <div
-                        className="schedule-day-grid"
-                        style={{ height: gridHeight }}
-                      >
-                        {daySlots.length === 0 ? (
-                          <div className="schedule-empty">Нет занятий</div>
+                    <div key={day.value} className="schedule-day-block">
+                      <div className="schedule-day-block-title">{day.label}</div>
+                      <div className="schedule-day-segments">
+                        {segments.length === 0 ? (
+                          <div className="schedule-empty">Нет данных</div>
                         ) : (
-                          daySlots.map((item) => {
-                            const top = ((item.displayStart - START_HOUR * 60) / 60) * hourHeight;
-                            const height = Math.max(
-                              24,
-                              ((item.displayEnd - item.displayStart) / 60) * hourHeight
-                            );
-                            const width = 100 / item.colCount;
-                            const left = item.col * width;
-                            const slot = item.slot;
-                            const teachers = slot.teachers || [];
-                            const primaryTeacher = teachers[0];
-                            const showDetails = !!flippedSlots[slot.id];
-                            return (
-                              <div
-                                key={slot.id}
-                                className="schedule-slot schedule-slot-absolute"
-                                style={{
-                                  top: `${top}px`,
-                                  height: `${height}px`,
-                                  width: `calc(${width}% - 8px)`,
-                                  left: `calc(${left}% + 3px)`,
-                                }}
-                                onClick={() => toggleSlotDetails(slot.id)}
-                              >
-                                {showDetails ? (
-                                  <>
-                                    <div className="schedule-slot-back-list">
-                                      {teachers.length === 0 ? (
-                                        <span className="schedule-slot-teacher-empty">Нет преподавателей</span>
-                                      ) : (
-                                        teachers.map((t) => (
-                                          <span key={t.id} className="schedule-slot-teacher">
-                                            <span
-                                              className="schedule-slot-teacher-dot"
-                                              style={{ backgroundColor: t.color || '#94a3b8' }}
-                                            />
-                                            {t.full_name}
-                                          </span>
-                                        ))
-                                      )}
-                                    </div>
-                                  </>
-                                ) : (
-                                  <>
-                                    <div className="schedule-slot-time">
-                                      {formatTimeShort(slot.starts_at)} · {slot.duration_minutes} мин
-                                    </div>
-                                    <div className="schedule-slot-branch">{slot.branch_name || 'Филиал'}</div>
-                                    <div className="schedule-slot-teachers">
-                                      {primaryTeacher ? (
-                                        <span className="schedule-slot-teacher">
-                                          <span
-                                            className="schedule-slot-teacher-dot"
-                                            style={{ backgroundColor: primaryTeacher.color || '#94a3b8' }}
-                                          />
-                                          {primaryTeacher.full_name}
-                                        </span>
-                                      ) : (
-                                        <span className="schedule-slot-teacher-empty">Нет преподавателей</span>
-                                      )}
-                                    </div>
-                                  </>
-                                )}
-                                {isOwner && (
-                                  <div className="schedule-slot-actions">
-                                    <ActionMenu
-                                      items={[
-                                        { label: 'Редактировать', icon: '✏️', onClick: () => openEdit(slot) },
-                                        { label: 'Удалить', icon: '🗑️', danger: true, onClick: () => handleDelete(slot.id) },
-                                      ]}
-                                    />
+                          segments.map((seg, idx) => {
+                            if (seg.type === 'free') {
+                              const duration = seg.endMin - seg.startMin;
+                              if (duration < 15) return null;
+                              return (
+                                <div
+                                  key={`free-${idx}`}
+                                  className="schedule-segment schedule-segment-free"
+                                >
+                                  <span className="schedule-segment-free-label">
+                                    {minutesToStr(seg.startMin)} – {minutesToStr(seg.endMin)}
+                                  </span>
+                                  <span className="schedule-segment-free-text">свободно</span>
+                                </div>
+                              );
+                            }
+                            const { startMin, endMin, slots } = seg;
+                            const groupKey = `${day.value}-${startMin}`;
+                            const isExpanded = expandedGroups[groupKey];
+                            const isGroup = slots.length > 1;
+
+                            if (isGroup && !isExpanded) {
+                              return (
+                                <div
+                                  key={`group-${idx}`}
+                                  className="schedule-segment schedule-segment-group schedule-segment-group-collapsed"
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={() => toggleGroup(day.value, startMin)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                      e.preventDefault();
+                                      toggleGroup(day.value, startMin);
+                                    }
+                                  }}
+                                >
+                                  <span className="schedule-segment-group-time">
+                                    {minutesToStr(startMin)}
+                                  </span>
+                                  <span className="schedule-segment-group-count">
+                                    {slots.length} занятия
+                                  </span>
+                                  <span className="schedule-segment-group-chevron">▼</span>
+                                </div>
+                              );
+                            }
+
+                            if (isGroup && isExpanded) {
+                              return (
+                                <div key={`group-${idx}`} className="schedule-segment schedule-segment-group schedule-segment-group-expanded">
+                                  <button
+                                    type="button"
+                                    className="schedule-segment-group-header"
+                                    onClick={() => toggleGroup(day.value, startMin)}
+                                  >
+                                    <span className="schedule-segment-group-time">{minutesToStr(startMin)}</span>
+                                    <span className="schedule-segment-group-count">{slots.length} занятия</span>
+                                    <span className="schedule-segment-group-chevron">▲</span>
+                                  </button>
+                                  <div className="schedule-segment-group-cards">
+                                    {slots.map((s) => renderSlotCard(s))}
                                   </div>
-                                )}
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div key={`slot-${idx}`} className="schedule-segment schedule-segment-slot">
+                                {renderSlotCard(slots[0])}
                               </div>
                             );
                           })
@@ -533,7 +527,7 @@ const Schedule = () => {
                   );
                 })}
               </div>
-            </div>
+            </>
           )}
         </Card>
 

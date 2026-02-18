@@ -1,3 +1,5 @@
+/* --- Страница расписания (новая вёрстка: список по дням, свободные слоты, группы по времени) --- */
+
 .schedule-page {
   display: flex;
   flex-direction: column;
@@ -25,125 +27,248 @@
   gap: 16px;
 }
 
-.schedule-timeline {
-  display: grid;
-  grid-template-columns: 90px 1fr;
-  gap: 12px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  position: relative;
-}
-
-.schedule-time-column {
-  display: flex;
-  flex-direction: column;
-  position: sticky;
-  left: 0;
-  z-index: 3;
-  background: #ffffff;
-  padding-right: 4px;
-}
-
-.schedule-time-header {
-  font-size: calc(12px * var(--zoom, 1));
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 8px;
-}
-
-.schedule-time-grid {
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  overflow: hidden;
-  background: #ffffff;
-}
-
-.schedule-time-cell {
-  font-size: calc(12px * var(--zoom, 1));
-  color: #6b7280;
-  padding: calc(6px * var(--zoom, 1)) calc(8px * var(--zoom, 1));
-  border-bottom: 1px solid #f3f4f6;
-  display: flex;
-  align-items: flex-start;
-}
-
-.schedule-days {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  min-width: 1800px;
-}
-
-.schedule-day-column {
-  display: flex;
-  flex-direction: column;
-  min-width: 240px;
-}
-
-.schedule-day-header {
-  font-size: calc(12px * var(--zoom, 1));
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 8px;
-}
-
-.schedule-day-grid {
-  position: relative;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: repeating-linear-gradient(
-    to bottom,
-    #ffffff,
-    #ffffff calc(var(--hour-height) - 1px),
-    #f3f4f6 var(--hour-height)
-  );
+.schedule-card {
+  padding: 0;
+  /* overflow: visible — чтобы выпадающее меню действий (Редактировать/Удалить) не обрезалось */
   overflow: visible;
-  padding: 4px;
+}
+
+/* Табы дней на мобиле */
+.schedule-day-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.schedule-day-tab {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.schedule-day-tab:hover {
+  background: #f9fafb;
+  color: #374151;
+}
+
+.schedule-day-tab.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+/* Сетка дней: горизонтальный скролл на десктопе, один столбец на мобиле */
+.schedule-days-list {
+  display: flex;
+  gap: 24px;
+  padding: 24px;
+  overflow-x: auto;
+  min-height: 200px;
+}
+
+@media (max-width: 720px) {
+  .schedule-days-list {
+    flex-direction: column;
+    overflow-x: visible;
+    padding: 16px;
+  }
+}
+
+/* Один день — колонка */
+.schedule-day-block {
+  flex: 0 0 auto;
+  min-width: 280px;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 720px) {
+  .schedule-day-block {
+    min-width: 0;
+    max-width: none;
+  }
+}
+
+.schedule-day-block-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+/* Вертикальный список сегментов внутри дня */
+.schedule-day-segments {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .schedule-empty {
-  font-size: 12px;
+  font-size: 14px;
   color: #9ca3af;
-  padding: 8px;
+  padding: 16px;
+  text-align: center;
 }
 
-.schedule-slot {
-  border: 1px solid #e5e7eb;
+/* --- Сегмент: свободное окно --- */
+.schedule-segment-free {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
   border-radius: 8px;
-  background: #f9fafb;
-  padding: calc(8px * var(--zoom, 1)) calc(12px * var(--zoom, 1));
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+}
+
+.schedule-segment-free-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.schedule-segment-free-text {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* --- Сегмент: одно занятие (карточка) --- */
+.schedule-segment-slot {
+  border-radius: 10px;
+  overflow: visible;
+}
+
+/* --- Сегмент: группа в свернутом виде (клик раскрывает) --- */
+.schedule-segment-group-collapsed {
   display: flex;
-  flex-direction: column;
-  gap: calc(6px * var(--zoom, 1));
-  box-sizing: border-box;
-  overflow: hidden;
-  position: relative;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
   cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
 }
 
-.schedule-slot-absolute {
-  position: absolute;
-  box-shadow: 0 4px 10px rgba(17, 24, 39, 0.08);
+.schedule-segment-group-collapsed:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
 }
 
-.schedule-slot-time {
-  font-size: calc(12px * var(--zoom, 1));
+.schedule-segment-group-time {
+  font-size: 14px;
   font-weight: 600;
-  color: #111827;
+  color: #1e40af;
 }
 
-.schedule-slot-branch {
-  font-size: calc(12px * var(--zoom, 1));
+.schedule-segment-group-count {
+  font-size: 13px;
+  color: #3b82f6;
+  flex: 1;
+}
+
+.schedule-segment-group-chevron {
+  font-size: 10px;
+  color: #3b82f6;
+}
+
+/* --- Группа в развёрнутом виде --- */
+.schedule-segment-group-expanded {
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  overflow: visible;
+  background: #f8fafc;
+}
+
+.schedule-segment-group-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: none;
+  background: #eff6ff;
+  cursor: pointer;
+  font-size: 14px;
   font-weight: 600;
-  color: #1f2937;
+  color: #1e40af;
+  transition: background 0.15s;
 }
 
-.schedule-slot-teachers {
+.schedule-segment-group-header:hover {
+  background: #dbeafe;
+}
+
+.schedule-segment-group-header .schedule-segment-group-count {
+  flex: 1;
+  text-align: left;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.schedule-segment-group-cards {
   display: flex;
   flex-direction: column;
-  gap: calc(4px * var(--zoom, 1));
-  font-size: calc(11px * var(--zoom, 1));
-  color: #6b7280;
+  gap: 8px;
+  padding: 12px;
+}
+
+/* --- Карточка одного занятия --- */
+.schedule-slot-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.15s;
+}
+
+.schedule-slot-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.schedule-slot-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.schedule-slot-card-time {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.schedule-slot-card-branch {
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.schedule-slot-card-teachers {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
 }
 
 .schedule-slot-teacher {
@@ -154,61 +279,22 @@
 }
 
 .schedule-slot-teacher-dot {
-  width: calc(8px * var(--zoom, 1));
-  height: calc(8px * var(--zoom, 1));
+  width: 8px;
+  height: 8px;
   border-radius: 999px;
-  display: inline-block;
+  flex-shrink: 0;
 }
 
 .schedule-slot-teacher-empty {
-  font-size: calc(12px * var(--zoom, 1));
-  color: #9ca3af;
-}
-
-.schedule-slot-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.schedule-slot-back-list {
-  display: flex;
-  flex-direction: column;
-  gap: calc(4px * var(--zoom, 1));
-  font-size: calc(11px * var(--zoom, 1));
-  color: #6b7280;
-  overflow: auto;
-  padding-top: 2px;
-}
-
-.schedule-day-switcher {
-  grid-column: 1 / -1;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 8px;
-}
-
-.schedule-zoom-controls {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #ffffff;
-  padding: 6px 8px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  z-index: 999;
-}
-
-.schedule-zoom-value {
   font-size: 12px;
-  color: #6b7280;
-  min-width: 44px;
-  text-align: center;
+  color: #94a3b8;
 }
 
+.schedule-slot-card-actions {
+  flex-shrink: 0;
+}
+
+/* Форма добавления/редактирования (в модалке) */
 .schedule-form {
   display: flex;
   flex-direction: column;
@@ -222,6 +308,7 @@
   margin-top: 4px;
 }
 
+/* Адаптив */
 @media (max-width: 720px) {
   .schedule-header {
     flex-direction: column;
@@ -234,22 +321,5 @@
 
   .schedule-filters-grid {
     grid-template-columns: 1fr;
-  }
-
-  .schedule-timeline {
-    grid-template-columns: 1fr;
-    overflow-x: visible;
-  }
-
-  .schedule-time-column {
-    display: none;
-  }
-
-  .schedule-days {
-    min-width: 0;
-  }
-
-  .schedule-day-column {
-    min-width: 0;
   }
 }
