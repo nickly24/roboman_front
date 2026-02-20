@@ -4,6 +4,8 @@
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   overflow: visible;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .card-header {

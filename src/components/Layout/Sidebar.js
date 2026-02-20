@@ -35,7 +35,7 @@ const iconMap = {
   settings: IconSettings,
 };
 
-const Sidebar = ({ isOpen = false, onClose, expanded = true, onToggleCollapse }) => {
+const Sidebar = ({ isOpen = false, onClose, expanded = true, onToggleCollapse, isMobile = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, isOwner, isTeacher, crmAccess } = useAuth();
@@ -104,14 +104,14 @@ const Sidebar = ({ isOpen = false, onClose, expanded = true, onToggleCollapse })
           type="button"
           className="sidebar-toggle"
           onClick={onToggleCollapse}
-          title={expanded ? 'Свернуть' : 'Развернуть'}
-          aria-label={expanded ? 'Свернуть сайдбар' : 'Развернуть сайдбар'}
+          title={isMobile ? 'Свернуть' : (expanded ? 'Свернуть' : 'Развернуть')}
+          aria-label={isMobile ? 'Закрыть меню' : (expanded ? 'Свернуть сайдбар' : 'Развернуть сайдбар')}
         >
           <span className="sidebar-toggle-icon">
-            {expanded ? <IconChevronLeft /> : <IconChevronRight />}
+            {isMobile ? <IconChevronLeft /> : (expanded ? <IconChevronLeft /> : <IconChevronRight />)}
           </span>
           <span className="sidebar-toggle-label">
-            {expanded ? 'Свернуть' : 'Развернуть'}
+            {isMobile ? 'Свернуть' : (expanded ? 'Свернуть' : 'Развернуть')}
           </span>
         </button>
         <button onClick={handleLogout} className="sidebar-logout">

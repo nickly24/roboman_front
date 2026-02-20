@@ -163,6 +163,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 24px;
+  min-width: 0;
 }
 
 .dashboard-empty {
@@ -368,6 +369,17 @@
 
 @media (max-width: 900px) {
   .salary-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard,
+  .dashboard-grid {
+    min-width: 0;
+  }
+
+  .dashboard-grid {
     grid-template-columns: 1fr;
   }
 }
