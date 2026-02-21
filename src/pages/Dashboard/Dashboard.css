@@ -428,12 +428,13 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .dashboard-lesson-card:hover {
   border-color: var(--color-primary-light);
-  box-shadow: var(--shadow-xs);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .dashboard-lesson-card-time {

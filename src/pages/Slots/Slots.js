@@ -114,10 +114,7 @@ const Slots = () => {
   const isMobile = useMediaQuery('(max-width: 720px)');
   const [loading, setLoading] = useState(true);
   const [slots, setSlots] = useState([]);
-  const [activeDay, setActiveDay] = useState(() => {
-    const d = new Date().getDay();
-    return d === 0 ? 7 : d;
-  });
+  const [activeDay, setActiveDay] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState(null);
   const [createDefaultDay, setCreateDefaultDay] = useState(null);
@@ -128,9 +125,7 @@ const Slots = () => {
   const loadSlots = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (activeDay !== '' && activeDay != null) params.append('day_of_week', activeDay);
-      const response = await apiClient.get(`${API_ENDPOINTS.SLOTS}?${params.toString()}`);
+      const response = await apiClient.get(API_ENDPOINTS.SLOTS);
       if (response.data.ok) {
         const list = response.data.data?.items ?? [];
         setSlots(Array.isArray(list) ? list : []);
@@ -146,7 +141,7 @@ const Slots = () => {
 
   useEffect(() => {
     loadSlots();
-  }, [activeDay]);
+  }, []);
 
   useEffect(() => {
     if (isOwner) {

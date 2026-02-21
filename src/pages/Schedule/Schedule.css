@@ -239,11 +239,13 @@
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.15s;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
 
 .schedule-slot-card:hover {
   box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+  border-color: var(--color-primary-light);
 }
 
 .schedule-slot-card-main {

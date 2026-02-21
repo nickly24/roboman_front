@@ -103,13 +103,13 @@ const CRMBranches = () => {
             {items.map((row) => (
               <li key={row.branch_id} className="crm-branch-item">
                 <div className="crm-branch-info">
-                  <Link to={`/crm/branches/${row.branch_id}/chats`} className="crm-branch-name">
+                  <Link to={`/crm/chats?branch_id=${row.branch_id}`} className="crm-branch-name">
                     {row.name}
                   </Link>
                   <span className="crm-branch-address">{row.address || '—'}</span>
                 </div>
                 <div className="crm-branch-actions">
-                  <Link to={`/crm/branches/${row.branch_id}/chats`}>
+                  <Link to={`/crm/chats?branch_id=${row.branch_id}`}>
                     <Button variant="secondary">Чаты</Button>
                   </Link>
                   <Button variant="secondary" onClick={() => handleRemoveBranch(row.branch_id)}>

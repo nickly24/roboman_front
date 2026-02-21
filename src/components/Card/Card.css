@@ -6,6 +6,16 @@
   overflow: visible;
   min-width: 0;
   max-width: 100%;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-gray-300);
+}
+
+html.theme-dark .card:hover {
+  border-color: var(--color-gray-600);
 }
 
 .card-header {

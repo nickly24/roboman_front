@@ -206,6 +206,14 @@ html.theme-dark .lesson-badge-paid {
   flex-direction: column;
   gap: 6px;
   min-height: 120px;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.lessons-calendar-event:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+  border-color: var(--color-primary-light);
 }
 
 .lessons-calendar-event-bar {
@@ -372,6 +380,7 @@ html.theme-dark .lessons-calendar-event-badge {
   border-radius: var(--radius-md);
   background: var(--color-bg-elevated);
   display: flex;
+  transition: box-shadow 0.2s ease, background 0.2s ease;
   flex-direction: column;
   gap: 6px;
   font-size: var(--font-size-xs);

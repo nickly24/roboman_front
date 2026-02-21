@@ -109,12 +109,13 @@
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  transition: box-shadow 0.2s, border-color 0.2s;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .slots-my-item:hover {
-  border-color: var(--color-gray-400);
-  box-shadow: var(--shadow-sm);
+  border-color: var(--color-primary-light);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .slots-my-item .slots-status-badge {
@@ -158,6 +159,11 @@
   background: var(--color-bg-surface);
   border-radius: var(--radius-lg);
   border-left: 4px solid var(--color-gray-500);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.slots-time-row:hover {
+  box-shadow: var(--shadow-sm);
 }
 
 .slots-time-label {
@@ -192,6 +198,12 @@
   font-size: var(--font-size-base);
   color: var(--color-text-primary);
   font-weight: var(--font-weight-medium);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.slots-teacher-chip:hover {
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
 }
 
 .slots-status-badge {

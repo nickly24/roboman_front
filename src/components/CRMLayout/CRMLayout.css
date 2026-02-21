@@ -305,6 +305,13 @@
   min-width: 0;
 }
 
+/* Чаты: фикс высоты main, чтобы скролл был только внутри областей */
+.crm-layout .layout-main.layout-main-chat {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
 .crm-layout .layout-main .layout-content {
   flex: 1;
   min-height: 0;
@@ -317,6 +324,17 @@
   min-height: 100vh;
   min-width: 0;
   box-sizing: border-box;
+}
+
+/* Чаты: фиксированная высота, скролл только внутри .crm-messenger-left-list и .crm-messenger-messages */
+.crm-layout .layout-main .layout-content.layout-content-chat-view {
+  padding: 0;
+  min-height: 0;
+  flex: 1;
+  height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .crm-layout.sidebar-collapsed .layout-main {
@@ -445,6 +463,17 @@
     max-width: 100%;
     margin-left: 0;
     margin-right: 0;
-    padding: 0;
+    padding: 0 10px;
+    box-sizing: border-box;
+  }
+
+  /* ИИ-ассистент: почти во всю ширину, 10px по бокам */
+  .crm-layout .layout-content.layout-content-nchats {
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 10px;
+    box-sizing: border-box;
   }
 }

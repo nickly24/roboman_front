@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import Login from './pages/Login/Login';
@@ -17,13 +17,19 @@ import Salary from './pages/Salary/Salary';
 import Slots from './pages/Slots/Slots';
 import CRMBranches from './pages/CRM/CRMBranches';
 import CRMBranchChats from './pages/CRM/CRMBranchChats';
-import CRMAllChats from './pages/CRM/CRMAllChats';
-import CRMChatView from './pages/CRM/CRMChatView';
+import CRMChatsMessenger from './pages/CRM/CRMChatsMessenger';
+import CRMNchats from './pages/CRM/CRMNchats';
 import CRMNotifications from './pages/CRM/CRMNotifications';
 import CRMSettings from './pages/CRM/CRMSettings';
+import CRMRegistrationRequests from './pages/CRM/CRMRegistrationRequests';
 import Accounting from './pages/Accounting/Accounting';
 import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
+
+const BranchChatsRedirect = () => {
+  const { branchId } = useParams();
+  return <Navigate to={`/crm/chats?branch_id=${branchId}`} replace />;
+};
 
 const DashboardRoute = () => {
   const { isOwner } = useAuth();
@@ -146,6 +152,14 @@ function App() {
             }
           />
           <Route
+            path="/crm/requests"
+            element={
+              <ProtectedRoute requireCrmAccess>
+                <CRMRegistrationRequests />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/crm/notifications"
             element={
               <ProtectedRoute requireCrmAccess>
@@ -165,7 +179,7 @@ function App() {
             path="/crm/branches/:branchId/chats"
             element={
               <ProtectedRoute requireCrmAccess>
-                <CRMBranchChats />
+                <BranchChatsRedirect />
               </ProtectedRoute>
             }
           />
@@ -173,7 +187,15 @@ function App() {
             path="/crm/chats"
             element={
               <ProtectedRoute requireCrmAccess>
-                <CRMAllChats />
+                <CRMChatsMessenger />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/crm/nchats"
+            element={
+              <ProtectedRoute requireCrmAccess>
+                <CRMNchats />
               </ProtectedRoute>
             }
           />
@@ -181,7 +203,7 @@ function App() {
             path="/crm/chats/:chatId"
             element={
               <ProtectedRoute requireCrmAccess>
-                <CRMChatView />
+                <CRMChatsMessenger />
               </ProtectedRoute>
             }
           />
