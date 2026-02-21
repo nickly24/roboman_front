@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import apiClient from '../../services/api';
 import { API_ENDPOINTS } from '../../config/api';
-import { formatCurrency, formatNumber, getCurrentMonth } from '../../utils/format';
+import { formatCurrency, formatDateTime, formatNumber, getCurrentMonth } from '../../utils/format';
 import Layout from '../../components/Layout/Layout';
 import Card from '../../components/Card/Card';
 import KPICard from '../../components/KPICard/KPICard';
-import Table from '../../components/Table/Table';
 import Button from '../../components/Button/Button';
 import Input from '../../components/Input/Input';
+import Select from '../../components/Select/Select';
 import DepartmentSelector from '../../components/DepartmentSelector/DepartmentSelector';
 import LoadingSpinner from '../../components/Loading/LoadingSpinner';
 import useMediaQuery from '../../hooks/useMediaQuery';
@@ -26,11 +26,8 @@ import {
 import {
   Line,
   ComposedChart,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   Legend,
   ResponsiveContainer,
@@ -90,10 +87,30 @@ const OwnerDashboard = () => {
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [expandedBranches, setExpandedBranches] = useState(new Set());
+  const [branchesOptions, setBranchesOptions] = useState([]);
+  const [teachersOptions, setTeachersOptions] = useState([]);
 
   useEffect(() => {
     loadDashboard();
   }, [month, rangeStartMonth, rangeEndMonth, periodMode, filters, selectedDepartment]);
+
+  useEffect(() => {
+    Promise.all([
+      apiClient.get(API_ENDPOINTS.BRANCHES),
+      apiClient.get(API_ENDPOINTS.TEACHERS),
+    ]).then(([brResp, teachResp]) => {
+      if (brResp.data?.ok) {
+        const data = brResp.data.data;
+        const list = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
+        setBranchesOptions([{ value: '', label: 'Все филиалы' }, ...list.map((b) => ({ value: String(b.id), label: b.name || `Филиал #${b.id}` }))]);
+      }
+      if (teachResp.data?.ok) {
+        const data = teachResp.data.data;
+        const list = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
+        setTeachersOptions([{ value: '', label: 'Все преподаватели' }, ...list.filter((t) => t.status === 'working').map((t) => ({ value: String(t.id), label: t.full_name || `Преподаватель #${t.id}` }))]);
+      }
+    }).catch(() => {});
+  }, []);
 
   const kpi = dashboardData?.kpi;
   const series_by_month = dashboardData?.series_by_month || [];
@@ -106,7 +123,7 @@ const OwnerDashboard = () => {
       ? lessonsFromData
       : [];
 
-  // Группировка занятий по филиалам с выручкой и прибылью (хук должен вызываться до любых return)
+  // Группировка занятий по филиалам с выручкой, зарплатой и прибылью
   const lessonsByBranch = useMemo(() => {
     if (!lessons || lessons.length === 0) return [];
     const map = new Map();
@@ -115,13 +132,14 @@ const OwnerDashboard = () => {
       const branchName = lesson.branch_name || 'Без филиала';
       const branchKey = String(branchId || branchName);
       if (!map.has(branchKey)) {
-        map.set(branchKey, { branchId, branchName, lessons: [], revenue: 0, profit: 0 });
+        map.set(branchKey, { branchId, branchName, lessons: [], revenue: 0, salary: 0, profit: 0 });
       }
       const row = map.get(branchKey);
       row.lessons.push(lesson);
       const rev = Number(lesson.revenue) || (lesson.price_snapshot && lesson.paid_children ? lesson.price_snapshot * (lesson.paid_children || 0) : 0);
       const sal = Number(lesson.teacher_salary) || 0;
       row.revenue += rev;
+      row.salary += sal;
       row.profit += rev - sal;
     });
     return Array.from(map.values()).sort((a, b) => (a.branchName || '').localeCompare(b.branchName || ''));
@@ -338,42 +356,6 @@ const OwnerDashboard = () => {
     });
   };
 
-  const tableColumns = [
-    { key: 'starts_at', title: 'Дата/Время', render: (value) => new Date(value).toLocaleString('ru-RU') },
-    { key: 'branch_name', title: 'Филиал' },
-    { key: 'teacher_name', title: 'Преподаватель' },
-    { key: 'paid_children', title: 'Платные', align: 'center' },
-    { key: 'trial_children', title: 'Пробные', align: 'center' },
-    { key: 'total_children', title: 'Всего', align: 'center' },
-    {
-      key: 'instruction',
-      title: 'Инструкция',
-      render: (_, row) => {
-        if (row.is_creative) return 'Творческое';
-        return row.instruction_name || '—';
-      },
-    },
-    { key: 'revenue', title: 'Выручка', render: (value) => formatCurrency(value || 0), align: 'right' },
-    { 
-      key: 'profit', 
-      title: 'Прибыль', 
-      render: (_, row) => {
-        const revenue = row.revenue || 0;
-        const salary = row.teacher_salary || 0;
-        const profit = revenue - salary;
-        return (
-          <span style={{ color: profit >= 0 ? '#059669' : '#dc2626' }}>
-            {formatCurrency(profit)}
-          </span>
-        );
-      }, 
-      align: 'right' 
-    },
-  ];
-
-  // Колонки таблицы без филиала (для блока внутри филиала)
-  const tableColumnsWithoutBranch = tableColumns.filter((col) => col.key !== 'branch_name');
-
   return (
     <Layout>
       <div className="dashboard">
@@ -446,19 +428,19 @@ const OwnerDashboard = () => {
               onChange={(e) => setSelectedDepartment(e.target.value)}
               label="Отдел"
             />
-            <Input
-              type="text"
-              label="Филиал ID"
+            <Select
+              label="Филиал"
               value={filters.branch_id}
               onChange={(e) => setFilters({ ...filters, branch_id: e.target.value })}
-              placeholder="Опционально"
+              options={branchesOptions}
+              placeholder="Все филиалы"
             />
-            <Input
-              type="text"
-              label="Преподаватель ID"
+            <Select
+              label="Преподаватель"
               value={filters.teacher_id}
               onChange={(e) => setFilters({ ...filters, teacher_id: e.target.value })}
-              placeholder="Опционально"
+              options={teachersOptions}
+              placeholder="Все преподаватели"
             />
             <div className="filters-actions">
               <Button onClick={loadDashboard} variant="primary">Применить</Button>
@@ -487,38 +469,38 @@ const OwnerDashboard = () => {
               title="Выручка"
               value={formatCurrency(kpi.revenue_sum || kpi.revenue || 0)}
               icon={<IconRevenue />}
-              color="#059669"
+              color="var(--color-success)"
             />
             <KPICard
               title="Прибыль"
               value={formatCurrency(profit)}
               subtitle={profit >= 0 ? 'Выручка - зарплаты' : 'Отрицательная'}
               icon={<IconProfit />}
-              color={profit >= 0 ? "#10b981" : "#ef4444"}
+              color={profit >= 0 ? 'var(--color-success)' : 'var(--color-error)'}
             />
             <KPICard
               title="Платные дети"
               value={formatNumber(kpi.paid_sum || kpi.paid_children_sum || kpi.paid_children || 0)}
               icon={<IconPeople />}
-              color="#0369a1"
+              color="var(--color-info)"
             />
             <KPICard
               title="Пробные дети"
               value={formatNumber(kpi.trial_sum || kpi.trial_children_sum || kpi.trial_children || 0)}
               icon={<IconTarget />}
-              color="#7c3aed"
+              color="var(--color-primary)"
             />
             <KPICard
               title="Всего детей"
               value={formatNumber(kpi.total_children_sum || kpi.total_children || 0)}
               icon={<IconChartBar />}
-              color="#dc2626"
+              color="var(--color-primary)"
             />
             <KPICard
               title="Занятий"
               value={formatNumber(kpi.lessons_count || 0)}
               icon={<IconLessons />}
-              color="#ea580c"
+              color="var(--color-orange)"
             />
             <KPICard
               title="Среднее на занятие"
@@ -526,7 +508,7 @@ const OwnerDashboard = () => {
                      (kpi.lessons_count && kpi.lessons_count > 0 && kpi.total_children_sum ? 
                       formatNumber((kpi.total_children_sum / kpi.lessons_count).toFixed(1)) : '0')}
               icon={<IconChartLine />}
-              color="#0891b2"
+              color="var(--color-secondary)"
             />
           </div>
         )}
@@ -535,22 +517,33 @@ const OwnerDashboard = () => {
           <Card title="Рост выручки, зарплат и прибыли">
             <ResponsiveContainer width="100%" height={isMobile ? 240 : 300}>
               <ComposedChart data={revenueSalaryProfitChartData} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey="dateKey"
                   tickFormatter={formatChartDateLabel}
                   interval="preserveStartEnd"
                   minTickGap={24}
+                  stroke="var(--color-border)"
+                  tick={{ fill: 'var(--color-text-secondary)', fontSize: 12 }}
                 />
-                <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                <YAxis
+                  tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                  stroke="var(--color-border)"
+                  tick={{ fill: 'var(--color-text-secondary)', fontSize: 12 }}
+                />
                 <Tooltip
                   formatter={(value, name) => [formatCurrency(value), name]}
                   labelFormatter={formatChartDateLabel}
+                  contentStyle={{
+                    background: 'var(--color-bg-surface)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-md)',
+                  }}
+                  labelStyle={{ color: 'var(--color-text-primary)' }}
                 />
                 {!isMobile && <Legend />}
-                <Line type="monotone" dataKey="revenue" stroke="#059669" name="Выручка" strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="salary" stroke="#ea580c" name="Зарплаты" strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="profit" stroke="#0369a1" name="Прибыль" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="revenue" stroke="var(--color-info)" name="Выручка" strokeWidth={2} dot={{ r: 4, fill: 'var(--color-info)' }} />
+                <Line type="monotone" dataKey="salary" stroke="var(--color-orange)" name="Зарплаты" strokeWidth={2} dot={{ r: 4, fill: 'var(--color-orange)' }} />
+                <Line type="monotone" dataKey="profit" stroke="var(--color-success)" name="Прибыль" strokeWidth={2} dot={{ r: 4, fill: 'var(--color-success)' }} />
               </ComposedChart>
             </ResponsiveContainer>
           </Card>
@@ -559,35 +552,59 @@ const OwnerDashboard = () => {
         <div className="dashboard-grid">
           {top_branches && top_branches.length > 0 && (
             <Card title="Топ филиалов">
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={top_branches.map(item => ({
-                  name: item.branch_name || item.name,
-                  revenue: item.revenue_sum || item.revenue || 0,
-                }))}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="revenue" fill="#059669" name="Выручка" />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="dashboard-top-bars">
+                {top_branches.map((item) => {
+                  const name = item.branch_name || item.name || '—';
+                  const value = item.revenue_sum || item.revenue || 0;
+                  const maxVal = Math.max(...top_branches.map((b) => b.revenue_sum || b.revenue || 0), 1);
+                  const pct = (value / maxVal) * 100;
+                  return (
+                    <div key={String(item.branch_id || name)} className="dashboard-top-bar-row">
+                      <div className="dashboard-top-bar-label" title={name}>
+                        {name}
+                      </div>
+                      <div className="dashboard-top-bar-bar-wrap">
+                        <div className="dashboard-top-bar-track">
+                          <div
+                            className="dashboard-top-bar-fill dashboard-top-bar-fill-success"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <div className="dashboard-top-bar-value">{formatCurrency(value)}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </Card>
           )}
 
           {top_teachers && top_teachers.length > 0 && (
             <Card title="Топ преподавателей">
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={top_teachers.map(item => ({
-                  name: item.teacher_name || item.name,
-                  lessons_count: item.lessons_count || 0,
-                }))}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="lessons_count" fill="#0369a1" name="Занятий" />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="dashboard-top-bars">
+                {top_teachers.map((item) => {
+                  const name = item.teacher_name || item.name || '—';
+                  const value = item.lessons_count || 0;
+                  const maxVal = Math.max(...top_teachers.map((t) => t.lessons_count || 0), 1);
+                  const pct = (value / maxVal) * 100;
+                  return (
+                    <div key={String(item.teacher_id || name)} className="dashboard-top-bar-row">
+                      <div className="dashboard-top-bar-label" title={name}>
+                        {name}
+                      </div>
+                      <div className="dashboard-top-bar-bar-wrap">
+                        <div className="dashboard-top-bar-track">
+                          <div
+                            className="dashboard-top-bar-fill dashboard-top-bar-fill-primary"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <div className="dashboard-top-bar-value">{formatNumber(value)} занятий</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </Card>
           )}
         </div>
@@ -610,24 +627,66 @@ const OwnerDashboard = () => {
                         {isOpen ? <IconChevronUp /> : <IconChevronDown />}
                       </span>
                       <span className="lessons-branch-name">{group.branchName}</span>
-                      <span className="lessons-branch-stats">
-                        <span className="lessons-branch-stat">
-                          <span className="lessons-branch-stat-label">Выручка</span>
-                          <span className="lessons-branch-stat-value lessons-branch-revenue">
-                            {formatCurrency(group.revenue)}
-                          </span>
+                      <span className="lessons-branch-stats lessons-branch-stats-inline">
+                        <span className="lessons-branch-stat-inline lessons-branch-stat-revenue">
+                          Выручка <strong>{formatCurrency(group.revenue)}</strong>
                         </span>
-                        <span className="lessons-branch-stat">
-                          <span className="lessons-branch-stat-label">Прибыль</span>
-                          <span className={`lessons-branch-stat-value lessons-branch-profit ${group.profit >= 0 ? 'positive' : 'negative'}`}>
-                            {formatCurrency(group.profit)}
-                          </span>
+                        <span className="lessons-branch-stat-inline lessons-branch-stat-salary">
+                          Зарплата <strong>{formatCurrency(group.salary)}</strong>
+                        </span>
+                        <span className={`lessons-branch-stat-inline lessons-branch-stat-profit ${group.profit >= 0 ? 'positive' : 'negative'}`}>
+                          Прибыль <strong>{formatCurrency(group.profit)}</strong>
                         </span>
                       </span>
                     </button>
                     {isOpen && (
                       <div className="lessons-branch-body">
-                        <Table columns={tableColumnsWithoutBranch} data={group.lessons} />
+                        <div className="dashboard-lessons-cards">
+                          {group.lessons.map((lesson) => {
+                            const revenue = Number(lesson.revenue) || (lesson.price_snapshot && lesson.paid_children ? lesson.price_snapshot * (lesson.paid_children || 0) : 0);
+                            const salary = lesson.teacher_salary || 0;
+                            const profit = revenue - salary;
+                            return (
+                              <div key={lesson.id} className="dashboard-lesson-card">
+                                <div className="dashboard-lesson-card-time">
+                                  {formatDateTime(lesson.starts_at)}
+                                </div>
+                                <div className="dashboard-lesson-card-teacher">
+                                  <span
+                                    className="dashboard-lesson-teacher-dot"
+                                    style={{ backgroundColor: (lesson.teacher_color || lesson.teacherColor || '').trim() ? (String(lesson.teacher_color || lesson.teacherColor).trim().startsWith('#') ? String(lesson.teacher_color || lesson.teacherColor).trim() : `#${String(lesson.teacher_color || lesson.teacherColor).trim()}`) : '#94a3b8' }}
+                                    aria-hidden
+                                  />
+                                  {lesson.teacher_name || '—'}
+                                </div>
+                                <div className="dashboard-lesson-card-stats">
+                                  <span className="dashboard-lesson-stat dashboard-lesson-stat-paid">
+                                    <span className="dashboard-lesson-stat-label">Платные</span>
+                                    <span className="dashboard-lesson-stat-value">{lesson.paid_children ?? 0}</span>
+                                  </span>
+                                  <span className="dashboard-lesson-stat dashboard-lesson-stat-trial">
+                                    <span className="dashboard-lesson-stat-label">пробные</span>
+                                    <span className="dashboard-lesson-stat-value">{lesson.trial_children ?? 0}</span>
+                                  </span>
+                                  <span className="dashboard-lesson-stat dashboard-lesson-stat-total">
+                                    <span className="dashboard-lesson-stat-label">всего</span>
+                                    <span className="dashboard-lesson-stat-value">{lesson.total_children ?? 0}</span>
+                                  </span>
+                                </div>
+                                <div className="dashboard-lesson-card-instruction">
+                                  {lesson.is_creative ? 'Творческое' : (lesson.instruction_name || '—')}
+                                </div>
+                                <div className="dashboard-lesson-card-finance">
+                                  <span className="dashboard-lesson-revenue">{formatCurrency(revenue)}</span>
+                                  <span className="dashboard-lesson-salary">{formatCurrency(salary)}</span>
+                                  <span className={`dashboard-lesson-profit ${profit >= 0 ? 'positive' : 'negative'}`}>
+                                    {formatCurrency(profit)}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                   </div>

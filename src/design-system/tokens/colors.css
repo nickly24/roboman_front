@@ -68,3 +68,27 @@
   /* === Legacy / Alias === */
   --accent-color: var(--color-primary);
 }
+
+/* Glassmorphism — светлая тема при фоновом изображении */
+html:not(.theme-dark) .layout-main-with-bg .card,
+html:not(.theme-dark) .layout-main-with-bg .table-container,
+html:not(.theme-dark) .layout-main-with-bg .kpi-card,
+html:not(.theme-dark) .layout-main-with-bg .table-card {
+  background: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Только когда НЕ тёмная тема — иначе конфликт */
+html:not(.theme-dark) .layout-main-with-bg .schedule-day-tab:not(.active),
+html:not(.theme-dark) .layout-main-with-bg .schedule-slot-card,
+html:not(.theme-dark) .layout-main-with-bg .slots-slot-card,
+html:not(.theme-dark) .layout-main-with-bg .slots-slot-item,
+html:not(.theme-dark) .layout-main-with-bg .chip {
+  background: rgba(255, 255, 255, 0.4) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}

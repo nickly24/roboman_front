@@ -21,7 +21,7 @@ const Lessons = () => {
   const [loading, setLoading] = useState(true);
   const [lessons, setLessons] = useState([]);
   const [month, setMonth] = useState(getCurrentMonth());
-  const [viewMode, setViewMode] = useState('list');
+  const [viewMode, setViewMode] = useState('calendar');
   const [weekOffset, setWeekOffset] = useState(0);
   const [showInvoices, setShowInvoices] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState('');
@@ -34,10 +34,32 @@ const Lessons = () => {
   const [invoiceData, setInvoiceData] = useState(null);
   const [teacherBranches, setTeacherBranches] = useState([]);
   const [collapsedBranchIds, setCollapsedBranchIds] = useState(new Set());
+  const [branchesOptions, setBranchesOptions] = useState([]);
+  const [teachersOptions, setTeachersOptions] = useState([]);
 
   useEffect(() => {
     loadLessons();
   }, [month, filters, selectedDepartment]);
+
+  useEffect(() => {
+    if (isOwner) {
+      Promise.all([
+        apiClient.get(API_ENDPOINTS.BRANCHES),
+        apiClient.get(API_ENDPOINTS.TEACHERS),
+      ]).then(([brResp, teachResp]) => {
+        if (brResp.data?.ok) {
+          const data = brResp.data.data;
+          const list = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
+          setBranchesOptions([{ value: '', label: 'Все филиалы' }, ...list.map((b) => ({ value: String(b.id), label: b.name || `Филиал #${b.id}` }))]);
+        }
+        if (teachResp.data?.ok) {
+          const data = teachResp.data.data;
+          const list = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
+          setTeachersOptions([{ value: '', label: 'Все преподаватели' }, ...list.filter((t) => t.status === 'working').map((t) => ({ value: String(t.id), label: t.full_name || `Преподаватель #${t.id}` }))]);
+        }
+      }).catch(() => {});
+    }
+  }, [isOwner]);
 
   useEffect(() => {
     if (!isOwner && user?.profile?.id) {
@@ -58,7 +80,7 @@ const Lessons = () => {
   const loadLessons = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ month, limit: '100' });
+      const params = new URLSearchParams({ month, limit: '500', sort: 'starts_at', order: 'asc' });
       if (selectedDepartment) params.append('department_id', selectedDepartment);
       if (filters.branch_id) params.append('branch_id', filters.branch_id);
       if (filters.teacher_id) params.append('teacher_id', filters.teacher_id);
@@ -200,6 +222,14 @@ const Lessons = () => {
     return `${fmt.format(startDate)} – ${fmt.format(endDate)}`;
   };
 
+  const toLocalDateKey = (date) => {
+    const d = date instanceof Date ? date : new Date(date);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
   const formatTime = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -287,7 +317,7 @@ const Lessons = () => {
       const date = addDays(weekStart, i);
       return {
         date,
-        key: date.toISOString().slice(0, 10),
+        key: toLocalDateKey(date),
         label: fmt.format(date),
         isOutsideMonth: date < monthStart || date >= monthEndExclusive,
       };
@@ -305,7 +335,7 @@ const Lessons = () => {
       .sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at))
       .forEach((lesson) => {
         const dt = new Date(lesson.starts_at);
-        const key = dt.toISOString().slice(0, 10);
+        const key = toLocalDateKey(dt);
         if (!map.has(key)) {
           map.set(key, []);
         }
@@ -313,6 +343,37 @@ const Lessons = () => {
       });
     return map;
   }, [lessons, weekDays, weekStart, weekEndExclusive]);
+
+  const weekTotals = React.useMemo(() => {
+    const all = [];
+    weekLessonsByDay.forEach((dayLessons) => all.push(...dayLessons));
+    return getDayTotals(all);
+  }, [weekLessonsByDay]);
+
+  const weeklyChartData = React.useMemo(() => {
+    const result = [];
+    let wStart = getWeekStart(new Date(monthStart));
+    const end = new Date(monthEndExclusive);
+    while (wStart < end) {
+      if (weekIntersectsMonth(wStart, monthStart, monthEndExclusive)) {
+        const wEnd = addDays(wStart, 7);
+        const weekLessons = lessons.filter((l) => {
+          const dt = new Date(l.starts_at);
+          return dt >= wStart && dt < wEnd;
+        });
+        const t = getDayTotals(weekLessons);
+        result.push({
+          weekKey: wStart.getTime(),
+          label: formatWeekRange(wStart),
+          revenue: Number(t.revenueSum) || 0,
+          salary: Number(t.salarySum) || 0,
+          profit: Number(t.profit) || 0,
+        });
+      }
+      wStart = addDays(wStart, 7);
+    }
+    return result;
+  }, [lessons, monthStart, monthEndExclusive]);
 
   const groupedLessons = React.useMemo(() => {
     const branchesMap = new Map();
@@ -458,19 +519,19 @@ const Lessons = () => {
                   onChange={(e) => setSelectedDepartment(e.target.value)}
                   label="Отдел"
                 />
-                <Input
-                  type="text"
-                  label="Филиал ID"
+                <Select
+                  label="Филиал"
                   value={filters.branch_id}
                   onChange={(e) => setFilters({ ...filters, branch_id: e.target.value })}
-                  placeholder="Опционально"
+                  options={branchesOptions}
+                  placeholder="Все филиалы"
                 />
-                <Input
-                  type="text"
-                  label="Преподаватель ID"
+                <Select
+                  label="Преподаватель"
                   value={filters.teacher_id}
                   onChange={(e) => setFilters({ ...filters, teacher_id: e.target.value })}
-                  placeholder="Опционально"
+                  options={teachersOptions}
+                  placeholder="Все преподаватели"
                 />
               </>
             )}
@@ -509,17 +570,17 @@ const Lessons = () => {
               <div className="lessons-view-toggle lessons-view-toggle-inline">
                 <Button
                   size="small"
-                  variant={viewMode === 'list' ? 'primary' : 'secondary'}
-                  onClick={() => setViewMode('list')}
-                >
-                  Список
-                </Button>
-                <Button
-                  size="small"
                   variant={viewMode === 'calendar' ? 'primary' : 'secondary'}
                   onClick={() => setViewMode('calendar')}
                 >
                   Календарь
+                </Button>
+                <Button
+                  size="small"
+                  variant={viewMode === 'list' ? 'primary' : 'secondary'}
+                  onClick={() => setViewMode('list')}
+                >
+                  Список
                 </Button>
               </div>
               <div className="lessons-calendar-header">
@@ -545,12 +606,6 @@ const Lessons = () => {
                 {weekDays.map((day) => {
                   const dayLessons = weekLessonsByDay.get(day.key) || [];
                   const totals = getDayTotals(dayLessons);
-                  const profitClass =
-                    dayLessons.length > 0 && isOwner
-                      ? totals.profit < 0
-                        ? ' lessons-calendar-summary-negative'
-                        : ' lessons-calendar-summary-positive'
-                      : '';
                   return (
                     <div
                       key={day.key}
@@ -567,50 +622,92 @@ const Lessons = () => {
                               : 'Нет занятий'}
                           </div>
                         ) : (
-                          dayLessons.map((lesson) => (
-                            <div
-                              key={lesson.id}
-                              className="lessons-calendar-event"
-                              style={{ borderLeftColor: lesson.teacher_color || '#94a3b8' }}
-                            >
+                          dayLessons.map((lesson) => {
+                            const raw = lesson.teacher_color ?? lesson.teacherColor;
+                            const barColor = (typeof raw === 'string' && raw.trim())
+                              ? (raw.trim().startsWith('#') ? raw.trim() : `#${raw.trim()}`)
+                              : '#94a3b8';
+                            return (
+                            <div key={lesson.id} className="lessons-calendar-event">
+                              <div
+                                className="lessons-calendar-event-bar"
+                                style={{ backgroundColor: barColor }}
+                                aria-hidden
+                              />
                               <div className="lessons-calendar-event-time">
                                 {formatTime(lesson.starts_at)}
                               </div>
-                              <div className="lessons-calendar-event-title">
-                                {lesson.teacher_name || 'Преподаватель'}
-                              </div>
-                              <div className="lessons-calendar-event-meta">
+                              <div className="lessons-calendar-event-branch">
                                 {lesson.branch_name || 'Филиал'}
+                              </div>
+                              <div className="lessons-calendar-event-teacher">
+                                {lesson.teacher_name || 'Преподаватель'}
                               </div>
                               {lesson.is_salary_free ? (
                                 <div className="lessons-calendar-event-badge">Бесплатное занятие</div>
                               ) : null}
-                              <div className="lessons-calendar-event-meta">
-                                Платные {lesson.paid_children ?? 0}, пробные {lesson.trial_children ?? 0}, всего {lesson.total_children ?? 0}
+                              <div className="lessons-calendar-event-stats">
+                                <span className="lessons-calendar-event-stat lessons-calendar-event-stat-paid">
+                                  <span className="lessons-calendar-event-stat-label">Платные</span>
+                                  <span className="lessons-calendar-event-stat-value">{lesson.paid_children ?? 0}</span>
+                                </span>
+                                <span className="lessons-calendar-event-stat lessons-calendar-event-stat-trial">
+                                  <span className="lessons-calendar-event-stat-label">пробные</span>
+                                  <span className="lessons-calendar-event-stat-value">{lesson.trial_children ?? 0}</span>
+                                </span>
+                                <span className="lessons-calendar-event-stat lessons-calendar-event-stat-total">
+                                  <span className="lessons-calendar-event-stat-label">всего</span>
+                                  <span className="lessons-calendar-event-stat-value">{lesson.total_children ?? 0}</span>
+                                </span>
                               </div>
+                              {isOwner && (
+                                <div className="lessons-calendar-event-finance">
+                                  <div className="lessons-calendar-event-finance-row lessons-calendar-event-finance-revenue">
+                                    <span className="lessons-calendar-event-finance-label">Выручка</span>
+                                    <span className="lessons-calendar-event-finance-value">{formatCurrency(lesson.revenue)}</span>
+                                  </div>
+                                  <div className="lessons-calendar-event-finance-row lessons-calendar-event-finance-salary">
+                                    <span className="lessons-calendar-event-finance-label">Зарплата</span>
+                                    <span className="lessons-calendar-event-finance-value">{formatCurrency(lesson.teacher_salary)}</span>
+                                  </div>
+                                  <div className={`lessons-calendar-event-finance-row lessons-calendar-event-finance-profit ${((lesson.revenue || 0) - (lesson.teacher_salary || 0)) >= 0 ? 'lessons-calendar-event-finance-profit-positive' : 'lessons-calendar-event-finance-profit-negative'}`}>
+                                    <span className="lessons-calendar-event-finance-label">Прибыль</span>
+                                    <span className="lessons-calendar-event-finance-value">{formatCurrency((lesson.revenue || 0) - (lesson.teacher_salary || 0))}</span>
+                                  </div>
+                                </div>
+                              )}
+                              {!isOwner && (
+                                <div className="lessons-calendar-event-finance">
+                                  <div className="lessons-calendar-event-finance-row lessons-calendar-event-finance-salary">
+                                    <span className="lessons-calendar-event-finance-label">Зарплата</span>
+                                    <span className="lessons-calendar-event-finance-value">{formatCurrency(lesson.teacher_salary)}</span>
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          ))
+                            );
+                          })
                         )}
                       </div>
                       {dayLessons.length > 0 && (
-                        <div className={`lessons-calendar-summary${profitClass}`}>
+                        <div className="lessons-calendar-summary">
                           {isOwner ? (
                             <>
-                              <div className="lessons-calendar-summary-row">
+                              <div className="lessons-calendar-summary-row lessons-calendar-summary-row-revenue">
                                 <span>Выручка</span>
                                 <span>{formatCurrency(totals.revenueSum)}</span>
                               </div>
-                              <div className="lessons-calendar-summary-row">
+                              <div className="lessons-calendar-summary-row lessons-calendar-summary-row-salary">
                                 <span>Зарплаты</span>
                                 <span>{formatCurrency(totals.salarySum)}</span>
                               </div>
-                              <div className="lessons-calendar-summary-row lessons-calendar-summary-profit">
+                              <div className={`lessons-calendar-summary-row lessons-calendar-summary-row-profit ${totals.profit >= 0 ? 'lessons-calendar-summary-profit-positive' : 'lessons-calendar-summary-profit-negative'}`}>
                                 <span>Прибыль</span>
                                 <span>{formatCurrency(totals.profit)}</span>
                               </div>
                             </>
                           ) : (
-                            <div className="lessons-calendar-summary-row">
+                            <div className="lessons-calendar-summary-row lessons-calendar-summary-row-salary">
                               <span>Зарплата</span>
                               <span>{formatCurrency(totals.salarySum)}</span>
                             </div>
@@ -621,6 +718,121 @@ const Lessons = () => {
                   );
                 })}
               </div>
+              <div className="lessons-calendar-week-summary">
+                <div className="lessons-calendar-week-summary-title">Итого за неделю</div>
+                {isOwner ? (
+                  <div className="lessons-calendar-week-summary-rows">
+                    <div className="lessons-calendar-summary-row lessons-calendar-summary-row-revenue">
+                      <span>Выручка</span>
+                      <span>{formatCurrency(weekTotals.revenueSum)}</span>
+                    </div>
+                    <div className="lessons-calendar-summary-row lessons-calendar-summary-row-salary">
+                      <span>Зарплаты</span>
+                      <span>{formatCurrency(weekTotals.salarySum)}</span>
+                    </div>
+                    <div className={`lessons-calendar-summary-row lessons-calendar-summary-row-profit ${weekTotals.profit >= 0 ? 'lessons-calendar-summary-profit-positive' : 'lessons-calendar-summary-profit-negative'}`}>
+                      <span>Прибыль</span>
+                      <span>{formatCurrency(weekTotals.profit)}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="lessons-calendar-week-summary-rows">
+                    <div className="lessons-calendar-summary-row lessons-calendar-summary-row-salary">
+                      <span>Зарплата</span>
+                      <span>{formatCurrency(weekTotals.salarySum)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+              {weeklyChartData.length > 0 && (() => {
+                const maxRevenue = Math.max(...weeklyChartData.map((w) => w.revenue), 1);
+                const maxSalary = Math.max(...weeklyChartData.map((w) => w.salary), 1);
+                const maxProfit = Math.max(...weeklyChartData.map((w) => Math.abs(w.profit)), 1);
+                return (
+                <div className="lessons-calendar-weekly-chart">
+                  <div className="lessons-calendar-week-summary-title">Понедельные итоги</div>
+                  <div className="lessons-weekly-bars">
+                    {isOwner && (
+                      <div className="lessons-weekly-bar-row lessons-weekly-bar-header">
+                        <div className="lessons-weekly-bar-label" />
+                        <div className="lessons-weekly-bar-cols">
+                          <div className="lessons-weekly-bar-cell">
+                            <span className="lessons-weekly-bar-col-label">Выручка</span>
+                          </div>
+                          <div className="lessons-weekly-bar-cell">
+                            <span className="lessons-weekly-bar-col-label">Зарплаты</span>
+                          </div>
+                          <div className="lessons-weekly-bar-cell">
+                            <span className="lessons-weekly-bar-col-label">Прибыль</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {!isOwner && (
+                      <div className="lessons-weekly-bar-row lessons-weekly-bar-header">
+                        <div className="lessons-weekly-bar-label" />
+                        <div className="lessons-weekly-bar-cols">
+                          <div className="lessons-weekly-bar-cell">
+                            <span className="lessons-weekly-bar-col-label">Зарплата</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {weeklyChartData.map((week) => (
+                      <div key={week.weekKey} className="lessons-weekly-bar-row">
+                        <div className="lessons-weekly-bar-label">{week.label}</div>
+                        <div className="lessons-weekly-bar-cols">
+                          {isOwner && (
+                            <>
+                              <div className="lessons-weekly-bar-cell">
+                                <div className="lessons-weekly-bar-track">
+                                  <div
+                                    className="lessons-weekly-bar-fill lessons-weekly-bar-revenue"
+                                    style={{ width: `${(week.revenue / maxRevenue) * 100}%` }}
+                                  />
+                                </div>
+                                <span className="lessons-weekly-bar-value">{formatCurrency(week.revenue)}</span>
+                              </div>
+                              <div className="lessons-weekly-bar-cell">
+                                <div className="lessons-weekly-bar-track">
+                                  <div
+                                    className="lessons-weekly-bar-fill lessons-weekly-bar-salary"
+                                    style={{ width: `${(week.salary / maxSalary) * 100}%` }}
+                                  />
+                                </div>
+                                <span className="lessons-weekly-bar-value">{formatCurrency(week.salary)}</span>
+                              </div>
+                              <div className="lessons-weekly-bar-cell">
+                                <div className="lessons-weekly-bar-track">
+                                  <div
+                                    className={`lessons-weekly-bar-fill ${week.profit >= 0 ? 'lessons-weekly-bar-profit-pos' : 'lessons-weekly-bar-profit-neg'}`}
+                                    style={{ width: `${(Math.abs(week.profit) / maxProfit) * 100}%` }}
+                                  />
+                                </div>
+                                <span className={`lessons-weekly-bar-value ${week.profit >= 0 ? 'profit-pos' : 'profit-neg'}`}>
+                                  {formatCurrency(week.profit)}
+                                </span>
+                              </div>
+                            </>
+                          )}
+                          {!isOwner && (
+                            <div className="lessons-weekly-bar-cell">
+                              <div className="lessons-weekly-bar-track">
+                                <div
+                                  className="lessons-weekly-bar-fill lessons-weekly-bar-salary"
+                                  style={{ width: `${(week.salary / maxSalary) * 100}%` }}
+                                />
+                              </div>
+                              <span className="lessons-weekly-bar-value">{formatCurrency(week.salary)}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                );
+              })()}
             </div>
           ) : lessons.length === 0 ? (
             <Table
@@ -634,17 +846,17 @@ const Lessons = () => {
               <div className="lessons-view-toggle lessons-view-toggle-inline">
                 <Button
                   size="small"
-                  variant={viewMode === 'list' ? 'primary' : 'secondary'}
-                  onClick={() => setViewMode('list')}
-                >
-                  Список
-                </Button>
-                <Button
-                  size="small"
                   variant={viewMode === 'calendar' ? 'primary' : 'secondary'}
                   onClick={() => setViewMode('calendar')}
                 >
                   Календарь
+                </Button>
+                <Button
+                  size="small"
+                  variant={viewMode === 'list' ? 'primary' : 'secondary'}
+                  onClick={() => setViewMode('list')}
+                >
+                  Список
                 </Button>
               </div>
               {groupedLessons.map((group) => {

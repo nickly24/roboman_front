@@ -105,7 +105,7 @@ const CRMLayout = ({ children }) => {
             onClick={() => { setMobileNavOpen(false); navigate('/dashboard'); }}
           >
             <span className="crm-sidebar-back-icon"><IconArrowBack /></span>
-            <span className="crm-sidebar-back-label">Вернуться в систему управления уроками</span>
+            <span className="crm-sidebar-back-label">Вернуться в систему управления</span>
           </button>
         </div>
       </aside>

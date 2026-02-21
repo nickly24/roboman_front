@@ -80,12 +80,78 @@ html.theme-dark {
   --shadow-primary-hover: 0 6px 16px rgba(99, 102, 241, 0.45);
 }
 
-/* Glassmorphism — матовое стекло для карточек в тёмной теме */
-html.theme-dark .glass-card,
-html.theme-dark [data-glass="true"] {
-  background: rgba(34, 36, 55, 0.5) !important;
+/* Glassmorphism — матовое стекло при фоновом изображении (кроме сайдбара) */
+html.theme-dark .layout-main-with-bg .card,
+html.theme-dark .layout-main-with-bg .table-container,
+html.theme-dark .layout-main-with-bg .kpi-card,
+html.theme-dark .layout-main-with-bg .table-card,
+html.theme-dark .layout-main-with-bg .glass-card,
+html.theme-dark .layout-main-with-bg [data-glass="true"] {
+  background: rgba(34, 36, 55, 0.3) !important;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* Модалки и выпадающие меню (рендерятся вне layout-main) */
+html.theme-dark .modal,
+html.theme-dark .action-menu-popover {
+  background: rgba(34, 36, 55, 0.65) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Элементы расписания, слотов, занятий */
+html.theme-dark .layout-main-with-bg .schedule-day-tab:not(.active),
+html.theme-dark .layout-main-with-bg .schedule-segment-free,
+html.theme-dark .layout-main-with-bg .schedule-segment-group-expanded,
+html.theme-dark .layout-main-with-bg .schedule-segment-group-collapsed,
+html.theme-dark .layout-main-with-bg .schedule-slot-card,
+html.theme-dark .layout-main-with-bg .slots-tab:not(.active),
+html.theme-dark .layout-main-with-bg .slots-slot-card,
+html.theme-dark .layout-main-with-bg .slots-slot-item,
+html.theme-dark .layout-main-with-bg .slots-my-item,
+html.theme-dark .layout-main-with-bg .slots-time-row,
+html.theme-dark .layout-main-with-bg .slots-teacher-chip,
+html.theme-dark .layout-main-with-bg .lessons-filters,
+html.theme-dark .layout-main-with-bg .lessons-group-card,
+html.theme-dark .layout-main-with-bg .lessons-calendar-day,
+html.theme-dark .layout-main-with-bg .lessons-calendar-event,
+html.theme-dark .layout-main-with-bg .lessons-calendar-summary,
+html.theme-dark .layout-main-with-bg .instructions-filters,
+html.theme-dark .layout-main-with-bg .salary-filters,
+html.theme-dark .layout-main-with-bg .dashboard-filters,
+html.theme-dark .layout-main-with-bg .chip {
+  background: rgba(34, 36, 55, 0.3) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: rgba(255, 255, 255, 0.08) !important;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Таблица: заголовок и ячейки с лёгким стеклом */
+html.theme-dark .layout-main-with-bg .table-header {
+  background: rgba(45, 48, 71, 0.4) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+html.theme-dark .layout-main-with-bg .table-body {
+  background: transparent !important;
+}
+
+html.theme-dark .layout-main-with-bg .table-row:hover {
+  background: rgba(99, 102, 241, 0.15) !important;
+}
+
+/* Input, Select — лёгкое стекло в тёмной теме с фоном */
+html.theme-dark .layout-main-with-bg .input,
+html.theme-dark .layout-main-with-bg .select {
+  background: rgba(34, 36, 55, 0.4) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }

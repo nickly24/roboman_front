@@ -1,0 +1,450 @@
+/* Бухгалтерия — дизайн-система RoboMan */
+
+.accounting-page {
+  padding: 0;
+  min-height: 0;
+}
+
+.accounting-header {
+  margin-bottom: var(--space-6);
+}
+
+.accounting-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.accounting-subtitle {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* Tabs */
+.accounting-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.accounting-tab {
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.accounting-tab:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.accounting-tab.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+/* Filters */
+.accounting-filters {
+  margin-bottom: var(--space-6);
+}
+
+.accounting-filters-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: flex-end;
+}
+
+.accounting-filters-grid .form-group {
+  min-width: 120px;
+}
+
+.accounting-filters-grid .department-selector {
+  min-width: 200px;
+}
+
+.accounting-filters-actions {
+  margin-left: auto;
+}
+
+/* Sheets list */
+.accounting-sheets-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.accounting-sheet-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.accounting-sheet-item:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-primary);
+}
+
+.sheet-item-name {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.sheet-item-period {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.accounting-empty {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--color-text-secondary);
+}
+
+.accounting-empty p {
+  margin: 0 0 var(--space-4) 0;
+}
+
+.accounting-sheet-toolbar {
+  margin-bottom: var(--space-4);
+}
+
+/* Sheet view — горизонтальный скролл */
+.accounting-sheet-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.sheet-view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.sheet-view-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.sheet-view-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* Timeline — широкий горизонтальный скролл */
+.sheet-timeline-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin: 0 calc(-1 * var(--space-6));
+  padding: 0 var(--space-6);
+  -webkit-overflow-scrolling: touch;
+}
+
+.sheet-timeline {
+  min-width: max-content;
+  padding-bottom: var(--space-4);
+}
+
+.owner-row {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  min-height: 88px;
+}
+
+.owner-row-label {
+  flex-shrink: 0;
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--space-4);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.owner-name {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.owner-balance {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+}
+
+.owner-row-ops {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: nowrap;
+  padding: var(--space-3);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  min-width: 0;
+}
+
+.owner-row-empty {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* Карточки операций */
+.accounting-op-card {
+  flex-shrink: 0;
+  min-width: 140px;
+  max-width: 200px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.accounting-op-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.op-card-title {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.op-card-sub {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.op-card-extra {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-1);
+}
+
+.op-card-amount {
+  display: block;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  margin-top: var(--space-2);
+}
+
+.op-card-amount.positive {
+  color: var(--color-success);
+}
+
+.op-card-amount.negative {
+  color: var(--color-error);
+}
+
+.accounting-op-card.op-income { border-left: 3px solid var(--color-success); }
+.accounting-op-card.op-salary { border-left: 3px solid var(--color-error); }
+.accounting-op-card.op-expense { border-left: 3px solid var(--color-orange); }
+.accounting-op-card.op-transfer { border-left: 3px solid var(--color-info); }
+
+/* Сводка */
+.sheet-summary-card {
+  margin-top: var(--space-4);
+}
+
+.sheet-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--space-6);
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.summary-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.summary-value {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.summary-costs { color: var(--color-orange); }
+.summary-expenses { color: var(--color-error); }
+.summary-profit { color: var(--color-success); }
+.summary-loss { color: var(--color-error); }
+
+.summary-discrepancy {
+  grid-column: 1 / -1;
+}
+
+.summary-discrepancy .summary-value {
+  color: var(--color-warning);
+}
+
+/* Формы в модалках */
+.create-sheet-form .form-row,
+.add-record-form .form-row-with-action {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.create-sheet-form .form-row .form-group,
+.add-record-form .form-row-with-action .input-group {
+  flex: 1;
+}
+
+.add-record-form .form-row-with-action .btn {
+  align-self: flex-end;
+}
+
+.form-group {
+  margin-bottom: var(--space-4);
+}
+
+.form-group .input-label,
+.form-group .select-label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.form-group .select,
+.form-group .input {
+  width: 100%;
+}
+
+.form-error {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.modal-actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  width: 18px;
+  height: 18px;
+}
+
+/* Детали операции */
+.operation-detail dl {
+  margin: 0;
+}
+
+.operation-detail dt {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-1);
+}
+
+.operation-detail dt:first-child {
+  margin-top: 0;
+}
+
+.operation-detail dd {
+  margin: 0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+}
+
+.operation-detail .amount-positive { color: var(--color-success); font-weight: 600; }
+.operation-detail .amount-negative { color: var(--color-error); font-weight: 600; }
+
+@media (max-width: 768px) {
+  .sheet-view-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sheet-view-actions {
+    justify-content: flex-start;
+  }
+
+  .sheet-timeline-scroll {
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+
+  .owner-row {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .owner-row-label {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .owner-row-ops {
+    flex-wrap: wrap;
+    min-height: auto;
+  }
+
+  .accounting-op-card {
+    min-width: 120px;
+  }
+}

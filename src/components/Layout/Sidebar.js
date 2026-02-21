@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -15,9 +15,12 @@ import {
   IconCRM,
   IconInstructions,
   IconSettings,
+  IconAccounting,
   IconLogout,
   IconChevronLeft,
   IconChevronRight,
+  IconChevronDown,
+  IconChevronUp,
   IconSun,
   IconMoon,
 } from '../Icons/SidebarIcons';
@@ -36,7 +39,10 @@ const iconMap = {
   crm: IconCRM,
   instructions: IconInstructions,
   settings: IconSettings,
+  accounting: IconAccounting,
 };
+
+const STORAGE_GROUPS = 'sidebar-groups-expanded';
 
 const Sidebar = ({ isOpen = false, onClose, expanded = true, onToggleCollapse, isMobile = false }) => {
   const location = useLocation();
@@ -44,40 +50,80 @@ const Sidebar = ({ isOpen = false, onClose, expanded = true, onToggleCollapse, i
   const { user, logout, isOwner, isTeacher, crmAccess } = useAuth();
   const { theme, setTheme } = useTheme();
 
+  const [groupsOpen, setGroupsOpen] = useState({
+    lessons: true,
+    references: true,
+  });
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_GROUPS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setGroupsOpen((prev) => ({ ...prev, ...parsed }));
+      }
+    } catch (_) {}
+  }, []);
+
+  const setGroupOpen = (key, value) => {
+    setGroupsOpen((prev) => {
+      const next = { ...prev, [key]: value };
+      try {
+        localStorage.setItem(STORAGE_GROUPS, JSON.stringify(next));
+      } catch (_) {}
+      return next;
+    });
+  };
+
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
-  const ownerMenuItems = [
-    { path: '/dashboard', label: 'Дашборд', iconKey: 'dashboard' },
-    { path: '/lessons', label: 'Занятия', iconKey: 'lessons' },
+  // Управление занятиями: Занятия, Расписание, Слоты, Зарплата (owner), Инструкции
+  const lessonsGroupPaths = ['/lessons', '/schedule', '/slots', '/instructions', '/salary'];
+  const isLessonsActive = lessonsGroupPaths.some((p) => location.pathname === p || location.pathname.startsWith(p + '/'));
+
+  // Справочники: Филиалы, Отделы, Преподаватели, Создание учеток, Настройки
+  const refsGroupPaths = ['/branches', '/departments', '/teachers', '/teacher-accounts', '/settings'];
+  const isRefsActive = refsGroupPaths.some((p) => location.pathname === p || location.pathname.startsWith(p + '/'));
+
+  // Авто-раскрытие группы при навигации в её раздел
+  useEffect(() => {
+    if (!isLessonsActive && !isRefsActive) return;
+    setGroupsOpen((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      if (isLessonsActive && !prev.lessons) { next.lessons = true; changed = true; }
+      if (isRefsActive && !prev.references) { next.references = true; changed = true; }
+      if (changed) {
+        try { localStorage.setItem(STORAGE_GROUPS, JSON.stringify(next)); } catch (_) {}
+        return next;
+      }
+      return prev;
+    });
+  }, [location.pathname, isLessonsActive, isRefsActive]);
+
+  const lessonsGroupItems = [
+    { path: '/lessons', label: isTeacher ? 'Мои занятия' : 'Занятия', iconKey: 'lessons' },
     { path: '/schedule', label: 'Расписание', iconKey: 'schedule' },
     { path: '/slots', label: 'Слоты', iconKey: 'slots' },
+    ...(isOwner ? [{ path: '/salary', label: 'Зарплата', iconKey: 'salary' }] : []),
+    { path: '/instructions', label: 'Инструкции', iconKey: 'instructions' },
+  ];
+
+  const refsGroupItems = [
     { path: '/branches', label: 'Филиалы', iconKey: 'branches' },
     { path: '/departments', label: 'Отделы', iconKey: 'departments' },
-    { path: '/salary', label: 'Зарплата', iconKey: 'salary' },
     { path: '/teachers', label: 'Преподаватели', iconKey: 'teachers' },
     { path: '/teacher-accounts', label: 'Создание учеток', iconKey: 'teacher-accounts' },
-    ...(crmAccess ? [{ path: '/crm', label: 'CRM', iconKey: 'crm' }] : []),
-    { path: '/instructions', label: 'Инструкции', iconKey: 'instructions' },
     { path: '/settings', label: 'Настройки', iconKey: 'settings' },
   ];
-
-  const teacherMenuItems = [
-    { path: '/dashboard', label: 'Дашборд', iconKey: 'dashboard' },
-    { path: '/lessons', label: 'Мои занятия', iconKey: 'lessons' },
-    { path: '/schedule', label: 'Расписание', iconKey: 'schedule' },
-    { path: '/slots', label: 'Слоты', iconKey: 'slots' },
-    { path: '/instructions', label: 'Инструкции', iconKey: 'instructions' },
-  ];
-
-  const menuItems = isOwner ? ownerMenuItems : teacherMenuItems;
 
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''} ${!expanded ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
-        <h1 className="sidebar-logo">RoboMan</h1>
+        <img src={`${process.env.PUBLIC_URL || ''}/Heads/Logo.png`} alt="RoboMan" className="sidebar-logo" />
         <div className="sidebar-user">
           <span className="sidebar-user-name">{user?.profile?.full_name || user?.user?.login}</span>
           <span className="sidebar-user-role">
@@ -87,20 +133,125 @@ const Sidebar = ({ isOpen = false, onClose, expanded = true, onToggleCollapse, i
       </div>
 
       <nav className="sidebar-nav">
-        {menuItems.map((item) => {
-          const Icon = iconMap[item.iconKey];
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`sidebar-nav-item ${location.pathname === item.path ? 'active' : ''}`}
-              onClick={() => onClose?.()}
+        {/* Дашборд */}
+        <Link
+          to="/dashboard"
+          className={`sidebar-nav-item ${location.pathname === '/dashboard' ? 'active' : ''}`}
+          onClick={() => onClose?.()}
+        >
+          <span className="sidebar-nav-icon"><IconDashboard /></span>
+          <span className="sidebar-nav-label">Дашборд</span>
+        </Link>
+
+        {/* Управление занятиями */}
+        <div className="sidebar-group">
+          <button
+            type="button"
+            className={`sidebar-group-toggle ${isLessonsActive ? 'active' : ''}`}
+            onClick={() => {
+              if (!expanded) {
+                onToggleCollapse?.();
+              } else {
+                setGroupOpen('lessons', !groupsOpen.lessons);
+              }
+            }}
+            aria-expanded={groupsOpen.lessons}
+            aria-controls="sidebar-group-lessons"
+          >
+            <span className="sidebar-nav-icon sidebar-group-icon">
+              <IconLessons />
+            </span>
+            <span className="sidebar-nav-label">Управление занятиями</span>
+            <span className="sidebar-group-chevron">
+              {groupsOpen.lessons ? <IconChevronUp /> : <IconChevronDown />}
+            </span>
+          </button>
+          <div id="sidebar-group-lessons" className={`sidebar-group-items ${groupsOpen.lessons ? 'open' : ''}`}>
+            {lessonsGroupItems.map((item) => {
+              const Icon = iconMap[item.iconKey];
+              const isItemActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`sidebar-nav-item sidebar-nav-subitem ${isItemActive ? 'active' : ''}`}
+                  onClick={() => onClose?.()}
+                >
+                  <span className="sidebar-nav-icon">{Icon ? <Icon /> : null}</span>
+                  <span className="sidebar-nav-label">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Справочники (только owner) */}
+        {isOwner && (
+          <div className="sidebar-group">
+            <button
+              type="button"
+              className={`sidebar-group-toggle ${isRefsActive ? 'active' : ''}`}
+              onClick={() => {
+                if (!expanded) {
+                  onToggleCollapse?.();
+                } else {
+                  setGroupOpen('references', !groupsOpen.references);
+                }
+              }}
+              aria-expanded={groupsOpen.references}
+              aria-controls="sidebar-group-references"
             >
-              <span className="sidebar-nav-icon">{Icon ? <Icon /> : null}</span>
-              <span className="sidebar-nav-label">{item.label}</span>
-            </Link>
-          );
-        })}
+              <span className="sidebar-nav-icon sidebar-group-icon">
+                <IconDepartments />
+              </span>
+              <span className="sidebar-nav-label">Справочники</span>
+              <span className="sidebar-group-chevron">
+                {groupsOpen.references ? <IconChevronUp /> : <IconChevronDown />}
+              </span>
+            </button>
+            <div id="sidebar-group-references" className={`sidebar-group-items ${groupsOpen.references ? 'open' : ''}`}>
+              {refsGroupItems.map((item) => {
+                const Icon = iconMap[item.iconKey];
+                const isItemActive = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`sidebar-nav-item sidebar-nav-subitem ${isItemActive ? 'active' : ''}`}
+                    onClick={() => onClose?.()}
+                  >
+                    <span className="sidebar-nav-icon">{Icon ? <Icon /> : null}</span>
+                    <span className="sidebar-nav-label">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* CRM (отдельная мини-система) */}
+        {isOwner && crmAccess && (
+          <Link
+            to="/crm"
+            className={`sidebar-nav-item sidebar-nav-item-crm ${location.pathname.startsWith('/crm') ? 'active' : ''}`}
+            onClick={() => onClose?.()}
+          >
+            <span className="sidebar-nav-icon"><IconCRM /></span>
+            <span className="sidebar-nav-label">CRM</span>
+          </Link>
+        )}
+
+        {/* Бухгалтерия (только owner) */}
+        {isOwner && (
+          <Link
+            to="/accounting"
+            className={`sidebar-nav-item ${location.pathname.startsWith('/accounting') ? 'active' : ''}`}
+            onClick={() => onClose?.()}
+          >
+            <span className="sidebar-nav-icon"><IconAccounting /></span>
+            <span className="sidebar-nav-label">Бухгалтерия</span>
+          </Link>
+        )}
       </nav>
 
       <div className="sidebar-footer">

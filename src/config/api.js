@@ -72,6 +72,21 @@ export const API_ENDPOINTS = {
   SALARY_TEACHER_BY_DEPARTMENT: '/salary/teacher-by-department',
   SALARY_OWNER_BY_DEPARTMENT: '/salary/owner-by-department',
 
+  // Reports (for accounting pull)
+  REPORTS_BRANCH_SUMMARY: (branchId) => `/reports/branch/${branchId}/summary`,
+
+  // Accounting (Бухгалтерия)
+  ACCOUNTING_SHEETS: '/accounting/sheets',
+  ACCOUNTING_SHEET: (id) => `/accounting/sheets/${id}`,
+  ACCOUNTING_INCOMES: (sheetId) => `/accounting/sheets/${sheetId}/incomes`,
+  ACCOUNTING_INCOME: (id) => `/accounting/incomes/${id}`,
+  ACCOUNTING_SALARIES: (sheetId) => `/accounting/sheets/${sheetId}/salaries`,
+  ACCOUNTING_SALARY: (id) => `/accounting/salaries/${id}`,
+  ACCOUNTING_EXPENSES: (sheetId) => `/accounting/sheets/${sheetId}/expenses`,
+  ACCOUNTING_EXPENSE: (id) => `/accounting/expenses/${id}`,
+  ACCOUNTING_TRANSFERS: (sheetId) => `/accounting/sheets/${sheetId}/transfers`,
+  ACCOUNTING_TRANSFER: (id) => `/accounting/transfers/${id}`,
+
   // CRM (Telegram)
   CRM_BRANCHES: '/crm/branches',
   CRM_BRANCH: (branchId) => `/crm/branches/${branchId}`,

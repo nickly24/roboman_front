@@ -154,12 +154,18 @@ html.theme-dark .lesson-badge-paid {
 }
 
 .lessons-calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  display: flex;
   gap: 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 2px 0;
+  min-height: 240px;
 }
 
 .lessons-calendar-day {
+  flex: 0 0 auto;
+  min-width: 270px;
+  max-width: 340px;
   display: flex;
   flex-direction: column;
   min-height: 220px;
@@ -192,25 +198,145 @@ html.theme-dark .lesson-badge-paid {
 }
 
 .lessons-calendar-event {
-  border-left: 4px solid var(--color-gray-500);
-  padding: var(--space-2) var(--space-2);
+  position: relative;
+  padding: var(--space-3) var(--space-3) var(--space-3) calc(var(--space-3) + 4px);
   border-radius: var(--radius-md);
   background: var(--color-bg-elevated);
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 6px;
+  min-height: 120px;
+}
+
+.lessons-calendar-event-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
 }
 
 .lessons-calendar-event-time {
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
+  font-size: 11px;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
 }
 
-.lessons-calendar-event-title {
-  font-size: var(--font-size-sm);
+.lessons-calendar-event-branch {
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
+  line-height: 1.25;
+}
+
+.lessons-calendar-event-teacher {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.lessons-calendar-event-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-top: 4px;
+  font-size: var(--font-size-xs);
+}
+
+.lessons-calendar-event-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.lessons-calendar-event-stat-label {
+  color: var(--color-text-muted);
+}
+
+.lessons-calendar-event-stat-paid .lessons-calendar-event-stat-value {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.lessons-calendar-event-stat-trial .lessons-calendar-event-stat-value {
+  color: var(--color-secondary);
+  font-weight: 600;
+}
+
+.lessons-calendar-event-stat-total .lessons-calendar-event-stat-value {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+html.theme-dark .lessons-calendar-event-stat-paid .lessons-calendar-event-stat-value {
+  color: #34d399;
+}
+
+html.theme-dark .lessons-calendar-event-stat-trial .lessons-calendar-event-stat-value {
+  color: #22d3ee;
+}
+
+html.theme-dark .lessons-calendar-event-stat-total .lessons-calendar-event-stat-value {
+  color: #818cf8;
+}
+
+.lessons-calendar-event-finance {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.lessons-calendar-event-finance-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.lessons-calendar-event-finance-label {
+  color: var(--color-text-muted);
+}
+
+.lessons-calendar-event-finance-value {
+  font-weight: 600;
+}
+
+.lessons-calendar-event-finance-revenue .lessons-calendar-event-finance-value {
+  color: var(--color-info);
+}
+
+.lessons-calendar-event-finance-salary .lessons-calendar-event-finance-value {
+  color: var(--color-orange);
+}
+
+.lessons-calendar-event-finance-profit-positive .lessons-calendar-event-finance-value {
+  color: var(--color-success);
+}
+
+.lessons-calendar-event-finance-profit-negative .lessons-calendar-event-finance-value {
+  color: var(--color-error);
+}
+
+html.theme-dark .lessons-calendar-event-finance-revenue .lessons-calendar-event-finance-value {
+  color: #60a5fa;
+}
+
+html.theme-dark .lessons-calendar-event-finance-salary .lessons-calendar-event-finance-value {
+  color: #fb923c;
+}
+
+html.theme-dark .lessons-calendar-event-finance-profit-positive .lessons-calendar-event-finance-value {
+  color: #34d399;
+}
+
+html.theme-dark .lessons-calendar-event-finance-profit-negative .lessons-calendar-event-finance-value {
+  color: #f87171;
 }
 
 .lessons-calendar-event-meta {
@@ -247,44 +373,241 @@ html.theme-dark .lessons-calendar-event-badge {
   background: var(--color-bg-elevated);
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 6px;
   font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
 }
 
 .lessons-calendar-summary-row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
 }
 
-.lessons-calendar-summary-profit {
+.lessons-calendar-summary-row-revenue {
+  background: var(--color-info-light);
+  color: var(--color-info);
+}
+
+.lessons-calendar-summary-row-revenue span:last-child {
   font-weight: 600;
+  color: var(--color-info);
 }
 
-.lessons-calendar-summary-positive {
+.lessons-calendar-summary-row-salary {
+  background: var(--color-orange-light);
+  color: var(--color-orange);
+}
+
+.lessons-calendar-summary-row-salary span:last-child {
+  font-weight: 600;
+  color: var(--color-orange);
+}
+
+.lessons-calendar-summary-row-profit.lessons-calendar-summary-profit-positive {
   background: var(--color-success-light);
   color: var(--color-success);
 }
 
-.lessons-calendar-summary-negative {
+.lessons-calendar-summary-row-profit.lessons-calendar-summary-profit-positive span:last-child {
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.lessons-calendar-summary-row-profit.lessons-calendar-summary-profit-negative {
   background: var(--color-error-light);
   color: var(--color-error);
 }
 
-html.theme-dark .lessons-calendar-summary-positive {
-  background: var(--color-success);
-  color: var(--color-text-inverse);
+.lessons-calendar-summary-row-profit.lessons-calendar-summary-profit-negative span:last-child {
+  font-weight: 600;
+  color: var(--color-error);
 }
 
-html.theme-dark .lessons-calendar-summary-negative {
-  background: var(--color-error);
-  color: var(--color-text-inverse);
+/* Тёмная тема — итоги дня */
+html.theme-dark .lessons-calendar-summary-row-revenue {
+  background: rgba(96, 165, 250, 0.2);
+  color: #93c5fd;
+}
+
+html.theme-dark .lessons-calendar-summary-row-revenue span:last-child {
+  color: #60a5fa;
+}
+
+html.theme-dark .lessons-calendar-summary-row-salary {
+  background: rgba(251, 146, 60, 0.2);
+  color: #fdba74;
+}
+
+html.theme-dark .lessons-calendar-summary-row-salary span:last-child {
+  color: #fb923c;
+}
+
+html.theme-dark .lessons-calendar-summary-row-profit.lessons-calendar-summary-profit-positive {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+}
+
+html.theme-dark .lessons-calendar-summary-row-profit.lessons-calendar-summary-profit-positive span:last-child {
+  color: #34d399;
+}
+
+html.theme-dark .lessons-calendar-summary-row-profit.lessons-calendar-summary-profit-negative {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+html.theme-dark .lessons-calendar-summary-row-profit.lessons-calendar-summary-profit-negative span:last-child {
+  color: #f87171;
+}
+
+.lessons-calendar-week-summary {
+  margin-top: 20px;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+}
+
+.lessons-calendar-week-summary-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: 12px;
+}
+
+.lessons-calendar-week-summary-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lessons-calendar-weekly-chart {
+  margin-top: 24px;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  width: 100%;
+}
+
+.lessons-calendar-weekly-chart .lessons-calendar-week-summary-title {
+  margin-bottom: 16px;
+}
+
+.lessons-weekly-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lessons-weekly-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 32px;
+}
+
+.lessons-weekly-bar-row.lessons-weekly-bar-header {
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 4px;
+}
+
+.lessons-weekly-bar-label {
+  flex: 0 0 100px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.lessons-weekly-bar-cols {
+  flex: 1;
+  display: flex;
+  gap: 24px;
+  min-width: 0;
+}
+
+.lessons-weekly-bar-cell {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.lessons-weekly-bar-col-label {
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.lessons-weekly-bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 40px;
+}
+
+.lessons-weekly-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  min-width: 2px;
+  transition: width 0.2s ease;
+}
+
+.lessons-weekly-bar-revenue {
+  background: #3b82f6;
+}
+
+.lessons-weekly-bar-salary {
+  background: #f97316;
+}
+
+.lessons-weekly-bar-profit-pos {
+  background: #10b981;
+}
+
+.lessons-weekly-bar-profit-neg {
+  background: #ef4444;
+}
+
+.lessons-weekly-bar-value {
+  flex: 0 0 auto;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  min-width: 70px;
+  text-align: right;
+}
+
+.lessons-weekly-bar-value.profit-pos {
+  color: var(--color-success);
+}
+
+.lessons-weekly-bar-value.profit-neg {
+  color: var(--color-error);
+}
+
+html.theme-dark .lessons-weekly-bar-value.profit-pos {
+  color: #34d399;
+}
+
+html.theme-dark .lessons-weekly-bar-value.profit-neg {
+  color: #f87171;
 }
 
 .lessons-groups {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0;
 }
 
 .lessons-group-header {
@@ -312,6 +635,14 @@ html.theme-dark .lessons-calendar-summary-negative {
 
 .lessons-group-header-collapsed {
   margin-bottom: 0;
+}
+
+.lessons-group {
+  min-width: 0;
+}
+
+.lessons-group .table-container {
+  min-width: 0;
 }
 
 .lessons-group-title {
@@ -404,7 +735,8 @@ html.theme-dark .lessons-calendar-summary-negative {
     flex-wrap: wrap;
   }
 
-  .lessons-calendar-grid {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
+  .lessons-calendar-day {
+    min-width: 240px;
+    max-width: none;
   }
 }

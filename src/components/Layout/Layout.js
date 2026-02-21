@@ -2,11 +2,16 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import { IconMenu } from '../Icons/SidebarIcons';
 import useMediaQuery from '../../hooks/useMediaQuery';
+import { useTheme } from '../../context/ThemeContext';
 import './Layout.css';
+
+const BG_DARK = `${process.env.PUBLIC_URL || ''}/bg/dark-bg.jpg`;
+const BG_LIGHT = `${process.env.PUBLIC_URL || ''}/bg/light-bg.jpg`;
 
 const STORAGE_KEY = 'main-sidebar-expanded';
 
 const Layout = ({ children }) => {
+  const { theme } = useTheme();
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
@@ -45,7 +50,15 @@ const Layout = ({ children }) => {
         onToggleCollapse={handleCollapseClick}
         isMobile={isMobile}
       />
-      <main className={`layout-main ${!sidebarExpanded ? 'sidebar-collapsed' : ''}`}>
+      <main
+          className={`layout-main ${!sidebarExpanded ? 'sidebar-collapsed' : ''} layout-main-with-bg`}
+          style={{
+            backgroundImage: `url(${theme === 'dark' ? BG_DARK : BG_LIGHT})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundAttachment: 'fixed',
+          }}
+        >
         <div className="layout-mobile-header">
           <button
             type="button"
@@ -55,17 +68,6 @@ const Layout = ({ children }) => {
           >
             <IconMenu />
           </button>
-          <div className="layout-mobile-logo" aria-hidden>
-            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="8" y="6" width="24" height="26" rx="4" stroke="currentColor" strokeWidth="2"/>
-              <circle cx="15" cy="14" r="2" fill="currentColor"/>
-              <circle cx="25" cy="14" r="2" fill="currentColor"/>
-              <path d="M12 22h16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              <path d="M14 28h2v2h-2zM24 28h2v2h-2z" fill="currentColor"/>
-              <path d="M18 6v2M22 6v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-            <span className="layout-mobile-logo-text">RoboMan</span>
-          </div>
         </div>
         <div className="layout-content">
           {children}

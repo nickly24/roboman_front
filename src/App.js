@@ -21,6 +21,7 @@ import CRMAllChats from './pages/CRM/CRMAllChats';
 import CRMChatView from './pages/CRM/CRMChatView';
 import CRMNotifications from './pages/CRM/CRMNotifications';
 import CRMSettings from './pages/CRM/CRMSettings';
+import Accounting from './pages/Accounting/Accounting';
 import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
@@ -181,6 +182,15 @@ function App() {
             element={
               <ProtectedRoute requireCrmAccess>
                 <CRMChatView />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/accounting"
+            element={
+              <ProtectedRoute requireRole="OWNER">
+                <Accounting />
               </ProtectedRoute>
             }
           />
