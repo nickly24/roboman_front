@@ -221,11 +221,21 @@
   font-weight: 600;
   color: var(--crm-text);
   display: block;
+  word-break: break-word;
+}
+
+.crm-chat-view-branch {
+  display: block;
+  font-size: 14px;
+  color: var(--crm-text-secondary);
+  margin-top: 2px;
 }
 
 .crm-chat-view-status {
-  font-size: 13px;
+  display: block;
+  font-size: 12px;
   color: var(--crm-text-muted);
+  margin-top: 2px;
 }
 
 .crm-chat-page .crm-page-header-with-back {
@@ -696,4 +706,107 @@ html.theme-dark .crm-send-row {
 .crm-layout .spinner-ring:nth-child(3),
 .crm-layout .spinner-ring:nth-child(4) {
   border-top-color: var(--crm-accent);
+}
+
+/* ========== Мобильная версия CRM (чаты, филиалы) ========== */
+@media (max-width: 768px) {
+  .crm-page {
+    padding: 12px 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .crm-page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .crm-page-header .btn-primary {
+    width: 100%;
+  }
+
+  .crm-branch-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .crm-branch-actions {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .crm-branch-actions .btn-secondary,
+  .crm-branch-actions a .btn-secondary {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .crm-chats-filter {
+    max-width: 100%;
+  }
+
+  .crm-chat-list-messenger .crm-chat-item-messenger {
+    width: 100%;
+  }
+
+  .crm-chat-page {
+    width: 100%;
+  }
+
+  .crm-chat-view-header {
+    padding: 12px 15px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .crm-chat-back-btn {
+    order: 1;
+    flex-shrink: 0;
+  }
+
+  .crm-chat-header-actions {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .crm-chat-view-header-main {
+    order: 3;
+    flex-basis: 100%;
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .crm-chat-view-title-wrap {
+    overflow: hidden;
+  }
+
+  .crm-chat-view-title {
+    font-size: 18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .crm-chat-view-branch {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .crm-messages-list {
+    padding: 12px 15px;
+  }
+
+  .crm-msg {
+    max-width: 100%;
+  }
+
+  .crm-send-row {
+    padding: 12px 15px;
+  }
+
+  .crm-send-input {
+    min-width: 0;
+  }
 }

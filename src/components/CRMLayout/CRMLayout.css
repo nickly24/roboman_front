@@ -432,6 +432,19 @@
   }
 
   .crm-layout .layout-content {
+    width: 96%;
+    max-width: 96vw;
+    margin-left: auto;
+    margin-right: auto;
     padding: 16px;
+    box-sizing: border-box;
+  }
+
+  .crm-layout .layout-content.layout-content-chat-view {
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 0;
   }
 }

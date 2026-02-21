@@ -33,6 +33,10 @@ const CRMLayout = ({ children }) => {
   }, []);
 
   const handleToggleSidebar = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setMobileNavOpen(false);
+      return;
+    }
     setSidebarExpanded((prev) => {
       const next = !prev;
       try {
@@ -121,7 +125,7 @@ const CRMLayout = ({ children }) => {
           </button>
           <div className="layout-mobile-title">CRM</div>
         </div>
-        <div className="layout-content">{children}</div>
+        <div className={`layout-content ${location.pathname.match(/^\/crm\/chats\/[^/]+$/) ? 'layout-content-chat-view' : ''}`}>{children}</div>
       </main>
     </div>
   );

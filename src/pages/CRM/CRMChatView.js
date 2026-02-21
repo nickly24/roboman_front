@@ -154,7 +154,8 @@ const CRMChatView = () => {
             <div className="crm-chat-view-header-main">
               <div className="crm-chat-view-avatar" aria-hidden>{chatInitial}</div>
               <div className="crm-chat-view-title-wrap">
-                <h2 className="crm-chat-view-title">{title} {branchName ? `— ${branchName}` : ''}</h2>
+                <h2 className="crm-chat-view-title">{title}</h2>
+                {branchName ? <span className="crm-chat-view-branch">{branchName}</span> : null}
                 <span className="crm-chat-view-status">Чат с клиентом</span>
               </div>
               <div className="crm-chat-header-actions">
