@@ -274,20 +274,22 @@ const Sidebar = ({ isOpen = false, onClose, expanded = true, onToggleCollapse, i
             {theme === 'dark' ? 'Светлая' : 'Тёмная'}
           </span>
         </button>
-        <button
-          type="button"
-          className="sidebar-toggle"
-          onClick={onToggleCollapse}
-          title={isMobile ? 'Свернуть' : (expanded ? 'Свернуть' : 'Развернуть')}
-          aria-label={isMobile ? 'Закрыть меню' : (expanded ? 'Свернуть сайдбар' : 'Развернуть сайдбар')}
-        >
-          <span className="sidebar-toggle-icon">
-            {isMobile ? <IconChevronLeft /> : (expanded ? <IconChevronLeft /> : <IconChevronRight />)}
-          </span>
-          <span className="sidebar-toggle-label">
-            {isMobile ? 'Свернуть' : (expanded ? 'Свернуть' : 'Развернуть')}
-          </span>
-        </button>
+        {!isMobile && (
+          <button
+            type="button"
+            className="sidebar-toggle"
+            onClick={onToggleCollapse}
+            title={expanded ? 'Свернуть' : 'Развернуть'}
+            aria-label={expanded ? 'Свернуть сайдбар' : 'Развернуть сайдбар'}
+          >
+            <span className="sidebar-toggle-icon">
+              {expanded ? <IconChevronLeft /> : <IconChevronRight />}
+            </span>
+            <span className="sidebar-toggle-label">
+              {expanded ? 'Свернуть' : 'Развернуть'}
+            </span>
+          </button>
+        )}
         <button onClick={handleLogout} className="sidebar-logout">
           <span className="sidebar-logout-icon"><IconLogout /></span>
           <span className="sidebar-logout-label">Выйти</span>

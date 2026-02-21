@@ -377,6 +377,11 @@
     transition: transform 0.2s;
   }
 
+  /* На мобиле collapse/expand не используется — всегда полная ширина */
+  .crm-sidebar.collapsed {
+    width: 260px;
+  }
+
   .crm-sidebar.open {
     transform: translateX(0);
   }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import useMediaQuery from '../../hooks/useMediaQuery';
 import {
   IconBuilding,
   IconChat,
@@ -23,6 +24,7 @@ const CRMLayout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
 
@@ -35,7 +37,7 @@ const CRMLayout = ({ children }) => {
   }, []);
 
   const handleToggleSidebar = () => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+    if (isMobile) {
       setMobileNavOpen(false);
       return;
     }
@@ -58,9 +60,9 @@ const CRMLayout = ({ children }) => {
   ];
 
   return (
-    <div className={`layout crm-layout ${!sidebarExpanded ? 'sidebar-collapsed' : ''}`}>
+    <div className={`layout crm-layout ${!isMobile && !sidebarExpanded ? 'sidebar-collapsed' : ''}`}>
       <div className={`layout-overlay ${mobileNavOpen ? 'open' : ''}`} onClick={() => setMobileNavOpen(false)} />
-      <aside className={`crm-sidebar ${mobileNavOpen ? 'open' : ''} ${!sidebarExpanded ? 'collapsed' : ''}`}>
+      <aside className={`crm-sidebar ${mobileNavOpen ? 'open' : ''} ${!isMobile && !sidebarExpanded ? 'collapsed' : ''}`}>
         <div className="crm-sidebar-header">
           <h1 className="crm-sidebar-logo">CRM</h1>
           <p className="crm-sidebar-desc">Telegram-чаты филиалов</p>
@@ -79,20 +81,22 @@ const CRMLayout = ({ children }) => {
           ))}
         </nav>
         <div className="crm-sidebar-footer">
-          <button
-            type="button"
-            className="crm-sidebar-toggle"
-            onClick={handleToggleSidebar}
-            title={sidebarExpanded ? 'Свернуть' : 'Развернуть'}
-            aria-label={sidebarExpanded ? 'Свернуть сайдбар' : 'Развернуть сайдбар'}
-          >
-            <span className="crm-sidebar-toggle-icon">
-              {sidebarExpanded ? <IconChevronLeft /> : <IconChevronRight />}
-            </span>
-            <span className="crm-sidebar-toggle-label">
-              {sidebarExpanded ? 'Свернуть' : 'Развернуть'}
-            </span>
-          </button>
+          {!isMobile && (
+            <button
+              type="button"
+              className="crm-sidebar-toggle"
+              onClick={handleToggleSidebar}
+              title={sidebarExpanded ? 'Свернуть' : 'Развернуть'}
+              aria-label={sidebarExpanded ? 'Свернуть сайдбар' : 'Развернуть сайдбар'}
+            >
+              <span className="crm-sidebar-toggle-icon">
+                {sidebarExpanded ? <IconChevronLeft /> : <IconChevronRight />}
+              </span>
+              <span className="crm-sidebar-toggle-label">
+                {sidebarExpanded ? 'Свернуть' : 'Развернуть'}
+              </span>
+            </button>
+          )}
           <button
             type="button"
             className="crm-theme-toggle"

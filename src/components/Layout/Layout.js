@@ -46,12 +46,12 @@ const Layout = ({ children }) => {
       <Sidebar
         isOpen={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
-        expanded={sidebarExpanded}
+        expanded={isMobile ? true : sidebarExpanded}
         onToggleCollapse={handleCollapseClick}
         isMobile={isMobile}
       />
       <main
-          className={`layout-main ${!sidebarExpanded ? 'sidebar-collapsed' : ''} layout-main-with-bg`}
+          className={`layout-main ${!isMobile && !sidebarExpanded ? 'sidebar-collapsed' : ''} layout-main-with-bg`}
           style={{
             backgroundImage: `url(${theme === 'dark' ? BG_DARK : BG_LIGHT})`,
             backgroundSize: 'cover',
