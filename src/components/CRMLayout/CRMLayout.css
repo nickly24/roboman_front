@@ -34,13 +34,14 @@
   top: 0;
   width: 260px;
   height: 100vh;
-  background: var(--crm-panel);
-  color: var(--crm-text-secondary);
+  background: var(--color-primary);
+  color: #ffffff;
   display: flex;
   flex-direction: column;
   z-index: 100;
-  border-right: 1px solid var(--crm-border);
-  transition: width 0.2s, background 0.2s;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  transition: width 0.2s;
+  overflow-x: hidden;
 }
 
 .crm-sidebar.collapsed {
@@ -49,7 +50,7 @@
 
 .crm-sidebar-header {
   padding: 20px;
-  border-bottom: 1px solid var(--crm-border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   flex-shrink: 0;
   text-align: left;
 }
@@ -62,7 +63,7 @@
 .crm-sidebar-logo {
   font-size: 18px;
   font-weight: 700;
-  color: var(--crm-text);
+  color: #ffffff;
   margin: 0;
   letter-spacing: -0.5px;
   white-space: nowrap;
@@ -71,7 +72,7 @@
 
 .crm-sidebar-desc {
   font-size: 11px;
-  color: var(--crm-text-muted);
+  color: rgba(255, 255, 255, 0.85);
   margin: 4px 0 0 0;
   white-space: nowrap;
   overflow: hidden;
@@ -85,6 +86,26 @@
   flex: 1;
   padding: 12px 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+}
+
+.crm-sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.crm-sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.crm-sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 3px;
+}
+
+.crm-sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.55);
 }
 
 .crm-sidebar-item {
@@ -94,7 +115,7 @@
   gap: 14px;
   padding: 12px 20px;
   margin: 0 12px;
-  color: var(--crm-text-secondary);
+  color: #ffffff;
   text-decoration: none;
   transition: background 0.15s, color 0.15s;
   border-radius: 8px;
@@ -119,18 +140,18 @@
 }
 
 .crm-sidebar-item:hover {
-  background: var(--crm-panel-elevated);
-  color: var(--crm-text);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
 }
 
 .crm-sidebar-item.active {
-  background: var(--crm-accent-muted);
-  color: var(--crm-accent);
+  background: #ffffff;
+  color: var(--color-primary);
   font-weight: 500;
 }
 
 .crm-sidebar-item.active .crm-sidebar-icon {
-  filter: none;
+  color: var(--color-primary);
 }
 
 .crm-sidebar-icon {
@@ -140,6 +161,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  color: inherit;
 }
 
 .crm-sidebar-icon svg {
@@ -148,7 +170,7 @@
 
 .crm-sidebar-footer {
   padding: 16px 20px;
-  border-top: 1px solid var(--crm-border);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -165,9 +187,9 @@
   gap: 10px;
   padding: 10px 14px;
   font-size: 13px;
-  color: var(--crm-text-secondary);
+  color: #ffffff;
   background: transparent;
-  border: 1px solid var(--crm-border);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -180,8 +202,9 @@
 }
 
 .crm-sidebar-toggle:hover {
-  background: var(--crm-panel-elevated);
-  color: var(--crm-text);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .crm-sidebar-toggle-icon {
@@ -208,9 +231,9 @@
   gap: 8px;
   padding: 10px 14px;
   font-size: 13px;
-  color: var(--crm-text-secondary);
+  color: #ffffff;
   background: transparent;
-  border: 1px solid var(--crm-border);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -223,8 +246,9 @@
 }
 
 .crm-theme-toggle:hover {
-  background: var(--crm-panel-elevated);
-  color: var(--crm-text);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .crm-theme-toggle-icon {
@@ -253,9 +277,9 @@
   width: 100%;
   padding: 10px 14px;
   font-size: 13px;
-  color: var(--crm-text-muted);
+  color: #ffffff;
   background: transparent;
-  border: 1px solid var(--crm-border);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -290,8 +314,9 @@
 }
 
 .crm-sidebar-back:hover {
-  background: var(--crm-panel-elevated);
-  color: var(--crm-text-secondary);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .crm-layout .layout-main {

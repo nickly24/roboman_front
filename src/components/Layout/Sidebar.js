@@ -123,10 +123,15 @@ const Sidebar = ({ isOpen = false, onClose, expanded = true, onToggleCollapse, i
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''} ${!expanded ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
-        <img src={`${process.env.PUBLIC_URL || ''}/Heads/Logo.png`} alt="RoboMan" className="sidebar-logo" />
+        <img
+          src={`${process.env.PUBLIC_URL || ''}/Heads/${expanded || isOpen ? 'full.svg' : 'min.svg'}`}
+          alt="RoboMan"
+          className="sidebar-logo"
+        />
+        <div className="sidebar-logo-divider" aria-hidden />
         <div className="sidebar-user">
           <span className="sidebar-user-name">{user?.profile?.full_name || user?.user?.login}</span>
-          <span className="sidebar-user-role">
+          <span className={`sidebar-user-role-badge ${isOwner ? 'sidebar-user-role-owner' : 'sidebar-user-role-teacher'}`}>
             {isOwner ? 'Владелец' : 'Преподаватель'}
           </span>
         </div>

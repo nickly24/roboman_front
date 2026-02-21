@@ -24,6 +24,7 @@ const AI_PANEL_MAX = 480;
 const AI_PANEL_DEFAULT = 480;
 const AI_CHAT_STORAGE_PREFIX = 'crm_ai_chat_';
 const AI_SUMMARY_STORAGE_PREFIX = 'crm_ai_summary_';
+const AI_SENT_STORAGE_PREFIX = 'crm_ai_sent_';
 
 const BG_DARK = `${process.env.PUBLIC_URL || ''}/bg/dark-bg.jpg`;
 const BG_LIGHT = `${process.env.PUBLIC_URL || ''}/bg/light-bg.jpg`;
@@ -257,17 +258,22 @@ const CRMChatsMessenger = () => {
     try {
       const rawChat = localStorage.getItem(AI_CHAT_STORAGE_PREFIX + chatId);
       const rawSummary = localStorage.getItem(AI_SUMMARY_STORAGE_PREFIX + chatId);
+      const rawSent = localStorage.getItem(AI_SENT_STORAGE_PREFIX + chatId);
       const arr = rawChat ? JSON.parse(rawChat) : [];
       const savedSummary = rawSummary || '';
+      const sentArr = rawSent ? JSON.parse(rawSent) : [];
       setAiChatHistory(Array.isArray(arr) ? arr : []);
       setAiSummary(savedSummary);
       setAiContextReady(Boolean(savedSummary));
-      setAiSentToChatIndices(new Set());
+      setAiSentToChatIndices(Array.isArray(sentArr) ? new Set(sentArr.map(Number)) : new Set());
     } catch {
       setAiChatHistory([]);
       setAiSummary('');
       setAiContextReady(false);
       setAiSentToChatIndices(new Set());
+      try {
+        localStorage.removeItem(AI_SENT_STORAGE_PREFIX + chatId);
+      } catch (_) {}
     }
     loadChat();
   }, [chatId]);
@@ -399,7 +405,13 @@ const CRMChatsMessenger = () => {
     try {
       await sendChatMessage(chatId, draft);
       loadMessages();
-      setAiSentToChatIndices((prev) => new Set(prev).add(index));
+      setAiSentToChatIndices((prev) => {
+        const next = new Set(prev).add(index);
+        try {
+          localStorage.setItem(AI_SENT_STORAGE_PREFIX + chatId, JSON.stringify(Array.from(next)));
+        } catch (_) {}
+        return next;
+      });
       return true;
     } catch (err) {
       alert(err.message || 'Ошибка отправки');
@@ -423,6 +435,7 @@ const CRMChatsMessenger = () => {
     try {
       localStorage.removeItem(AI_CHAT_STORAGE_PREFIX + chatId);
       localStorage.removeItem(AI_SUMMARY_STORAGE_PREFIX + chatId);
+      localStorage.removeItem(AI_SENT_STORAGE_PREFIX + chatId);
     } catch (_) {}
   };
 
@@ -431,8 +444,10 @@ const CRMChatsMessenger = () => {
     setAiSummarizing(true);
     setAiSummary('');
     setAiChatHistory([]);
+    setAiSentToChatIndices(new Set());
     try {
       localStorage.removeItem(AI_CHAT_STORAGE_PREFIX + chatId);
+      localStorage.removeItem(AI_SENT_STORAGE_PREFIX + chatId);
     } catch (_) {}
     const token = localStorage.getItem('auth_token');
     try {

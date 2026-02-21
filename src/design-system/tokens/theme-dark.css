@@ -62,6 +62,7 @@ html.theme-dark {
   /* === Sidebar (тёмная) === */
   --color-sidebar-bg: #1a1c29;
   --color-sidebar-active: #2d3047;
+  --color-sidebar-purple: #2C2860;
 
   /* === Border === */
   --color-border: #3d4158;
@@ -79,6 +80,13 @@ html.theme-dark {
   --shadow-primary: 0 4px 12px rgba(99, 102, 241, 0.35);
   --shadow-primary-hover: 0 6px 16px rgba(99, 102, 241, 0.45);
 }
+
+/* Сайдбары — тёмный фиолетовый в тёмной теме */
+html.theme-dark .sidebar,
+html.theme-dark .crm-sidebar {
+  background: var(--color-sidebar-purple) !important;
+}
+
 
 /* Glassmorphism — матовое стекло при фоновом изображении (кроме сайдбара) */
 html.theme-dark .layout-main-with-bg .card,

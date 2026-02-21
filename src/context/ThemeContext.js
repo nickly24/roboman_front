@@ -43,7 +43,11 @@ export const ThemeProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    document.documentElement.classList.toggle('theme-dark', theme === 'dark');
+    const root = document.documentElement;
+    root.classList.add('theme-transition');
+    root.classList.toggle('theme-dark', theme === 'dark');
+    const t = setTimeout(() => root.classList.remove('theme-transition'), 1400);
+    return () => clearTimeout(t);
   }, [theme]);
 
   const setTheme = (value) => {

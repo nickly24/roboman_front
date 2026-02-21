@@ -13,6 +13,16 @@ html {
   overflow-x: hidden;
 }
 
+/* Плавное переключение тем — ~1.2 сек */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition-property: background-color, color, border-color, fill, stroke, box-shadow, background !important;
+  transition-duration: 1.2s !important;
+  transition-timing-function: ease !important;
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);
