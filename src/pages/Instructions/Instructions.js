@@ -462,7 +462,7 @@ const Instructions = () => {
                 </div>
               <div className="file-field">
                 <label className="input-label">Фото (необязательно)</label>
-                <div style={{ color: '#6b7280', fontSize: 12, marginBottom: 6 }}>
+                <div style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginBottom: 6 }}>
                   Формат: изображение, размер до 5 MB
                 </div>
                 <input
@@ -570,7 +570,7 @@ const Instructions = () => {
               />
               <div className="file-field">
                 <label className="input-label">Фото (необязательно)</label>
-                <div style={{ color: '#6b7280', fontSize: 12, marginBottom: 6 }}>
+                <div style={{ color: 'var(--color-text-secondary)', fontSize: 12, marginBottom: 6 }}>
                   Формат: изображение, размер до 5 MB
                 </div>
                 <input

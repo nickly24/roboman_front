@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useCRMTheme } from '../../context/CRMThemeContext';
+import { useTheme } from '../../context/ThemeContext';
 import {
   IconBuilding,
   IconChat,
@@ -20,7 +20,7 @@ const CRM_SIDEBAR_STORAGE = 'crm-sidebar-expanded';
 const CRMLayout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { theme, setTheme } = useCRMTheme();
+  const { theme, setTheme } = useTheme();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
 
@@ -42,11 +42,6 @@ const CRMLayout = ({ children }) => {
     });
   };
 
-  useEffect(() => {
-    document.documentElement.setAttribute('data-crm-theme', theme);
-    return () => document.documentElement.removeAttribute('data-crm-theme');
-  }, [theme]);
-
   const menuItems = [
     { path: '/crm', label: 'Филиалы в CRM', Icon: IconBuilding },
     { path: '/crm/chats', label: 'Чаты', Icon: IconChat },
@@ -55,7 +50,7 @@ const CRMLayout = ({ children }) => {
   ];
 
   return (
-    <div className={`layout crm-layout ${!sidebarExpanded ? 'sidebar-collapsed' : ''}`} data-theme={theme}>
+    <div className={`layout crm-layout ${!sidebarExpanded ? 'sidebar-collapsed' : ''}`}>
       <div className={`layout-overlay ${mobileNavOpen ? 'open' : ''}`} onClick={() => setMobileNavOpen(false)} />
       <aside className={`crm-sidebar ${mobileNavOpen ? 'open' : ''} ${!sidebarExpanded ? 'collapsed' : ''}`}>
         <div className="crm-sidebar-header">

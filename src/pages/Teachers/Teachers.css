@@ -12,11 +12,11 @@
 }
 
 .teachers-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1f2937;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
   margin: 0;
-  letter-spacing: -0.5px;
+  letter-spacing: var(--letter-spacing-tight);
 }
 
 .table-actions {
@@ -44,13 +44,23 @@
 }
 
 .teacher-badge-free {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--color-error-light);
+  color: var(--color-error);
 }
 
 .teacher-badge-paid {
-  background: #ecfdf3;
-  color: #065f46;
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
+
+html.theme-dark .teacher-badge-free {
+  background: var(--color-error);
+  color: var(--color-text-inverse);
+}
+
+html.theme-dark .teacher-badge-paid {
+  background: var(--color-success);
+  color: var(--color-text-inverse);
 }
 
 .teacher-form {
@@ -83,25 +93,25 @@
   width: 44px;
   height: 40px;
   padding: 0;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
 }
 
 .teacher-color-text {
   height: 40px;
-  padding: 10px 12px;
-  font-size: 14px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #1f2937;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
   font-family: inherit;
 }
 
 .teacher-form-note {
-  font-size: 12px;
-  color: #6b7280;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
   padding-top: 4px;
 }
 

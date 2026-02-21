@@ -108,7 +108,7 @@ const Teachers = () => {
             height: '24px',
             borderRadius: '4px',
             backgroundColor: value,
-            border: '1px solid #e5e7eb',
+            border: '1px solid var(--color-border)',
           }}
         />
       ),
@@ -170,7 +170,7 @@ const Teachers = () => {
             height: '24px',
             borderRadius: '4px',
             backgroundColor: value,
-            border: '1px solid #e5e7eb',
+            border: '1px solid var(--color-border)',
           }}
         />
       ),

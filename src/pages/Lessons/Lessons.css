@@ -33,9 +33,9 @@
 }
 
 .lessons-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1f2937;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
   margin: 0;
   letter-spacing: -0.5px;
 }
@@ -53,21 +53,31 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px 8px;
+  padding: 2px var(--space-2);
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   white-space: nowrap;
 }
 
 .lesson-badge-free {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--color-error-light);
+  color: var(--color-error);
 }
 
 .lesson-badge-paid {
-  background: #ecfdf3;
-  color: #065f46;
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
+
+html.theme-dark .lesson-badge-free {
+  background: var(--color-error);
+  color: var(--color-text-inverse);
+}
+
+html.theme-dark .lesson-badge-paid {
+  background: var(--color-success);
+  color: var(--color-text-inverse);
 }
 
 .lesson-form {
@@ -77,12 +87,12 @@
 }
 
 .form-error {
-  padding: 12px 16px;
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 6px;
-  color: #dc2626;
-  font-size: 14px;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-error-light);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  font-size: var(--font-size-base);
 }
 
 .form-row {
@@ -99,9 +109,9 @@
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: #374151;
+  gap: var(--space-2);
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
   cursor: pointer;
 }
 
@@ -138,9 +148,9 @@
 }
 
 .lessons-calendar-range {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1f2937;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
 }
 
 .lessons-calendar-grid {
@@ -153,25 +163,25 @@
   display: flex;
   flex-direction: column;
   min-height: 220px;
-  padding: 10px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #ffffff;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
 }
 
 .lessons-calendar-day-outside {
-  background: #f9fafb;
-  border-color: #e5e7eb;
+  background: var(--color-bg-elevated);
+  border-color: var(--color-border);
 }
 
 .lessons-calendar-day-outside .lessons-calendar-day-header {
-  color: #9ca3af;
+  color: var(--color-text-muted);
 }
 
 .lessons-calendar-day-header {
-  font-size: 12px;
-  font-weight: 600;
-  color: #374151;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
   margin-bottom: 8px;
 }
 
@@ -182,59 +192,64 @@
 }
 
 .lessons-calendar-event {
-  border-left: 4px solid #94a3b8;
-  padding: 8px 10px;
-  border-radius: 6px;
-  background: #f9fafb;
+  border-left: 4px solid var(--color-gray-500);
+  padding: var(--space-2) var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .lessons-calendar-event-time {
-  font-size: 12px;
-  font-weight: 600;
-  color: #111827;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
 }
 
 .lessons-calendar-event-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1f2937;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
 }
 
 .lessons-calendar-event-meta {
-  font-size: 12px;
-  color: #6b7280;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
 }
 
 .lessons-calendar-event-badge {
   align-self: flex-start;
   margin: 2px 0;
-  padding: 2px 6px;
+  padding: 2px var(--space-1);
   border-radius: 999px;
   font-size: 11px;
-  font-weight: 600;
-  background: #fee2e2;
-  color: #991b1b;
+  font-weight: var(--font-weight-semibold);
+  background: var(--color-error-light);
+  color: var(--color-error);
+}
+
+html.theme-dark .lessons-calendar-event-badge {
+  background: var(--color-error);
+  color: var(--color-text-inverse);
 }
 
 .lessons-calendar-empty {
-  font-size: 12px;
-  color: #9ca3af;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
 }
 
 .lessons-calendar-summary {
   margin-top: auto;
   margin-bottom: 0;
-  padding: 8px 10px;
-  border-radius: 6px;
-  background: #f3f4f6;
+  padding: var(--space-2) var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 12px;
-  color: #374151;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
 }
 
 .lessons-calendar-summary-row {
@@ -247,13 +262,23 @@
 }
 
 .lessons-calendar-summary-positive {
-  background: #ecfdf3;
-  color: #065f46;
+  background: var(--color-success-light);
+  color: var(--color-success);
 }
 
 .lessons-calendar-summary-negative {
-  background: #fef2f2;
-  color: #991b1b;
+  background: var(--color-error-light);
+  color: var(--color-error);
+}
+
+html.theme-dark .lessons-calendar-summary-positive {
+  background: var(--color-success);
+  color: var(--color-text-inverse);
+}
+
+html.theme-dark .lessons-calendar-summary-negative {
+  background: var(--color-error);
+  color: var(--color-text-inverse);
 }
 
 .lessons-groups {
@@ -266,11 +291,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 12px;
-  margin-bottom: 8px;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-2);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 }
 
 .lessons-group-header-clickable {
@@ -282,7 +307,7 @@
 }
 
 .lessons-group-header-clickable:hover {
-  background: #e5e7eb;
+  background: var(--color-bg-hover);
 }
 
 .lessons-group-header-collapsed {
@@ -290,27 +315,27 @@
 }
 
 .lessons-group-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #111827;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
 }
 
 .lessons-group-meta {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 12px;
-  color: #6b7280;
+  gap: var(--space-3);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
 }
 
 .lessons-group-count {
-  font-size: 12px;
-  color: #6b7280;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
 }
 
 .lessons-group-salary {
-  font-weight: 600;
-  color: #059669;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-success);
 }
 
 .lessons-group-toggle {
@@ -322,32 +347,32 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  padding: var(--space-4);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   transition: all 0.2s;
 }
 
 .branch-invoice-item:hover {
-  background: #f3f4f6;
-  border-color: #d1d5db;
+  background: var(--color-bg-hover);
+  border-color: var(--color-gray-400);
 }
 
 .branch-invoice-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .branch-invoice-info strong {
-  font-size: 15px;
-  color: #1f2937;
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
 }
 
 .branch-invoice-count {
-  font-size: 13px;
-  color: #6b7280;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 @media (max-width: 768px) {

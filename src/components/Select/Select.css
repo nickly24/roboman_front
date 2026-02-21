@@ -5,23 +5,23 @@
 }
 
 .select-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: #374151;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
 }
 
 .select-required {
-  color: #dc2626;
+  color: var(--color-error);
   margin-left: 2px;
 }
 
 .select {
   padding: 10px 12px;
   font-size: 14px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #1f2937;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
   transition: all 0.2s;
   font-family: inherit;
   cursor: pointer;
@@ -29,26 +29,26 @@
 
 .select:focus {
   outline: none;
-  border-color: #0369a1;
-  box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
 .select:disabled {
-  background-color: #f9fafb;
-  color: #6b7280;
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text-muted);
   cursor: not-allowed;
 }
 
 .select-error {
-  border-color: #dc2626;
+  border-color: var(--color-error);
 }
 
 .select-error:focus {
-  border-color: #dc2626;
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px var(--color-error-light);
 }
 
 .select-error-message {
-  font-size: 12px;
-  color: #dc2626;
+  font-size: var(--font-size-xs);
+  color: var(--color-error);
 }

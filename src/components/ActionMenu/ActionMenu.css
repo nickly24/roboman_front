@@ -15,11 +15,11 @@
   position: absolute;
   top: calc(100% + 6px);
   min-width: 200px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  box-shadow: 0 14px 28px rgba(17, 24, 39, 0.14);
-  padding: 6px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  padding: var(--space-1);
   z-index: 1000;
 }
 
@@ -35,27 +35,27 @@
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 10px;
+  gap: var(--space-2);
+  padding: var(--space-2);
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
   text-align: left;
-  font-size: 13px;
-  color: #111827;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
 }
 
 .action-menu-item:hover {
-  background: #f9fafb;
+  background: var(--color-bg-hover);
 }
 
 .action-menu-item.danger {
-  color: #dc2626;
+  color: var(--color-error);
 }
 
 .action-menu-item.danger:hover {
-  background: #fef2f2;
+  background: var(--color-error-light);
 }
 
 .action-menu-item.disabled {
@@ -65,8 +65,8 @@
 
 .action-menu-divider {
   height: 1px;
-  background: #e5e7eb;
-  margin: 6px 0;
+  background: var(--color-border);
+  margin: var(--space-1) 0;
 }
 
 .action-menu-icon {

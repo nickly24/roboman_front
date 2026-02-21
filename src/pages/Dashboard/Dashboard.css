@@ -9,25 +9,25 @@
 }
 
 .dashboard-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1f2937;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
   margin: 0;
   letter-spacing: -0.5px;
 }
 
 .dashboard-loading {
-  padding: 48px;
+  padding: var(--space-12);
   text-align: center;
-  color: #6b7280;
-  font-size: 16px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-md);
 }
 
 .dashboard-error {
-  padding: 48px;
+  padding: var(--space-12);
   text-align: center;
-  color: #dc2626;
-  font-size: 16px;
+  color: var(--color-error);
+  font-size: var(--font-size-md);
 }
 
 .dashboard-filters-wrap {
@@ -37,30 +37,30 @@
 .dashboard-filters-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 20px;
-  font-size: 15px;
-  font-weight: 500;
-  color: #374151;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s, color 0.2s;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-xs);
 }
 
 .dashboard-filters-toggle:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
-  color: #1f2937;
+  background: var(--color-bg-hover);
+  border-color: var(--color-gray-400);
+  color: var(--color-text-primary);
 }
 
 .dashboard-filters-toggle-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #0369a1;
+  color: var(--color-primary);
 }
 
 .dashboard-filters-toggle-icon svg {
@@ -119,17 +119,17 @@
 }
 
 .period-mode-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: #374151;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
 }
 
 .period-mode-buttons {
   display: inline-flex;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  background: #ffffff;
+  background: var(--color-bg-surface);
   width: fit-content;
   justify-self: start;
 }
@@ -144,13 +144,13 @@
 }
 
 .period-btn:hover {
-  background: #f9fafb;
+  background: var(--color-bg-hover);
 }
 
 .period-btn.active {
-  background: #0369a1;
-  color: #ffffff;
-  font-weight: 600;
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  font-weight: var(--font-weight-semibold);
 }
 
 .dashboard-kpi {
@@ -167,14 +167,14 @@
 }
 
 .dashboard-empty {
-  padding: 48px;
+  padding: var(--space-12);
   text-align: center;
-  color: #6b7280;
+  color: var(--color-text-secondary);
 }
 
 .dashboard-empty p {
-  margin: 0 0 20px 0;
-  font-size: 16px;
+  margin: 0 0 var(--space-5) 0;
+  font-size: var(--font-size-md);
 }
 
 .salary-split {
@@ -184,49 +184,49 @@
 }
 
 .salary-split-item {
-  padding: 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #ffffff;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
 }
 
 .salary-split-title {
-  font-size: 12px;
-  color: #6b7280;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
   text-transform: uppercase;
 }
 
 .salary-split-value {
-  margin-top: 8px;
-  font-size: 22px;
-  font-weight: 700;
-  color: #1f2937;
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
 }
 
 .salary-split-meta {
-  margin-top: 6px;
-  font-size: 13px;
-  color: #6b7280;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .salary-split-by-dept {
-  margin: 12px 0 0 0;
+  margin: var(--space-3) 0 0 0;
   padding: 0;
   list-style: none;
-  font-size: 13px;
-  border-top: 1px solid #e5e7eb;
-  padding-top: 10px;
+  font-size: var(--font-size-sm);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-2);
 }
 
 .salary-split-by-dept li {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  padding: 4px 0;
-  color: #374151;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+  color: var(--color-text-secondary);
 }
 
 .salary-split-dept-name {
@@ -235,8 +235,8 @@
 }
 
 .salary-split-dept-value {
-  font-weight: 600;
-  color: #059669;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-success);
   white-space: nowrap;
 }
 
@@ -248,13 +248,13 @@
 .dashboard-lessons-total {
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--color-border);
   font-size: 15px;
-  color: #374151;
+  color: var(--color-text-secondary);
 }
 
 .dashboard-lessons-total strong {
-  color: #059669;
+  color: var(--color-success);
 }
 
 /* Занятия по филиалам (раскрывающиеся блоки) */
@@ -265,8 +265,8 @@
 }
 
 .lessons-branch-group {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   margin-bottom: 12px;
 }
@@ -278,33 +278,33 @@
 .lessons-branch-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   width: 100%;
-  padding: 14px 16px;
+  padding: var(--space-3) var(--space-4);
   text-align: left;
-  font-size: 15px;
-  font-weight: 600;
-  color: #1f2937;
-  background: #f9fafb;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  background: var(--color-bg-elevated);
   border: none;
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .lessons-branch-header:hover {
-  background: #f3f4f6;
+  background: var(--color-bg-hover);
 }
 
 .lessons-branch-header.open {
-  background: #eff6ff;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--color-bg-active);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .lessons-branch-chevron {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   flex-shrink: 0;
 }
 
@@ -334,8 +334,8 @@
 
 .lessons-branch-stat-label {
   font-size: 11px;
-  font-weight: 500;
-  color: #6b7280;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   margin-bottom: 2px;
@@ -347,20 +347,20 @@
 }
 
 .lessons-branch-revenue {
-  color: #059669;
+  color: var(--color-success);
 }
 
 .lessons-branch-profit.positive {
-  color: #059669;
+  color: var(--color-success);
 }
 
 .lessons-branch-profit.negative {
-  color: #dc2626;
+  color: var(--color-error);
 }
 
 .lessons-branch-body {
-  padding: 12px 16px 16px;
-  background: #ffffff;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  background: var(--color-bg-surface);
 }
 
 .lessons-branch-body .table-container {

@@ -1,0 +1,70 @@
+/**
+ * Design System — Color Tokens
+ * Dashdark X — Светлая тема
+ */
+
+:root {
+  /* === Primary / Brand (фиолетово-синий акцент) === */
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-primary-light: #eef2ff;
+  --color-primary-shadow: rgba(99, 102, 241, 0.35);
+
+  /* === Secondary (для графиков, второстепенные элементы) === */
+  --color-secondary: #06b6d4;
+  --color-secondary-light: #cffafe;
+
+  /* === Neutral / Gray Scale === */
+  --color-white: #ffffff;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* === Semantic === */
+  --color-success: #10b981;
+  --color-success-light: #d1fae5;
+  --color-error: #ef4444;
+  --color-error-light: #fee2e2;
+  --color-warning: #f59e0b;
+  --color-warning-light: #fef3c7;
+
+  /* === Дополнительные акценты === */
+  --color-orange: #f97316;
+  --color-orange-light: #ffedd5;
+  --color-info: #3b82f6;
+  --color-info-light: #dbeafe;
+
+  /* === Text === */
+  --color-text-primary: var(--color-gray-900);
+  --color-text-secondary: var(--color-gray-600);
+  --color-text-muted: var(--color-gray-500);
+  --color-text-inverse: var(--color-white);
+
+  /* === Background === */
+  --color-bg-base: #f8fafc;
+  --color-bg-surface: var(--color-white);
+  --color-bg-elevated: var(--color-gray-50);
+  --color-bg-hover: var(--color-gray-100);
+  --color-bg-active: var(--color-primary-light);
+
+  /* === Sidebar (светлая) === */
+  --color-sidebar-bg: var(--color-white);
+  --color-sidebar-active: var(--color-primary-light);
+
+  /* === Border === */
+  --color-border: var(--color-gray-200);
+  --color-border-light: #e5e7eb;
+
+  /* === Overlay === */
+  --color-overlay: rgba(17, 24, 39, 0.45);
+
+  /* === Legacy / Alias === */
+  --accent-color: var(--color-primary);
+}

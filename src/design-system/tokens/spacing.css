@@ -1,0 +1,29 @@
+/**
+ * Design System — Spacing Tokens
+ * 4px base unit (0.25rem)
+ */
+
+:root {
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* === Component-specific === */
+  --space-card-padding: var(--space-6);
+  --space-card-header-padding: var(--space-5) var(--space-6);
+  --space-sidebar-padding: var(--space-6) var(--space-5);
+  --space-content-padding: var(--space-6) var(--space-8);
+  --space-content-padding-mobile: var(--space-4);
+
+  /* === Layout === */
+  --sidebar-width: 260px;
+  --sidebar-width-collapsed: 80px;
+  --content-max-width: 1440px;
+}

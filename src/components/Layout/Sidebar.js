@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import {
   IconDashboard,
   IconLessons,
@@ -17,6 +18,8 @@ import {
   IconLogout,
   IconChevronLeft,
   IconChevronRight,
+  IconSun,
+  IconMoon,
 } from '../Icons/SidebarIcons';
 import './Sidebar.css';
 
@@ -39,6 +42,7 @@ const Sidebar = ({ isOpen = false, onClose, expanded = true, onToggleCollapse, i
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, isOwner, isTeacher, crmAccess } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   const handleLogout = async () => {
     await logout();
@@ -100,6 +104,20 @@ const Sidebar = ({ isOpen = false, onClose, expanded = true, onToggleCollapse, i
       </nav>
 
       <div className="sidebar-footer">
+        <button
+          type="button"
+          className="sidebar-theme-toggle"
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          title={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+          aria-label={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+        >
+          <span className="sidebar-theme-toggle-icon" aria-hidden>
+            {theme === 'dark' ? <IconSun /> : <IconMoon />}
+          </span>
+          <span className="sidebar-theme-toggle-label">
+            {theme === 'dark' ? 'Светлая' : 'Тёмная'}
+          </span>
+        </button>
         <button
           type="button"
           className="sidebar-toggle"

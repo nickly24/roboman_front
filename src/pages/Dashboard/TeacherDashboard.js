@@ -205,11 +205,11 @@ const TeacherDashboard = () => {
                   key={b.id}
                   style={{
                     padding: '8px 10px',
-                    border: '1px solid #e5e7eb',
+                    border: '1px solid var(--color-border)',
                     borderRadius: 999,
-                    background: '#ffffff',
+                    background: 'var(--color-bg-surface)',
                     fontSize: 13,
-                    color: '#374151',
+                    color: 'var(--color-text-secondary)',
                   }}
                   title={b.address || b.name}
                 >
@@ -218,7 +218,7 @@ const TeacherDashboard = () => {
               ))}
             </div>
           ) : (
-            <div style={{ color: '#6b7280', fontSize: 14 }}>Нет привязанных филиалов</div>
+            <div style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>Нет привязанных филиалов</div>
           )}
         </Card>
 
@@ -322,7 +322,7 @@ const TeacherDashboard = () => {
               />
             </>
           ) : (
-            <div style={{ color: '#6b7280', fontSize: 14 }}>
+            <div style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>
               {salaryByDept ? 'Нет занятий за выбранный период по отделам' : 'Загрузка…'}
             </div>
           )}

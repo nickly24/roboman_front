@@ -14,9 +14,9 @@
 }
 
 .schedule-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1f2937;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
   margin: 0;
   letter-spacing: -0.5px;
 }
@@ -36,35 +36,35 @@
 /* Табы дней на мобиле */
 .schedule-day-tabs {
   display: flex;
-  gap: 4px;
-  padding: 12px 16px;
-  border-bottom: 1px solid #e5e7eb;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
 .schedule-day-tab {
   flex-shrink: 0;
-  padding: 8px 14px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #fff;
-  color: #6b7280;
-  font-size: 14px;
-  font-weight: 500;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
 .schedule-day-tab:hover {
-  background: #f9fafb;
-  color: #374151;
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
 }
 
 .schedule-day-tab.active {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: #fff;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-inverse);
 }
 
 /* Сетка дней: горизонтальный скролл на десктопе, один столбец на мобиле */
@@ -101,12 +101,12 @@
 }
 
 .schedule-day-block-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #e5e7eb;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 2px solid var(--color-border);
 }
 
 /* Вертикальный список сегментов внутри дня */
@@ -117,8 +117,8 @@
 }
 
 .schedule-empty {
-  font-size: 14px;
-  color: #9ca3af;
+  font-size: var(--font-size-base);
+  color: var(--color-text-muted);
   padding: 16px;
   text-align: center;
 }
@@ -128,22 +128,22 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: #f8fafc;
-  border: 1px dashed #cbd5e1;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-elevated);
+  border: 1px dashed var(--color-border);
 }
 
 .schedule-segment-free-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: #64748b;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
 }
 
 .schedule-segment-free-text {
-  font-size: 12px;
-  color: #94a3b8;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
 }
 
 /* --- Сегмент: одно занятие (карточка) --- */
@@ -156,62 +156,62 @@
 .schedule-segment-group-collapsed {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border-radius: 10px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-active);
+  border: 1px solid var(--color-primary-light);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
 
 .schedule-segment-group-collapsed:hover {
-  background: #dbeafe;
-  border-color: #93c5fd;
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
 }
 
 .schedule-segment-group-time {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1e40af;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
 }
 
 .schedule-segment-group-count {
-  font-size: 13px;
-  color: #3b82f6;
+  font-size: var(--font-size-sm);
+  color: var(--color-primary);
   flex: 1;
 }
 
 .schedule-segment-group-chevron {
   font-size: 10px;
-  color: #3b82f6;
+  color: var(--color-primary);
 }
 
 /* --- Группа в развёрнутом виде --- */
 .schedule-segment-group-expanded {
-  border: 1px solid #bfdbfe;
-  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   overflow: visible;
-  background: #f8fafc;
+  background: var(--color-bg-elevated);
 }
 
 .schedule-segment-group-header {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border: none;
-  background: #eff6ff;
+  background: var(--color-bg-active);
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  color: #1e40af;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
   transition: background 0.15s;
 }
 
 .schedule-segment-group-header:hover {
-  background: #dbeafe;
+  background: var(--color-primary-light);
 }
 
 .schedule-segment-group-header .schedule-segment-group-count {
@@ -233,48 +233,48 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: 8px;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
   transition: box-shadow 0.15s;
 }
 
 .schedule-slot-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-md);
 }
 
 .schedule-slot-card-main {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
 .schedule-slot-card-time {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1e293b;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
 }
 
 .schedule-slot-card-branch {
-  font-size: 13px;
-  font-weight: 500;
-  color: #475569;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
 }
 
 .schedule-slot-card-teachers {
-  font-size: 12px;
-  color: #64748b;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
   margin-top: 2px;
 }
 
 .schedule-slot-teacher {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1);
   white-space: nowrap;
 }
 
@@ -286,8 +286,8 @@
 }
 
 .schedule-slot-teacher-empty {
-  font-size: 12px;
-  color: #94a3b8;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
 }
 
 .schedule-slot-card-actions {

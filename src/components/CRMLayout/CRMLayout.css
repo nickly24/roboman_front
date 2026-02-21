@@ -1,38 +1,20 @@
-/* ========== CRM Theme Variables (reference: dark messenger style + light variant) ========== */
-.crm-layout[data-theme="dark"] {
-  --crm-bg: #1a1a1a;
-  --crm-panel: #222222;
-  --crm-panel-elevated: #282828;
-  --crm-text: #ffffff;
-  --crm-text-secondary: #b0b0b0;
-  --crm-text-muted: #8a8a8a;
-  --crm-accent: #00ff7f;
-  --crm-accent-hover: #00e673;
-  --crm-accent-muted: rgba(0, 255, 127, 0.15);
-  --crm-border: #333333;
-  --crm-border-subtle: #2a2a2a;
-  --crm-input-bg: #282828;
-  --crm-input-border: #404040;
-  --crm-danger: #ef4444;
-  --crm-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-}
-
-.crm-layout[data-theme="light"] {
-  --crm-bg: #f0f2f5;
-  --crm-panel: #ffffff;
-  --crm-panel-elevated: #ffffff;
-  --crm-text: #1a1a1a;
-  --crm-text-secondary: #4a4a4a;
-  --crm-text-muted: #6b7280;
-  --crm-accent: #00c853;
-  --crm-accent-hover: #00a843;
-  --crm-accent-muted: rgba(0, 200, 83, 0.12);
-  --crm-border: #e5e7eb;
-  --crm-border-subtle: #f3f4f6;
-  --crm-input-bg: #ffffff;
-  --crm-input-border: #d1d5db;
-  --crm-danger: #dc2626;
-  --crm-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+/* ========== CRM использует единую дизайн-систему (html.theme-dark для тёмной темы) ========== */
+.crm-layout {
+  --crm-bg: var(--color-bg-base);
+  --crm-panel: var(--color-bg-surface);
+  --crm-panel-elevated: var(--color-bg-elevated);
+  --crm-text: var(--color-text-primary);
+  --crm-text-secondary: var(--color-text-secondary);
+  --crm-text-muted: var(--color-text-muted);
+  --crm-accent: var(--color-primary);
+  --crm-accent-hover: var(--color-primary-hover);
+  --crm-accent-muted: var(--color-primary-light);
+  --crm-border: var(--color-border);
+  --crm-border-subtle: var(--color-border-light);
+  --crm-input-bg: var(--color-bg-surface);
+  --crm-input-border: var(--color-border);
+  --crm-danger: var(--color-error);
+  --crm-shadow: var(--shadow-lg);
 }
 
 /* Layout root */

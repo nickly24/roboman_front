@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import Button from '../../components/Button/Button';
 import Input from '../../components/Input/Input';
+import { IconSun, IconMoon } from '../../components/Icons/SidebarIcons';
 import './Login.css';
 
 const Login = () => {
@@ -11,6 +13,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login: authLogin } = useAuth();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -31,6 +34,15 @@ const Login = () => {
 
   return (
     <div className="login-page">
+      <button
+        type="button"
+        className="login-theme-toggle"
+        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        title={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+        aria-label={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+      >
+        {theme === 'dark' ? <IconSun /> : <IconMoon />}
+      </button>
       <div className="login-container">
         <div className="login-header">
           <h1 className="login-title">RoboMan</h1>

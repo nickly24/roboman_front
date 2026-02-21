@@ -1,0 +1,91 @@
+/**
+ * Design System — Тёмная тема
+ * Dashdark X — тёмная версия
+ * html.theme-dark применяется на document.documentElement
+ */
+
+html.theme-dark {
+  color: var(--color-text-primary);
+}
+
+html.theme-dark {
+  /* === Primary / Brand (фиолетово-синий) === */
+  --color-primary: #6366f1;
+  --color-primary-hover: #818cf8;
+  --color-primary-light: rgba(99, 102, 241, 0.2);
+  --color-primary-shadow: rgba(99, 102, 241, 0.4);
+
+  /* === Secondary === */
+  --color-secondary: #22d3ee;
+  --color-secondary-light: rgba(34, 211, 238, 0.15);
+
+  /* === Neutral (тёмная палитра Dashdark X) === */
+  --color-white: #1a1c29;
+  --color-gray-50: #222437;
+  --color-gray-100: #222437;
+  --color-gray-200: #2d3047;
+  --color-gray-300: #3d4158;
+  --color-gray-400: #64748b;
+  --color-gray-500: #94a3b8;
+  --color-gray-600: #cbd5e1;
+  --color-gray-700: #e2e8f0;
+  --color-gray-800: #f1f5f9;
+  --color-gray-900: #f8fafc;
+
+  /* === Semantic === */
+  --color-success: #10b981;
+  --color-success-light: rgba(16, 185, 129, 0.2);
+  --color-error: #ef4444;
+  --color-error-light: rgba(239, 68, 68, 0.2);
+  --color-warning: #f59e0b;
+  --color-warning-light: rgba(245, 158, 11, 0.2);
+
+  /* === Дополнительные акценты === */
+  --color-orange: #fb923c;
+  --color-orange-light: rgba(251, 146, 60, 0.2);
+  --color-info: #60a5fa;
+  --color-info-light: rgba(96, 165, 250, 0.2);
+
+  /* === Text === */
+  --color-text-primary: #f9fafb;
+  --color-text-secondary: #d1d5db;
+  --color-text-muted: #9ca3af;
+  --color-text-inverse: #1a1c29;
+
+  /* === Background === */
+  --color-bg-base: #1a1c29;
+  --color-bg-surface: #222437;
+  --color-bg-elevated: #2d3047;
+  --color-bg-hover: #2d3047;
+  --color-bg-active: rgba(99, 102, 241, 0.2);
+
+  /* === Sidebar (тёмная) === */
+  --color-sidebar-bg: #1a1c29;
+  --color-sidebar-active: #2d3047;
+
+  /* === Border === */
+  --color-border: #3d4158;
+  --color-border-light: #2d3047;
+
+  /* === Overlay === */
+  --color-overlay: rgba(0, 0, 0, 0.6);
+
+  /* === Shadows === */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 6px 16px rgba(0, 0, 0, 0.6);
+  --shadow-primary: 0 4px 12px rgba(99, 102, 241, 0.35);
+  --shadow-primary-hover: 0 6px 16px rgba(99, 102, 241, 0.45);
+}
+
+/* Glassmorphism — матовое стекло для карточек в тёмной теме */
+html.theme-dark .glass-card,
+html.theme-dark [data-glass="true"] {
+  background: rgba(34, 36, 55, 0.5) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}

@@ -365,7 +365,7 @@
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
 }
 
-.crm-layout[data-theme="dark"] .crm-send-row {
+html.theme-dark .crm-send-row {
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.3);
 }
 
@@ -662,50 +662,6 @@
 .crm-layout .select:focus {
   border-color: var(--crm-accent);
   box-shadow: 0 0 0 2px var(--crm-accent-muted);
-}
-
-/* Modal inside CRM (portal: theme on html for open modals from CRM) */
-html[data-crm-theme="dark"] .modal-overlay {
-  background-color: rgba(0, 0, 0, 0.7);
-}
-
-html[data-crm-theme="dark"] .modal {
-  background: #222222;
-  border: 1px solid #333333;
-}
-
-html[data-crm-theme="dark"] .modal-title {
-  color: #ffffff;
-}
-
-html[data-crm-theme="dark"] .modal-header {
-  border-bottom-color: #333333;
-}
-
-html[data-crm-theme="dark"] .modal-close {
-  color: #8a8a8a;
-}
-
-html[data-crm-theme="dark"] .modal-close:hover {
-  background: #282828;
-  color: #ffffff;
-}
-
-html[data-crm-theme="dark"] .modal-body {
-  color: #ffffff;
-}
-
-html[data-crm-theme="light"] .modal {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-}
-
-html[data-crm-theme="light"] .modal-title {
-  color: #1a1a1a;
-}
-
-html[data-crm-theme="light"] .modal-body {
-  color: #1a1a1a;
 }
 
 /* Input inside CRM */

@@ -9,16 +9,16 @@
 }
 
 .salary-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 8px 0;
-  letter-spacing: -0.5px;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-2) 0;
+  letter-spacing: var(--letter-spacing-tight);
 }
 
 .salary-subtitle {
-  font-size: 14px;
-  color: #6b7280;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
@@ -46,9 +46,9 @@
 
 .salary-empty,
 .salary-department-empty {
-  color: #6b7280;
-  font-size: 14px;
-  padding: 16px 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  padding: var(--space-4) 0;
 }
 
 .salary-period-cell,
@@ -60,12 +60,12 @@
 }
 
 .salary-period-meta {
-  font-size: 12px;
-  color: #6b7280;
-  font-weight: 400;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-normal);
 }
 
 .salary-total-cell {
-  font-weight: 600;
-  color: #059669;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-success);
 }

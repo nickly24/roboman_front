@@ -21,7 +21,7 @@ import CRMAllChats from './pages/CRM/CRMAllChats';
 import CRMChatView from './pages/CRM/CRMChatView';
 import CRMNotifications from './pages/CRM/CRMNotifications';
 import CRMSettings from './pages/CRM/CRMSettings';
-import { CRMThemeProvider } from './context/CRMThemeContext';
+import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
 const DashboardRoute = () => {
@@ -33,7 +33,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <CRMThemeProvider>
+        <ThemeProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
           
@@ -187,7 +187,7 @@ function App() {
 
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
-        </CRMThemeProvider>
+        </ThemeProvider>
       </Router>
     </AuthProvider>
   );
