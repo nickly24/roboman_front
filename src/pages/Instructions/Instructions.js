@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import apiClient from '../../services/api';
 import { API_ENDPOINTS } from '../../config/api';
 import Layout from '../../components/Layout/Layout';
@@ -10,20 +10,28 @@ import Modal from '../../components/Modal/Modal';
 import Input from '../../components/Input/Input';
 import Select from '../../components/Select/Select';
 import InstructionDetailsModal from './InstructionDetailsModal';
+import InstructionCard from './InstructionCard';
 import { useAuth } from '../../context/AuthContext';
 import './Instructions.css';
 
 const MAX_PDF_BYTES = 10 * 1024 * 1024; // 10 MB
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5 MB
+const INSTRUCTIONS_PAGE_SIZE = 8;
 
 const Instructions = () => {
-  const { isOwner } = useAuth();
+  const { isOwner, isTeacher } = useAuth();
   const [tab, setTab] = useState('instructions'); // instructions | topics
   const [loading, setLoading] = useState(true);
   const [loadingSections, setLoadingSections] = useState(true);
   const [sections, setSections] = useState([]);
   const [selectedSectionId, setSelectedSectionId] = useState('');
   const [instructions, setInstructions] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [branches, setBranches] = useState([]);
+  const [branchFilterIds, setBranchFilterIds] = useState([]); // массив строк id садиков
+  const [builtFilter, setBuiltFilter] = useState(''); // '' | '0' = не было в саду | '1' = было в саду
+  const [branchModalOpen, setBranchModalOpen] = useState(false);
   const [viewingInstruction, setViewingInstruction] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [createMode, setCreateMode] = useState('instruction'); // instruction | topic
@@ -42,15 +50,39 @@ const Instructions = () => {
   const [editingInstruction, setEditingInstruction] = useState(null);
   const [editForm, setEditForm] = useState({ section_id: '', name: '', description: '', photo: null });
   const [photoUrls, setPhotoUrls] = useState({});
+  const photoUrlsRef = React.useRef(photoUrls);
+  const photoRequestedRef = React.useRef(new Set());
+  photoUrlsRef.current = photoUrls;
 
   useEffect(() => {
     loadSections();
   }, []);
 
   useEffect(() => {
+    const loadBranches = async () => {
+      try {
+        const res = await apiClient.get(`${API_ENDPOINTS.BRANCHES}?limit=500`);
+        if (res.data?.ok && res.data?.data?.items) {
+          setBranches(res.data.data.items);
+        } else {
+          const data = res.data?.data;
+          setBranches(Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : []);
+        }
+      } catch (e) {
+        setBranches([]);
+      }
+    };
+    loadBranches();
+  }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [selectedSectionId, JSON.stringify(branchFilterIds), builtFilter]);
+
+  useEffect(() => {
     loadInstructions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSectionId]);
+  }, [selectedSectionId, page, JSON.stringify(branchFilterIds), builtFilter]);
 
   useEffect(() => {
     const currentIds = new Set(instructions.map((item) => String(item.id)));
@@ -60,42 +92,31 @@ const Instructions = () => {
         if (!currentIds.has(id)) {
           URL.revokeObjectURL(next[id]);
           delete next[id];
+          photoRequestedRef.current.delete(id);
         }
       });
       return next;
     });
   }, [instructions]);
 
-  useEffect(() => {
-    let cancelled = false;
-    const loadPhotos = async () => {
-      const toLoad = instructions.filter(
-        (item) => item.has_photo && !photoUrls[String(item.id)]
-      );
-      if (!toLoad.length) return;
-      await Promise.all(
-        toLoad.map(async (item) => {
-          try {
-            const resp = await apiClient.get(API_ENDPOINTS.INSTRUCTION_PHOTO(item.id), {
-              responseType: 'blob',
-              headers: { Accept: 'image/*' },
-            });
-            if (cancelled) return;
-            const blob = new Blob([resp.data], { type: resp.data?.type || 'image/jpeg' });
-            const url = URL.createObjectURL(blob);
-            setPhotoUrls((prev) => ({ ...prev, [String(item.id)]: url }));
-          } catch (err) {
-            // eslint-disable-next-line no-console
-            console.error('Ошибка загрузки фото инструкции:', err);
-          }
-        })
-      );
-    };
-    loadPhotos();
-    return () => {
-      cancelled = true;
-    };
-  }, [instructions, photoUrls]);
+  const requestPhoto = useCallback(async (instructionId) => {
+    const id = String(instructionId);
+    if (photoUrlsRef.current[id] || photoRequestedRef.current.has(id)) return;
+    photoRequestedRef.current.add(id);
+    try {
+      const resp = await apiClient.get(API_ENDPOINTS.INSTRUCTION_PHOTO(instructionId), {
+        responseType: 'blob',
+        headers: { Accept: 'image/*' },
+      });
+      const blob = new Blob([resp.data], { type: resp.data?.type || 'image/jpeg' });
+      const url = URL.createObjectURL(blob);
+      setPhotoUrls((prev) => (prev[id] ? prev : { ...prev, [id]: url }));
+    } catch (err) {
+      photoRequestedRef.current.delete(id);
+      // eslint-disable-next-line no-console
+      console.error('Ошибка загрузки фото инструкции:', err);
+    }
+  }, []);
 
   const loadSections = async () => {
     setLoadingSections(true);
@@ -119,17 +140,26 @@ const Instructions = () => {
     setLoading(true);
     try {
       const qs = new URLSearchParams();
+      qs.append('limit', String(INSTRUCTIONS_PAGE_SIZE));
+      qs.append('offset', String((page - 1) * INSTRUCTIONS_PAGE_SIZE));
       if (selectedSectionId) qs.append('section_id', selectedSectionId);
+      if (branchFilterIds.length > 0 && (builtFilter === '0' || builtFilter === '1')) {
+        qs.append('branch_ids', branchFilterIds.join(','));
+        qs.append('built', builtFilter);
+      }
       const response = await apiClient.get(
-        `${API_ENDPOINTS.INSTRUCTIONS}${qs.toString() ? `?${qs}` : ''}`
+        `${API_ENDPOINTS.INSTRUCTIONS}?${qs.toString()}`
       );
       if (response.data.ok) {
         const data = response.data.data;
-        setInstructions(Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []));
+        const items = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
+        setInstructions(items);
+        setTotal(typeof data?.total === 'number' ? data.total : items.length);
       }
     } catch (error) {
       console.error('Ошибка загрузки инструкций:', error);
       setInstructions([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -153,42 +183,7 @@ const Instructions = () => {
     setEditOpen(true);
   };
 
-  const columns = [
-    {
-      key: 'photo',
-      title: 'Фото',
-      width: 90,
-      render: (_, row) => {
-        const url = photoUrls[String(row.id)];
-        if (!row.has_photo) return <span style={{ color: '#9ca3af' }}>—</span>;
-        if (!url) return <span style={{ color: '#9ca3af' }}>…</span>;
-        return <img className="instruction-photo-thumb" src={url} alt="Фото" />;
-      },
-    },
-    { key: 'name', title: 'Название' },
-    {
-      key: 'section_name',
-      title: 'Тема',
-      render: (value, row) => value || sectionNameById.get(String(row.section_id)) || '—',
-    },
-    { key: 'description', title: 'Описание' },
-    {
-      key: 'actions',
-      title: 'Действия',
-      render: (_, row) => (
-        <div className="table-actions">
-          <Button size="small" variant="primary" onClick={() => setViewingInstruction(row)}>
-            Открыть
-          </Button>
-          {isOwner && (
-            <Button size="small" variant="secondary" onClick={() => openEdit(row)}>
-              Редактировать
-            </Button>
-          )}
-        </div>
-      ),
-    },
-  ];
+  const totalPages = Math.max(1, Math.ceil(total / INSTRUCTIONS_PAGE_SIZE));
 
   const topicsColumns = [
     { key: 'name', title: 'Тема' },
@@ -270,13 +265,120 @@ const Instructions = () => {
                   ))
                 )}
               </div>
+              <div className="instructions-branch-filters">
+                <div className="instructions-branch-summary">
+                  <div className="input-label">Садики</div>
+                  <button
+                    type="button"
+                    className="instructions-branch-button"
+                    onClick={() => setBranchModalOpen(true)}
+                  >
+                    {branchFilterIds.length === 0
+                      ? 'Все садики'
+                      : branchFilterIds.length === 1
+                        ? (branches.find((b) => String(b.id) === branchFilterIds[0])?.name || '1 садик')
+                        : `Выбрано садиков: ${branchFilterIds.length}`}
+                  </button>
+                </div>
+                <div className="instructions-built-filter">
+                  <Select
+                    label="Показать"
+                    value={builtFilter}
+                    onChange={(e) => setBuiltFilter(e.target.value || '')}
+                    options={[
+                      { value: '', label: 'Все инструкции' },
+                      { value: '0', label: 'Не было в выбранных садах' },
+                      { value: '1', label: 'Было в выбранных садах' },
+                    ]}
+                    disabled={branches.length === 0 || branchFilterIds.length === 0}
+                  />
+                </div>
+              </div>
             </Card>
 
-            <Card>
+            <Card className="instructions-list-card">
               {loading ? (
                 <LoadingSpinner size="medium" text="Загрузка инструкций..." />
+              ) : instructions.length === 0 ? (
+                <div className="instructions-empty">Нет инструкций</div>
               ) : (
-                <Table columns={columns} data={instructions} loading={false} emptyMessage="Нет инструкций" />
+                <>
+                  <div className="instructions-grid">
+                    {instructions.map((item) => (
+                      <InstructionCard
+                        key={item.id}
+                        instruction={item}
+                        sectionName={item.section_name || sectionNameById.get(String(item.section_id))}
+                        branchesBuiltAt={item.branches_built_at || []}
+                        myBranches={isTeacher ? branches : []}
+                        isTeacher={isTeacher}
+                        photoUrl={photoUrls[String(item.id)]}
+                        onRequestPhoto={requestPhoto}
+                        onOpen={setViewingInstruction}
+                        onEdit={openEdit}
+                        isOwner={isOwner}
+                      />
+                    ))}
+                  </div>
+                  {totalPages > 1 && (
+                    <div className="instructions-pagination">
+                      <button
+                        type="button"
+                        className="instructions-pagination__btn instructions-pagination__btn--prev"
+                        disabled={page <= 1}
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        aria-label="Предыдущая страница"
+                      >
+                        <span className="instructions-pagination__arrow">←</span>
+                        Назад
+                      </button>
+                      <nav className="instructions-pagination__pages" aria-label="Номера страниц">
+                        {(() => {
+                          const start = Math.max(1, page - 2);
+                          const end = Math.min(totalPages, page + 2);
+                          const pages = [];
+                          if (start > 1) {
+                            pages.push(1);
+                            if (start > 2) pages.push('…');
+                          }
+                          for (let i = start; i <= end; i++) pages.push(i);
+                          if (end < totalPages) {
+                            if (end < totalPages - 1) pages.push('…');
+                            pages.push(totalPages);
+                          }
+                          return pages.map((p, idx) =>
+                            p === '…' ? (
+                              <span key={`ellipsis-${idx}`} className="instructions-pagination__ellipsis">
+                                …
+                              </span>
+                            ) : (
+                              <button
+                                key={p}
+                                type="button"
+                                className={`instructions-pagination__page ${p === page ? 'instructions-pagination__page--current' : ''}`}
+                                onClick={() => setPage(p)}
+                                aria-label={`Страница ${p}`}
+                                aria-current={p === page ? 'page' : undefined}
+                              >
+                                {p}
+                              </button>
+                            )
+                          );
+                        })()}
+                      </nav>
+                      <button
+                        type="button"
+                        className="instructions-pagination__btn instructions-pagination__btn--next"
+                        disabled={page >= totalPages}
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        aria-label="Следующая страница"
+                      >
+                        Вперёд
+                        <span className="instructions-pagination__arrow">→</span>
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </Card>
           </>
@@ -294,6 +396,15 @@ const Instructions = () => {
           isOpen={!!viewingInstruction}
           onClose={() => setViewingInstruction(null)}
           instruction={viewingInstruction}
+          allBranches={branches}
+        />
+
+        <BranchesModal
+          isOpen={branchModalOpen}
+          onClose={() => setBranchModalOpen(false)}
+          branches={branches}
+          selectedIds={branchFilterIds}
+          onChange={setBranchFilterIds}
         />
 
         {isOwner && (
@@ -598,6 +709,82 @@ const Instructions = () => {
         )}
       </div>
     </Layout>
+  );
+};
+
+const BranchesModal = ({ isOpen, onClose, branches, selectedIds, onChange }) => {
+  const toggleId = (id) => {
+    const strId = String(id);
+    if (selectedIds.includes(strId)) {
+      onChange(selectedIds.filter((x) => x !== strId));
+    } else {
+      onChange([...selectedIds, strId]);
+    }
+  };
+
+  const allSelected = branches.length > 0 && selectedIds.length === branches.length;
+
+  const handleSelectAll = () => {
+    if (allSelected) {
+      onChange([]);
+    } else {
+      onChange(branches.map((b) => String(b.id)));
+    }
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Выбор садиков"
+      size="medium"
+    >
+      <div className="instructions-branches-modal">
+        <div className="instructions-branches-modal-header">
+          <button
+            type="button"
+            className="instructions-branches-toggle-all"
+            onClick={handleSelectAll}
+          >
+            {allSelected ? 'Снять выделение' : 'Выбрать все'}
+          </button>
+          <div className="instructions-branches-count">
+            Выбрано: {selectedIds.length}
+          </div>
+        </div>
+        <div className="instructions-branches-list">
+          {branches.length === 0 ? (
+            <div className="instructions-branches-empty">Нет доступных садиков</div>
+          ) : (
+            branches.map((b) => {
+              const id = String(b.id);
+              const checked = selectedIds.includes(id);
+              return (
+                <label key={id} className="instructions-branches-item">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleId(id)}
+                  />
+                  <span className="instructions-branches-name">
+                    {b.name || `Садик #${b.id}`}
+                  </span>
+                </label>
+              );
+            })
+          )}
+        </div>
+        <div className="instructions-branches-actions">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+          >
+            Закрыть
+          </Button>
+        </div>
+      </div>
+    </Modal>
   );
 };
 

@@ -98,3 +98,66 @@
   color: var(--color-error);
   font-size: var(--font-size-xs);
 }
+
+.instruction-branches-block {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+@media (max-width: 640px) {
+  .instruction-branches-block {
+    grid-template-columns: 1fr;
+  }
+}
+
+.instruction-branches-section {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  background: var(--color-bg-elevated);
+}
+
+.instruction-branches-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-2);
+}
+
+.instruction-branches-empty {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+  font-style: italic;
+}
+
+.instruction-branches-list {
+  margin: 0;
+  padding-left: var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.instruction-branches-list li {
+  margin-bottom: var(--space-1);
+}
+
+.instruction-branches-list li:last-child {
+  margin-bottom: 0;
+}
+
+.instruction-branches-name {
+  color: var(--color-text-primary);
+}
+
+.instruction-branches-last {
+  color: var(--color-text-muted);
+  margin-left: var(--space-2);
+  font-size: var(--font-size-xs);
+}
+
+.instruction-branches-list--muted li {
+  color: var(--color-text-muted);
+}

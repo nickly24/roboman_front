@@ -6,7 +6,18 @@ import Button from '../../components/Button/Button';
 import LoadingSpinner from '../../components/Loading/LoadingSpinner';
 import './InstructionDetailsModal.css';
 
-const InstructionDetailsModal = ({ isOpen, onClose, instruction }) => {
+function formatLastAt(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  } catch {
+    return '';
+  }
+}
+
+const InstructionDetailsModal = ({ isOpen, onClose, instruction, allBranches = [] }) => {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState('');
   const [pdfUrl, setPdfUrl] = useState('');
@@ -42,6 +53,13 @@ const InstructionDetailsModal = ({ isOpen, onClose, instruction }) => {
       mime: instruction.pdf_mime || 'application/pdf',
     };
   }, [instruction]);
+
+  const branchesBuiltAt = instruction?.branches_built_at || [];
+  const builtBranchIds = useMemo(() => new Set(branchesBuiltAt.map((b) => b.branch_id)), [branchesBuiltAt]);
+  const branchesNotBuilt = useMemo(
+    () => allBranches.filter((b) => !builtBranchIds.has(b.id)),
+    [allBranches, builtBranchIds]
+  );
 
   const loadPdf = async () => {
     if (!instruction?.id) return;
@@ -138,6 +156,40 @@ const InstructionDetailsModal = ({ isOpen, onClose, instruction }) => {
               {!photoLoading && !photoUrl && !instruction?.has_photo && '—'}
             </span>
           </div>
+        </div>
+
+        <div className="instruction-branches-block">
+          <div className="instruction-branches-section">
+            <h4 className="instruction-branches-title">Где собиралась</h4>
+            {branchesBuiltAt.length === 0 ? (
+              <p className="instruction-branches-empty">Ни разу не собиралась</p>
+            ) : (
+              <ul className="instruction-branches-list">
+                {branchesBuiltAt.map((b) => (
+                  <li key={b.branch_id}>
+                    <span className="instruction-branches-name">{b.branch_name}</span>
+                    {b.last_at && (
+                      <span className="instruction-branches-last">последний раз {formatLastAt(b.last_at)}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          {allBranches.length > 0 && (
+            <div className="instruction-branches-section">
+              <h4 className="instruction-branches-title">Где не собиралась</h4>
+              {branchesNotBuilt.length === 0 ? (
+                <p className="instruction-branches-empty">Собиралась во всех ваших садиках</p>
+              ) : (
+                <ul className="instruction-branches-list instruction-branches-list--muted">
+                  {branchesNotBuilt.map((b) => (
+                    <li key={b.id}>{b.name || `#${b.id}`}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="instruction-actions">

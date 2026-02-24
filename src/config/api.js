@@ -122,6 +122,7 @@ export const API_ENDPOINTS = {
   CRM_LEAD_STATUSES: '/crm/lead-statuses',
   CRM_LEAD_STATUS: (id) => `/crm/lead-statuses/${id}`,
   CRM_LEADS: '/crm/leads',
+  CRM_LEADS_MANUAL: '/crm/leads/manual',
   CRM_LEADS_ARCHIVE: '/crm/leads/archive',
   CRM_LEAD_ARCHIVE: (id) => `/crm/leads/${id}/archive`,
   CRM_LEAD_RESTORE: (id) => `/crm/leads/${id}/restore`,

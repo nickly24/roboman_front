@@ -2955,8 +2955,15 @@ html.theme-light .crm-nchats-proposal-card.sent {
 
 .crm-leads-tabs {
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
   margin-bottom: 20px;
+}
+
+.crm-leads-tabs-left {
+  display: flex;
+  gap: 8px;
 }
 
 .crm-leads-tabs button {
@@ -3535,6 +3542,26 @@ html.theme-light .crm-nchats-proposal-card.sent {
 
 .crm-leads-btn-statuses:hover {
   background: var(--crm-panel-elevated);
+}
+
+.crm-leads-tabs-right {
+  margin-left: auto;
+}
+
+.crm-leads-btn-create-lead {
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: none;
+  background: var(--crm-accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(99, 102, 241, 0.35);
+}
+
+.crm-leads-btn-create-lead:hover {
+  filter: brightness(1.05);
 }
 
 .crm-leads-status-system {

@@ -10,6 +10,8 @@ const CRMLeads = () => {
   const [statuses, setStatuses] = useState([]);
   const [viewMode, setViewMode] = useState('kanban');
   const [selectedLead, setSelectedLead] = useState(null);
+  const [createLeadModal, setCreateLeadModal] = useState(false);
+  const [createLeadForm, setCreateLeadForm] = useState({ name: '', address: '', phone: '', website: '', notes: '', lead_status_id: '' });
   const [comments, setComments] = useState([]);
   const [history, setHistory] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -180,6 +182,7 @@ const CRMLeads = () => {
   }, {});
 
   const cooperationStatusId = statuses.find((s) => s.name === 'Сотрудничество')?.id;
+  const defaultInWorkStatusId = statuses.find((s) => s.name === 'Взят в работу')?.id;
 
   const getColumnColorClass = (status) => {
     if (!status?.name) return '';
@@ -243,6 +246,43 @@ const CRMLeads = () => {
     }
   };
 
+  const openCreateLead = () => {
+    const initialStatusId = defaultInWorkStatusId || (statuses[0]?.id ?? '');
+    setCreateLeadForm({
+      name: '',
+      address: '',
+      phone: '',
+      website: '',
+      notes: '',
+      lead_status_id: initialStatusId,
+    });
+    setCreateLeadModal(true);
+  };
+
+  const createLead = async () => {
+    const name = (createLeadForm.name || '').trim();
+    if (!name) {
+      setError('Укажите название лида');
+      return;
+    }
+    setError(null);
+    try {
+      await apiClient.post(API_ENDPOINTS.CRM_LEADS_MANUAL, {
+        name,
+        address: createLeadForm.address || undefined,
+        phone: createLeadForm.phone || undefined,
+        website: createLeadForm.website || undefined,
+        notes: createLeadForm.notes || undefined,
+        lead_status_id: createLeadForm.lead_status_id || undefined,
+      });
+      setCreateLeadModal(false);
+      setCreateLeadForm({ name: '', address: '', phone: '', website: '', notes: '', lead_status_id: defaultInWorkStatusId || '' });
+      loadLeads();
+    } catch (err) {
+      setError(err.response?.data?.error?.message || 'Ошибка создания лида');
+    }
+  };
+
   const deleteStatus = async (id) => {
     setError(null);
     try {
@@ -264,15 +304,22 @@ const CRMLeads = () => {
         </div>
 
         <div className="crm-leads-tabs">
-          <button type="button" className={viewMode === 'kanban' ? 'active' : ''} onClick={() => setViewMode('kanban')}>
-            Канбан
-          </button>
-          <button type="button" className={viewMode === 'archive' ? 'active' : ''} onClick={() => setViewMode('archive')}>
-            Архив ({archive.length})
-          </button>
-          <button type="button" className="crm-leads-btn-statuses" onClick={() => setStatusModal('list')}>
-            Статусы
-          </button>
+          <div className="crm-leads-tabs-left">
+            <button type="button" className={viewMode === 'kanban' ? 'active' : ''} onClick={() => setViewMode('kanban')}>
+              Канбан
+            </button>
+            <button type="button" className={viewMode === 'archive' ? 'active' : ''} onClick={() => setViewMode('archive')}>
+              Архив ({archive.length})
+            </button>
+            <button type="button" className="crm-leads-btn-statuses" onClick={() => setStatusModal('list')}>
+              Статусы
+            </button>
+          </div>
+          <div className="crm-leads-tabs-right">
+            <button type="button" className="crm-leads-btn-create-lead" onClick={openCreateLead}>
+              + Создать лид
+            </button>
+          </div>
         </div>
 
         {error && <div className="crm-search-error">{error}</div>}
@@ -567,6 +614,65 @@ const CRMLeads = () => {
                   </div>
                 </>
               )}
+            </div>
+          </div>
+        )}
+
+        {createLeadModal && (
+          <div className="crm-leads-modal-overlay" onClick={() => setCreateLeadModal(false)}>
+            <div className="crm-leads-modal" onClick={(e) => e.stopPropagation()}>
+              <h3>Создать лид вручную</h3>
+              <div className="crm-leads-modal-body">
+                <label>Название</label>
+                <input
+                  type="text"
+                  value={createLeadForm.name}
+                  onChange={(e) => setCreateLeadForm((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="Частный детский сад..."
+                />
+                <label>Статус</label>
+                <select
+                  value={createLeadForm.lead_status_id || defaultInWorkStatusId || ''}
+                  onChange={(e) => setCreateLeadForm((f) => ({ ...f, lead_status_id: Number(e.target.value) }))}
+                >
+                  <option value="">Без статуса</option>
+                  {statuses.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+                <label>Адрес</label>
+                <input
+                  type="text"
+                  value={createLeadForm.address}
+                  onChange={(e) => setCreateLeadForm((f) => ({ ...f, address: e.target.value }))}
+                  placeholder="Адрес"
+                />
+                <label>Телефон</label>
+                <input
+                  type="text"
+                  value={createLeadForm.phone}
+                  onChange={(e) => setCreateLeadForm((f) => ({ ...f, phone: e.target.value }))}
+                  placeholder="+7..."
+                />
+                <label>Сайт</label>
+                <input
+                  type="url"
+                  value={createLeadForm.website}
+                  onChange={(e) => setCreateLeadForm((f) => ({ ...f, website: e.target.value }))}
+                  placeholder="https://..."
+                />
+                <label>Заметки</label>
+                <textarea
+                  rows={3}
+                  value={createLeadForm.notes}
+                  onChange={(e) => setCreateLeadForm((f) => ({ ...f, notes: e.target.value }))}
+                  placeholder="Комментарий по лиду (необязательно)"
+                />
+              </div>
+              <div className="crm-leads-modal-actions">
+                <button type="button" onClick={createLead}>Создать</button>
+                <button type="button" onClick={() => setCreateLeadModal(false)}>Отмена</button>
+              </div>
             </div>
           </div>
         )}
