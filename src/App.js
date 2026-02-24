@@ -22,7 +22,11 @@ import CRMNchats from './pages/CRM/CRMNchats';
 import CRMNotifications from './pages/CRM/CRMNotifications';
 import CRMSettings from './pages/CRM/CRMSettings';
 import CRMRegistrationRequests from './pages/CRM/CRMRegistrationRequests';
+import CRMSearch from './pages/CRM/CRMSearch';
+import CRMLeads from './pages/CRM/CRMLeads';
+import CRMProspects from './pages/CRM/CRMProspects';
 import Accounting from './pages/Accounting/Accounting';
+import Analytics from './pages/Analytics/Analytics';
 import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
@@ -200,6 +204,30 @@ function App() {
             }
           />
           <Route
+            path="/crm/search"
+            element={
+              <ProtectedRoute requireCrmAccess>
+                <CRMSearch />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/crm/leads"
+            element={
+              <ProtectedRoute requireCrmAccess>
+                <CRMLeads />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/crm/prospects"
+            element={
+              <ProtectedRoute requireCrmAccess>
+                <CRMProspects />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/crm/chats/:chatId"
             element={
               <ProtectedRoute requireCrmAccess>
@@ -213,6 +241,15 @@ function App() {
             element={
               <ProtectedRoute requireRole="OWNER">
                 <Accounting />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/analytics"
+            element={
+              <ProtectedRoute requireRole="OWNER">
+                <Analytics />
               </ProtectedRoute>
             }
           />

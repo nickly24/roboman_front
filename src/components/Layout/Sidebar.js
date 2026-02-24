@@ -13,6 +13,7 @@ import {
   IconTeachers,
   IconTeacherAccounts,
   IconCRM,
+  IconAnalytics,
   IconInstructions,
   IconSettings,
   IconAccounting,
@@ -37,6 +38,7 @@ const iconMap = {
   teachers: IconTeachers,
   'teacher-accounts': IconTeacherAccounts,
   crm: IconCRM,
+  analytics: IconAnalytics,
   instructions: IconInstructions,
   settings: IconSettings,
   accounting: IconAccounting,
@@ -255,6 +257,18 @@ const Sidebar = ({ isOpen = false, onClose, expanded = true, onToggleCollapse, i
           >
             <span className="sidebar-nav-icon"><IconAccounting /></span>
             <span className="sidebar-nav-label">Бухгалтерия</span>
+          </Link>
+        )}
+
+        {/* Аналитика (только owner) */}
+        {isOwner && (
+          <Link
+            to="/analytics"
+            className={`sidebar-nav-item ${location.pathname.startsWith('/analytics') ? 'active' : ''}`}
+            onClick={() => onClose?.()}
+          >
+            <span className="sidebar-nav-icon"><IconAnalytics /></span>
+            <span className="sidebar-nav-label">Аналитика</span>
           </Link>
         )}
       </nav>

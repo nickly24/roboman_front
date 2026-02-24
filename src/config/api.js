@@ -72,8 +72,11 @@ export const API_ENDPOINTS = {
   SALARY_TEACHER_BY_DEPARTMENT: '/salary/teacher-by-department',
   SALARY_OWNER_BY_DEPARTMENT: '/salary/owner-by-department',
 
-  // Reports (for accounting pull)
+  // Reports (for analytics)
+  REPORTS_REVENUE_BY_MONTH: '/reports/revenue-by-month',
+  REPORTS_ATTENDANCE_BY_MONTH: '/reports/attendance-by-month',
   REPORTS_BRANCH_SUMMARY: (branchId) => `/reports/branch/${branchId}/summary`,
+  REPORTS_TEACHER_SUMMARY: (teacherId) => `/reports/teacher/${teacherId}/summary`,
 
   // Accounting (Бухгалтерия)
   ACCOUNTING_SHEETS: '/accounting/sheets',
@@ -106,4 +109,21 @@ export const API_ENDPOINTS = {
   CRM_NOTIFICATION_SUBSCRIBERS: '/crm/notification-subscribers',
   CRM_NOTIFICATION_SUBSCRIBER: (id) => `/crm/notification-subscribers/${id}`,
   CRM_SETTINGS: '/crm/settings',
+
+  // CRM Поиск (детские сады без робототехники)
+  CRM_SEARCH_PROSPECTS: '/crm/search-prospects',
+  CRM_SEARCH_PROSPECT: (id) => `/crm/search-prospects/${id}`,
+  CRM_SEARCH_PROSPECTS_STREAM: '/crm/search-prospects/stream',
+  CRM_SEARCH_PROSPECTS_STOP: '/crm/search-prospects/stop',
+  CRM_PROSPECT_TO_LEAD: (id) => `/crm/search-prospects/${id}/to-lead`,
+  CRM_PROSPECT_HISTORY: (id) => `/crm/search-prospects/${id}/history`,
+  CRM_PROSPECT_COMMENTS: (id) => `/crm/search-prospects/${id}/comments`,
+  // CRM Лиды (канбан)
+  CRM_LEAD_STATUSES: '/crm/lead-statuses',
+  CRM_LEAD_STATUS: (id) => `/crm/lead-statuses/${id}`,
+  CRM_LEADS: '/crm/leads',
+  CRM_LEADS_ARCHIVE: '/crm/leads/archive',
+  CRM_LEAD_ARCHIVE: (id) => `/crm/leads/${id}/archive`,
+  CRM_LEAD_RESTORE: (id) => `/crm/leads/${id}/restore`,
+  CRM_LEAD_CREATE_BRANCH: (id) => `/crm/leads/${id}/create-branch`,
 };

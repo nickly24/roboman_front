@@ -9,6 +9,9 @@ import {
   IconNotifications,
   IconSettings,
   IconAI,
+  IconSearch,
+  IconLeads,
+  IconDatabase,
   IconArrowBack,
   IconSun,
   IconMoon,
@@ -55,6 +58,9 @@ const CRMLayout = ({ children }) => {
     { path: '/crm/requests', label: 'Заявки', Icon: IconClipboardList },
     { path: '/crm/chats', label: 'Чаты', Icon: IconChat },
     { path: '/crm/nchats', label: 'ИИ-ассистент', Icon: IconAI },
+    { path: '/crm/search', label: 'Поиск', Icon: IconSearch },
+    { path: '/crm/leads', label: 'Лиды', Icon: IconLeads },
+    { path: '/crm/prospects', label: 'Холодная база', Icon: IconDatabase },
     { path: '/crm/notifications', label: 'Уведомления', Icon: IconNotifications },
     { path: '/crm/settings', label: 'Настройки бота', Icon: IconSettings },
   ];
@@ -72,7 +78,7 @@ const CRMLayout = ({ children }) => {
             <Link
               key={item.path}
               to={item.path}
-              className={`crm-sidebar-item ${location.pathname === item.path || (item.path === '/crm/chats' && location.pathname.startsWith('/crm/chats/')) || (item.path === '/crm/requests' && location.pathname.startsWith('/crm/requests')) || (item.path === '/crm/nchats' && location.pathname.startsWith('/crm/nchats')) ? 'active' : ''}`}
+              className={`crm-sidebar-item ${location.pathname === item.path || (item.path === '/crm/chats' && location.pathname.startsWith('/crm/chats/')) || (item.path === '/crm/requests' && location.pathname.startsWith('/crm/requests')) || (item.path === '/crm/nchats' && location.pathname.startsWith('/crm/nchats')) || (item.path === '/crm/search' && location.pathname.startsWith('/crm/search')) || (item.path === '/crm/leads' && location.pathname.startsWith('/crm/leads')) || (item.path === '/crm/prospects' && location.pathname.startsWith('/crm/prospects')) ? 'active' : ''}`}
               onClick={() => setMobileNavOpen(false)}
             >
               <span className="crm-sidebar-icon">{item.Icon ? <item.Icon /> : null}</span>
