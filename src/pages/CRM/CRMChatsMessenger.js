@@ -71,6 +71,7 @@ const CRMChatsMessenger = () => {
   const [messagesLoadingMore, setMessagesLoadingMore] = useState(false);
   const [comments, setComments] = useState([]);
   const [sendText, setSendText] = useState('');
+  const [sendInputExpanded, setSendInputExpanded] = useState(false);
   const [sending, setSending] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [commentSending, setCommentSending] = useState(false);
@@ -125,6 +126,15 @@ const CRMChatsMessenger = () => {
     }
   };
 
+  const sortChatsByLastMessage = (list) => {
+    if (!Array.isArray(list) || list.length === 0) return list;
+    return [...list].sort((a, b) => {
+      const ta = a?.last_message?.created_at || a?.created_at || a?.id || '';
+      const tb = b?.last_message?.created_at || b?.created_at || b?.id || '';
+      return (tb || '').localeCompare(ta || '');
+    });
+  };
+
   const loadChats = async (showLoading = true) => {
     if (showLoading) setChatsLoading(true);
     try {
@@ -132,7 +142,7 @@ const CRMChatsMessenger = () => {
       const url = bid ? `${API_ENDPOINTS.CRM_CHATS}?branch_id=${bid}` : API_ENDPOINTS.CRM_CHATS;
       const res = await apiClient.get(url);
       if (res.data?.ok && res.data?.data?.items) {
-        setChats(res.data.data.items);
+        setChats(sortChatsByLastMessage(res.data.data.items));
       } else {
         setChats([]);
       }
@@ -180,6 +190,17 @@ const CRMChatsMessenger = () => {
           const older = currentMessages.filter((m) => m.id < minFetchedId);
           const merged = [...older, ...[...list].reverse()];
           setMessages(merged);
+          const newest = merged[merged.length - 1];
+          if (newest) {
+            setChats((prev) => {
+              const next = prev.map((c) =>
+                String(c.id) === String(chatId)
+                  ? { ...c, last_message: { id: newest.id, content_preview: (newest.content || '').slice(0, 80), created_at: newest.created_at } }
+                  : c
+              );
+              return sortChatsByLastMessage(next);
+            });
+          }
         } else if (append) {
           scrollSourceRef.current = 'append';
           setMessagesHasMore(list.length >= MESSAGES_PAGE_SIZE);
@@ -370,10 +391,19 @@ const CRMChatsMessenger = () => {
     const text = sendText.trim();
     if (!text || sending || !chatId) return;
     setSending(true);
+    const now = new Date().toISOString();
     try {
       await sendChatMessage(chatId, text);
       setSendText('');
       loadMessages();
+      setChats((prev) => {
+        const next = prev.map((c) =>
+          String(c.id) === String(chatId)
+            ? { ...c, last_message: { ...c?.last_message, created_at: now, content_preview: text } }
+            : c
+        );
+        return sortChatsByLastMessage(next);
+      });
     } catch (err) {
       alert(err.message || 'Ошибка отправки');
     } finally {
@@ -402,9 +432,18 @@ const CRMChatsMessenger = () => {
       return;
     }
     setAiSendingToChatIndex(index);
+    const now = new Date().toISOString();
     try {
       await sendChatMessage(chatId, draft);
       loadMessages();
+      setChats((prev) => {
+        const next = prev.map((c) =>
+          String(c.id) === String(chatId)
+            ? { ...c, last_message: { ...c?.last_message, created_at: now, content_preview: draft } }
+            : c
+        );
+        return sortChatsByLastMessage(next);
+      });
       setAiSentToChatIndices((prev) => {
         const next = new Set(prev).add(index);
         try {
@@ -890,23 +929,67 @@ const CRMChatsMessenger = () => {
                     <div ref={messagesEndRef} />
                   </div>
                   <div className="crm-send-row">
-                    <input
-                      type="text"
-                      className="crm-send-input"
-                      placeholder="Введите сообщение..."
-                      value={sendText}
-                      onChange={(e) => setSendText(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
-                    />
-                    <button
-                      type="button"
-                      className="crm-send-btn"
-                      onClick={handleSend}
-                      disabled={!sendText.trim() || sending}
-                      aria-label="Отправить"
-                    >
-                      ▶
-                    </button>
+                    {sendInputExpanded ? (
+                      <div className="crm-send-input-expanded">
+                        <textarea
+                          className="crm-send-input crm-send-input-textarea"
+                          placeholder="Введите сообщение..."
+                          value={sendText}
+                          onChange={(e) => setSendText(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
+                          rows={4}
+                        />
+                        <div className="crm-send-input-actions">
+                          <button
+                            type="button"
+                            className="crm-ai-expand-btn"
+                            onClick={() => setSendInputExpanded(false)}
+                            title="Свернуть"
+                            aria-label="Свернуть"
+                          >
+                            <IconExpand expanded />
+                          </button>
+                          <button
+                            type="button"
+                            className="crm-send-btn crm-send-btn-inline"
+                            onClick={handleSend}
+                            disabled={!sendText.trim() || sending}
+                            aria-label="Отправить"
+                          >
+                            ▶
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <input
+                          type="text"
+                          className="crm-send-input"
+                          placeholder="Введите сообщение..."
+                          value={sendText}
+                          onChange={(e) => setSendText(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
+                        />
+                        <button
+                          type="button"
+                          className="crm-ai-expand-btn"
+                          onClick={() => setSendInputExpanded(true)}
+                          title="Развернуть"
+                          aria-label="Развернуть"
+                        >
+                          <IconExpand expanded={false} />
+                        </button>
+                        <button
+                          type="button"
+                          className="crm-send-btn"
+                          onClick={handleSend}
+                          disabled={!sendText.trim() || sending}
+                          aria-label="Отправить"
+                        >
+                          ▶
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </>

@@ -241,6 +241,10 @@ const Schedule = () => {
   };
 
   const loadBranches = async () => {
+    if (!isOwner) {
+      // Для преподавателя филиалы берутся из расписания (уже загружено в loadSchedules)
+      return;
+    }
     try {
       const url = selectedDepartment
         ? API_ENDPOINTS.DEPARTMENT_BRANCHES(selectedDepartment)
@@ -334,10 +338,25 @@ const Schedule = () => {
     return map;
   }, [schedulesByDay]);
 
-  const branchOptions = [
-    { value: '', label: 'Все филиалы' },
-    ...branches.map((b) => ({ value: String(b.id), label: b.name })),
-  ];
+  const branchOptions = useMemo(() => {
+    if (isOwner) {
+      return [
+        { value: '', label: 'Все филиалы' },
+        ...branches.map((b) => ({ value: String(b.id), label: b.name })),
+      ];
+    }
+    const branchMap = new Map();
+    schedules.forEach((s) => {
+      const bid = s.branch_id;
+      if (bid != null && !branchMap.has(bid)) {
+        branchMap.set(bid, { value: String(bid), label: s.branch_name || `Филиал #${bid}` });
+      }
+    });
+    return [
+      { value: '', label: 'Все филиалы' },
+      ...Array.from(branchMap.values()).sort((a, b) => a.label.localeCompare(b.label)),
+    ];
+  }, [isOwner, branches, schedules]);
 
   const visibleDays = isMobile ? WEEKDAYS.filter((d) => d.value === activeDay) : WEEKDAYS;
 

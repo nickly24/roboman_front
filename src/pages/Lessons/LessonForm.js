@@ -88,6 +88,20 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
     }
   };
 
+  const handleReprice = async () => {
+    if (!lesson?.id) return;
+    setError('');
+    setLoading(true);
+    try {
+      await apiClient.post(API_ENDPOINTS.LESSON_REPRICE(lesson.id));
+      onSuccess();
+    } catch (err) {
+      setError(err.response?.data?.error?.message || 'Ошибка пересчёта цены');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -120,7 +134,9 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
             trial_children: payload.trial_children,
           });
         } else {
-          await apiClient.put(API_ENDPOINTS.LESSON(lesson.id), payload);
+          const updatePayload = { ...payload };
+          delete updatePayload.branch_id;
+          await apiClient.put(API_ENDPOINTS.LESSON(lesson.id), updatePayload);
         }
       } else {
         await apiClient.post(API_ENDPOINTS.LESSONS, payload);
@@ -145,7 +161,7 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
           onChange={(e) => setFormData({ ...formData, teacher_id: e.target.value })}
           options={teachers}
           required
-          disabled={!!lesson}
+          disabled={false}
         />
       )}
 
@@ -155,7 +171,7 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
         onChange={(e) => setFormData({ ...formData, branch_id: e.target.value })}
         options={branches}
         required
-        disabled={!!lesson && !isOwner}
+        disabled={!!lesson}
       />
 
       <Input
@@ -206,6 +222,15 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
           required={!formData.is_creative}
           disabled={!!lesson && !isOwner}
         />
+      )}
+
+      {isOwner && lesson && (
+        <div className="form-group lesson-form-salary">
+          <Button type="button" variant="secondary" size="small" onClick={handleReprice} disabled={loading}>
+            Пересчитать цену
+          </Button>
+          <p className="form-hint">Обновить price_snapshot из филиала (для выручки). Зарплата — по формуле или «бесплатное».</p>
+        </div>
       )}
 
       <div className="form-actions">

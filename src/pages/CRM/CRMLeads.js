@@ -11,7 +11,7 @@ const CRMLeads = () => {
   const [viewMode, setViewMode] = useState('kanban');
   const [selectedLead, setSelectedLead] = useState(null);
   const [createLeadModal, setCreateLeadModal] = useState(false);
-  const [createLeadForm, setCreateLeadForm] = useState({ name: '', address: '', phone: '', website: '', notes: '', lead_status_id: '' });
+  const [createLeadForm, setCreateLeadForm] = useState({ name: '', address: '', phone: '', website: '', notes: '' });
   const [comments, setComments] = useState([]);
   const [history, setHistory] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -247,15 +247,7 @@ const CRMLeads = () => {
   };
 
   const openCreateLead = () => {
-    const initialStatusId = defaultInWorkStatusId || (statuses[0]?.id ?? '');
-    setCreateLeadForm({
-      name: '',
-      address: '',
-      phone: '',
-      website: '',
-      notes: '',
-      lead_status_id: initialStatusId,
-    });
+    setCreateLeadForm({ name: '', address: '', phone: '', website: '', notes: '' });
     setCreateLeadModal(true);
   };
 
@@ -273,10 +265,10 @@ const CRMLeads = () => {
         phone: createLeadForm.phone || undefined,
         website: createLeadForm.website || undefined,
         notes: createLeadForm.notes || undefined,
-        lead_status_id: createLeadForm.lead_status_id || undefined,
+        lead_status_id: defaultInWorkStatusId || undefined, // всегда «Взят в работу» по умолчанию
       });
       setCreateLeadModal(false);
-      setCreateLeadForm({ name: '', address: '', phone: '', website: '', notes: '', lead_status_id: defaultInWorkStatusId || '' });
+      setCreateLeadForm({ name: '', address: '', phone: '', website: '', notes: '' });
       loadLeads();
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Ошибка создания лида');
@@ -623,6 +615,7 @@ const CRMLeads = () => {
             <div className="crm-leads-modal" onClick={(e) => e.stopPropagation()}>
               <h3>Создать лид вручную</h3>
               <div className="crm-leads-modal-body">
+                <p className="crm-leads-create-lead-hint">Новый лид будет создан со статусом «Взят в работу»</p>
                 <label>Название</label>
                 <input
                   type="text"
@@ -630,16 +623,6 @@ const CRMLeads = () => {
                   onChange={(e) => setCreateLeadForm((f) => ({ ...f, name: e.target.value }))}
                   placeholder="Частный детский сад..."
                 />
-                <label>Статус</label>
-                <select
-                  value={createLeadForm.lead_status_id || defaultInWorkStatusId || ''}
-                  onChange={(e) => setCreateLeadForm((f) => ({ ...f, lead_status_id: Number(e.target.value) }))}
-                >
-                  <option value="">Без статуса</option>
-                  {statuses.map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
                 <label>Адрес</label>
                 <input
                   type="text"

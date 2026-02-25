@@ -419,11 +419,39 @@
   z-index: 10;
   display: flex;
   gap: 10px;
+  align-items: flex-end;
   padding: 16px 24px;
   border-top: 1px solid var(--crm-border);
   background: var(--crm-bg);
   flex-shrink: 0;
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.crm-send-input-expanded {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.crm-send-input-expanded textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.crm-send-input-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.crm-send-btn-inline {
+  width: auto;
+  height: auto;
+  padding: 8px 16px;
+  border-radius: 10px;
 }
 
 html.theme-dark .crm-send-row {
@@ -1722,8 +1750,9 @@ html.theme-light .crm-nchats-proposal-card.sent {
 }
 
 .crm-send-input.crm-send-input-textarea {
-  resize: none;
+  resize: vertical;
   min-height: 80px;
+  max-height: 40vh;
   line-height: 1.5;
 }
 
@@ -3595,6 +3624,12 @@ html.theme-light .crm-nchats-proposal-card.sent {
   margin: 0 0 16px 0;
   font-size: 18px;
   color: var(--crm-text);
+}
+
+.crm-leads-create-lead-hint {
+  margin: 0 0 14px 0;
+  font-size: 13px;
+  color: var(--crm-text-secondary);
 }
 
 .crm-leads-status-help {

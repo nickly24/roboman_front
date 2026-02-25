@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"name": "it_club",
+			"path": "../../.."
+		},
+		{
+			"name": "2 БЛОК. Ремённая передача",
+			"path": "../../../../../Documents/сет нью/2 БЛОК. Ремённая передача"
+		}
+	],
+	"settings": {
+		"python-envs.defaultEnvManager": "ms-python.python:system"
+	}
+}

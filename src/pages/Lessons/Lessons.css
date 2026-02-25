@@ -121,6 +121,21 @@ html.theme-dark .lesson-badge-paid {
   cursor: pointer;
 }
 
+.lesson-form-salary {
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -345,6 +360,66 @@ html.theme-dark .lessons-calendar-event-finance-profit-positive .lessons-calenda
 
 html.theme-dark .lessons-calendar-event-finance-profit-negative .lessons-calendar-event-finance-value {
   color: #f87171;
+}
+
+/* Кнопка «Редактировать» в списке — фирменный оранжевый/жёлтый */
+.lessons-btn-edit {
+  background-color: var(--color-orange-light) !important;
+  border-color: var(--color-orange) !important;
+  color: var(--color-orange) !important;
+}
+
+.lessons-btn-edit:hover {
+  background-color: var(--color-orange) !important;
+  border-color: var(--color-orange) !important;
+  color: #fff !important;
+}
+
+/* Календарь: панель — слева переключатель, справа Редактировать */
+.lessons-calendar-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.lessons-calendar-edit-mode {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.lessons-calendar-edit-hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.lessons-calendar-edit-cancel {
+  margin-left: 12px;
+  padding: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.lessons-calendar-edit-cancel:hover {
+  color: var(--color-primary-hover);
+}
+
+/* Занятие в календаре — подсветка синим при наведении в режиме редактирования */
+.lessons-calendar-event-selectable {
+  cursor: pointer;
+}
+
+.lessons-calendar-event-selectable:hover {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px var(--color-primary-light);
 }
 
 .lessons-calendar-event-meta {

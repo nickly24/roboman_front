@@ -36,6 +36,7 @@ const Lessons = () => {
   const [collapsedBranchIds, setCollapsedBranchIds] = useState(new Set());
   const [branchesOptions, setBranchesOptions] = useState([]);
   const [teachersOptions, setTeachersOptions] = useState([]);
+  const [calendarEditMode, setCalendarEditMode] = useState(false);
 
   useEffect(() => {
     loadLessons();
@@ -439,7 +440,7 @@ const Lessons = () => {
           title: 'Действия',
           render: (_, row) => (
             <div className="table-actions">
-              <Button size="small" variant="ghost" onClick={() => handleEdit(row)}>
+              <Button size="small" className="lessons-btn-edit" variant="secondary" onClick={() => handleEdit(row)}>
                 Редактировать
               </Button>
               <Button size="small" variant="secondary" onClick={() => handleSalaryToggle(row)}>
@@ -482,7 +483,7 @@ const Lessons = () => {
           title: 'Действия',
           render: (_, row) => (
             <div className="table-actions">
-              <Button size="small" variant="ghost" onClick={() => handleEdit(row)}>
+              <Button size="small" className="lessons-btn-edit" variant="secondary" onClick={() => handleEdit(row)}>
                 Редактировать
               </Button>
             </div>
@@ -567,21 +568,41 @@ const Lessons = () => {
             <LoadingSpinner size="medium" text="Загрузка занятий..." />
           ) : viewMode === 'calendar' ? (
             <div className="lessons-calendar">
-              <div className="lessons-view-toggle lessons-view-toggle-inline">
-                <Button
-                  size="small"
-                  variant={viewMode === 'calendar' ? 'primary' : 'secondary'}
-                  onClick={() => setViewMode('calendar')}
-                >
-                  Календарь
-                </Button>
-                <Button
-                  size="small"
-                  variant={viewMode === 'list' ? 'primary' : 'secondary'}
-                  onClick={() => setViewMode('list')}
-                >
-                  Список
-                </Button>
+              <div className="lessons-calendar-toolbar">
+                <div className="lessons-view-toggle lessons-view-toggle-inline">
+                  <Button
+                    size="small"
+                    variant={viewMode === 'calendar' ? 'primary' : 'secondary'}
+                    onClick={() => setViewMode('calendar')}
+                  >
+                    Календарь
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={viewMode === 'list' ? 'primary' : 'secondary'}
+                    onClick={() => setViewMode('list')}
+                  >
+                    Список
+                  </Button>
+                </div>
+                <div className="lessons-calendar-edit-mode">
+                  <Button
+                    size="small"
+                    className="lessons-btn-edit"
+                    variant={calendarEditMode ? 'primary' : 'secondary'}
+                    onClick={() => setCalendarEditMode(!calendarEditMode)}
+                  >
+                    Редактировать
+                  </Button>
+                  {calendarEditMode && (
+                    <span className="lessons-calendar-edit-hint">
+                      Выберите занятие для редактирования
+                      <button type="button" className="lessons-calendar-edit-cancel" onClick={() => setCalendarEditMode(false)}>
+                        Отмена
+                      </button>
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="lessons-calendar-header">
                 <Button
@@ -628,7 +649,14 @@ const Lessons = () => {
                               ? (raw.trim().startsWith('#') ? raw.trim() : `#${raw.trim()}`)
                               : '#94a3b8';
                             return (
-                            <div key={lesson.id} className="lessons-calendar-event">
+                            <div
+                              key={lesson.id}
+                              className={`lessons-calendar-event${calendarEditMode ? ' lessons-calendar-event-selectable' : ''}`}
+                              role={calendarEditMode ? 'button' : undefined}
+                              tabIndex={calendarEditMode ? 0 : undefined}
+                              onClick={calendarEditMode ? () => handleEdit(lesson) : undefined}
+                              onKeyDown={calendarEditMode ? (e) => e.key === 'Enter' && handleEdit(lesson) : undefined}
+                            >
                               <div
                                 className="lessons-calendar-event-bar"
                                 style={{ backgroundColor: barColor }}
