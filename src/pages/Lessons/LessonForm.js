@@ -22,6 +22,7 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
     trial_children: lesson?.trial_children || 0,
     is_creative: lesson?.is_creative !== undefined ? lesson.is_creative : false,
     instruction_id: lesson?.instruction_id || '',
+    is_fixed_salary_2000: lesson?.is_fixed_salary_2000 === true || lesson?.is_fixed_salary_2000 === 1,
   });
 
   useEffect(() => {
@@ -114,6 +115,7 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
         paid_children: parseInt(formData.paid_children),
         trial_children: parseInt(formData.trial_children),
         is_creative: formData.is_creative,
+        is_fixed_salary_2000: formData.is_fixed_salary_2000,
       };
 
       if (!formData.is_creative) {
@@ -127,11 +129,12 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
       if (lesson) {
         // Редактирование - ограничения для преподавателя
         if (!isOwner) {
-          // Преподаватель может менять только starts_at, paid_children, trial_children
+          // Преподаватель: дата, дети, флаг «от 10 чел.»
           await apiClient.put(API_ENDPOINTS.LESSON(lesson.id), {
             starts_at: payload.starts_at,
             paid_children: payload.paid_children,
             trial_children: payload.trial_children,
+            is_fixed_salary_2000: payload.is_fixed_salary_2000,
           });
         } else {
           const updatePayload = { ...payload };
@@ -232,6 +235,18 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
           <p className="form-hint">Обновить price_snapshot из филиала (для выручки). Зарплата — по формуле или «бесплатное».</p>
         </div>
       )}
+
+      <div className="form-group">
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={formData.is_fixed_salary_2000}
+            onChange={(e) => setFormData({ ...formData, is_fixed_salary_2000: e.target.checked })}
+          />
+          <span>Занятие от 10 чел.</span>
+        </label>
+        <p className="form-hint">Зарплата за занятие фиксированная — 2000 ₽ (количество детей вносится как обычно).</p>
+      </div>
 
       <div className="form-actions">
         <Button type="button" variant="secondary" onClick={onCancel} disabled={loading}>
