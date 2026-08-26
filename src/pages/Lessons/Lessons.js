@@ -283,6 +283,22 @@ const Lessons = () => {
     return Array.from(branchesMap.values());
   }, [lessons]);
 
+  const renderCurriculum = (_, row) => {
+    if (!row.curriculum_mode) return '—';
+    const modeLabels = {
+      PLAN: 'По плану',
+      REPEAT: 'Повтор',
+      OFF_PLAN_REPLACE: 'Вне плана · замена',
+      OFF_PLAN_PAUSE: 'Вне плана · без продвижения',
+    };
+    return (
+      <div className="lesson-curriculum-cell">
+        <strong>{modeLabels[row.curriculum_mode] || row.curriculum_mode}</strong>
+        {row.curriculum_lesson_name && <span>{row.curriculum_plan_name} · {row.curriculum_module_name} · {row.curriculum_lesson_name}</span>}
+      </div>
+    );
+  };
+
   const baseDate = React.useMemo(() => {
     if (isCurrentMonth(month)) {
       const now = new Date();
@@ -401,10 +417,13 @@ const Lessons = () => {
         { key: 'paid_children', title: 'Платные', align: 'center' },
         { key: 'trial_children', title: 'Пробные', align: 'center' },
         { key: 'total_children', title: 'Всего', align: 'center' },
+        { key: 'curriculum', title: 'Учебный план', render: renderCurriculum },
         {
           key: 'instruction',
           title: 'Инструкция',
           render: (_, row) => {
+            if (row.curriculum_mode?.startsWith('OFF_PLAN') && !row.instruction_name) return 'Внеплановое занятие';
+            if (row.curriculum_mode && !row.instruction_name) return 'Без инструкции';
             if (row.is_creative) return 'Творческое';
             return row.instruction_name || '—';
           },
@@ -459,10 +478,13 @@ const Lessons = () => {
         { key: 'paid_children', title: 'Платные', align: 'center' },
         { key: 'trial_children', title: 'Пробные', align: 'center' },
         { key: 'total_children', title: 'Всего', align: 'center' },
+        { key: 'curriculum', title: 'Учебный план', render: renderCurriculum },
         {
           key: 'instruction',
           title: 'Инструкция',
           render: (_, row) => {
+            if (row.curriculum_mode?.startsWith('OFF_PLAN') && !row.instruction_name) return 'Внеплановое занятие';
+            if (row.curriculum_mode && !row.instruction_name) return 'Без инструкции';
             if (row.is_creative) return 'Творческое';
             return row.instruction_name || 'По инструкции';
           },

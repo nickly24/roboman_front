@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import apiClient from '../../services/api';
 import { API_ENDPOINTS } from '../../config/api';
 import Input from '../../components/Input/Input';
@@ -9,6 +9,8 @@ const BranchForm = ({ branch, onSuccess, onCancel }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [departments, setDepartments] = useState([]);
+  const [curriculumPlans, setCurriculumPlans] = useState([]);
+  const [curriculumProgress, setCurriculumProgress] = useState(null);
   const [formData, setFormData] = useState({
     department_id: branch?.department_id || '',
     name: branch?.name || '',
@@ -17,13 +19,30 @@ const BranchForm = ({ branch, onSuccess, onCancel }) => {
     price_per_child: branch?.price_per_child ?? 0,
     teacher_base_rate: branch?.teacher_base_rate ?? 1200,
     is_active: branch?.is_active !== undefined ? branch.is_active : true,
+    curriculum_enabled: false,
+    curriculum_plan_id: '',
   });
 
-  useEffect(() => {
-    loadDepartments();
-  }, []);
+  const loadCurriculum = useCallback(async () => {
+    try {
+      const plansResponse = await apiClient.get(API_ENDPOINTS.CURRICULUM_PLANS);
+      setCurriculumPlans(plansResponse.data?.data?.items || []);
+      if (branch?.id) {
+        const progressResponse = await apiClient.get(API_ENDPOINTS.BRANCH_CURRICULUM(branch.id));
+        const progress = progressResponse.data?.data;
+        setCurriculumProgress(progress);
+        setFormData((prev) => ({
+          ...prev,
+          curriculum_enabled: !!progress?.enabled,
+          curriculum_plan_id: progress?.plan_id ? String(progress.plan_id) : '',
+        }));
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки учебного плана филиала:', error);
+    }
+  }, [branch?.id]);
 
-  const loadDepartments = async () => {
+  const loadDepartments = useCallback(async () => {
     try {
       const response = await apiClient.get(API_ENDPOINTS.DEPARTMENTS);
       if (response.data.ok) {
@@ -39,7 +58,12 @@ const BranchForm = ({ branch, onSuccess, onCancel }) => {
     } catch (error) {
       console.error('Ошибка загрузки отделов:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadDepartments();
+    loadCurriculum();
+  }, [loadCurriculum, loadDepartments]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,17 +71,34 @@ const BranchForm = ({ branch, onSuccess, onCancel }) => {
     setLoading(true);
 
     try {
+      const previousPlanId = curriculumProgress?.plan_id ? String(curriculumProgress.plan_id) : '';
+      const nextPlanId = formData.curriculum_enabled ? String(formData.curriculum_plan_id) : '';
+      if (branch && previousPlanId && nextPlanId && previousPlanId !== nextPlanId) {
+        const confirmed = window.confirm('При смене учебного плана текущий прогресс филиала будет полностью сброшен. Продолжить?');
+        if (!confirmed) { setLoading(false); return; }
+      }
       const payload = {
         ...formData,
         department_id: parseInt(formData.department_id),
         price_per_child: parseFloat(formData.price_per_child),
         teacher_base_rate: parseInt(formData.teacher_base_rate, 10) || 1200,
       };
+      delete payload.curriculum_enabled;
+      delete payload.curriculum_plan_id;
 
+      let branchId = branch?.id;
       if (branch) {
         await apiClient.put(API_ENDPOINTS.BRANCH(branch.id), payload);
       } else {
-        await apiClient.post(API_ENDPOINTS.BRANCHES, payload);
+        const response = await apiClient.post(API_ENDPOINTS.BRANCHES, payload);
+        branchId = response.data?.data?.id;
+      }
+
+      if (branchId) {
+        await apiClient.put(API_ENDPOINTS.BRANCH_CURRICULUM(branchId), {
+          enabled: !!formData.curriculum_enabled,
+          plan_id: formData.curriculum_enabled ? Number(formData.curriculum_plan_id) : null,
+        });
       }
 
       onSuccess();
@@ -87,6 +128,34 @@ const BranchForm = ({ branch, onSuccess, onCancel }) => {
         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
         required
       />
+
+      <div className="form-group">
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={!!formData.curriculum_enabled}
+            onChange={(e) => setFormData({ ...formData, curriculum_enabled: e.target.checked, curriculum_plan_id: e.target.checked ? formData.curriculum_plan_id : '' })}
+          />
+          <span>Обучение по учебному плану</span>
+        </label>
+      </div>
+
+      {formData.curriculum_enabled && (
+        <Select
+          label="Учебный план"
+          value={formData.curriculum_plan_id}
+          onChange={(e) => setFormData({ ...formData, curriculum_plan_id: e.target.value })}
+          options={curriculumPlans.map((plan) => ({ value: plan.id, label: `${plan.name} (${plan.lesson_count} уроков)` }))}
+          required
+        />
+      )}
+
+      {curriculumProgress?.enabled && (
+        <div className="form-hint">
+          Пройдено: {curriculumProgress.closed_lessons} из {curriculumProgress.total_lessons}.
+          {curriculumProgress.is_completed ? ' Учебный план завершён.' : ` Следующий урок: ${curriculumProgress.current_lesson?.name || 'не задан'}.`}
+        </div>
+      )}
 
       <Input
         type="text"

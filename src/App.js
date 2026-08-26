@@ -27,6 +27,7 @@ import CRMLeads from './pages/CRM/CRMLeads';
 import CRMProspects from './pages/CRM/CRMProspects';
 import Accounting from './pages/Accounting/Accounting';
 import Analytics from './pages/Analytics/Analytics';
+import CurriculumPlans from './pages/Curriculum/CurriculumPlans';
 import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
@@ -134,6 +135,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <Instructions />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/curriculum"
+            element={
+              <ProtectedRoute>
+                <CurriculumPlans />
               </ProtectedRoute>
             }
           />

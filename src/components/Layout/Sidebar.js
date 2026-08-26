@@ -40,6 +40,7 @@ const iconMap = {
   crm: IconCRM,
   analytics: IconAnalytics,
   instructions: IconInstructions,
+  curriculum: IconLessons,
   settings: IconSettings,
   accounting: IconAccounting,
 };
@@ -83,7 +84,7 @@ const Sidebar = ({ isOpen = false, onClose, expanded = true, onToggleCollapse, i
   };
 
   // Управление занятиями: Занятия, Расписание, Слоты, Зарплата (owner), Инструкции
-  const lessonsGroupPaths = ['/lessons', '/schedule', '/slots', '/instructions', '/salary'];
+  const lessonsGroupPaths = ['/lessons', '/schedule', '/slots', '/instructions', '/curriculum', '/salary'];
   const isLessonsActive = lessonsGroupPaths.some((p) => location.pathname === p || location.pathname.startsWith(p + '/'));
 
   // Справочники: Филиалы, Отделы, Преподаватели, Создание учеток, Настройки
@@ -112,6 +113,7 @@ const Sidebar = ({ isOpen = false, onClose, expanded = true, onToggleCollapse, i
     { path: '/slots', label: 'Слоты', iconKey: 'slots' },
     ...(isOwner ? [{ path: '/salary', label: 'Зарплата', iconKey: 'salary' }] : []),
     { path: '/instructions', label: 'Инструкции', iconKey: 'instructions' },
+    { path: '/curriculum', label: 'Учебные планы', iconKey: 'curriculum' },
   ];
 
   const refsGroupItems = [

@@ -1,0 +1,50 @@
+.curriculum-page { display: flex; flex-direction: column; gap: 20px; }
+.curriculum-header, .curriculum-plan-header, .curriculum-module-header { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; }
+.curriculum-header h1, .curriculum-plan-header h2, .curriculum-module-header h3 { margin: 0 0 6px; }
+.curriculum-header p, .curriculum-plan-header p, .curriculum-module-header p { margin: 0; color: var(--color-text-secondary); }
+.curriculum-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.curriculum-error { padding: 12px 16px; border-radius: 10px; color: #b42318; background: #fee4e2; }
+.curriculum-layout { display: grid; grid-template-columns: minmax(220px, 280px) minmax(0, 1fr); gap: 18px; align-items: start; }
+.curriculum-plans-list, .curriculum-workspace, .curriculum-module { border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-bg-surface); box-shadow: var(--shadow-sm); }
+.curriculum-plans-list { padding: 8px; display: flex; flex-direction: column; gap: 6px; position: sticky; top: 16px; }
+.curriculum-plan-nav { border: 0; border-radius: 10px; padding: 12px; text-align: left; background: transparent; color: var(--color-text-primary); cursor: pointer; display: flex; flex-direction: column; gap: 4px; }
+.curriculum-plan-nav span { color: var(--color-text-secondary); font-size: 12px; }
+.curriculum-plan-nav.active { background: var(--color-primary-light); color: var(--color-primary); }
+.curriculum-workspace { padding: 20px; min-width: 0; }
+.curriculum-toolbar { margin: 18px 0; }
+.curriculum-modules { display: flex; flex-direction: column; gap: 14px; }
+.curriculum-module { padding: 16px; }
+.curriculum-number { color: var(--color-primary); font-size: 12px; font-weight: 700; text-transform: uppercase; }
+.curriculum-lessons { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.curriculum-lesson { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--color-border); border-radius: 10px; }
+.curriculum-lesson.locked { background: var(--color-bg-elevated); }
+.curriculum-lesson-main { border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.curriculum-lesson-main span:last-child { display: flex; min-width: 0; flex-direction: column; }
+.curriculum-lesson-main small { color: var(--color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.curriculum-lesson-index { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--color-primary-light); color: var(--color-primary); font-weight: 700; }
+.curriculum-badges { display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; color: var(--color-text-secondary); }
+.curriculum-empty { padding: 30px; text-align: center; color: var(--color-text-secondary); }
+.curriculum-form, .curriculum-detail { display: flex; flex-direction: column; gap: 14px; }
+.curriculum-form label, .curriculum-detail label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; }
+.curriculum-form textarea, .curriculum-comment-form textarea { min-height: 100px; padding: 10px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-bg-surface); color: var(--color-text-primary); resize: vertical; }
+.curriculum-detail h4 { margin: 6px 0 0; }
+.curriculum-detail p { margin: 0; white-space: pre-wrap; }
+.curriculum-detail-meta { display: flex; flex-wrap: wrap; gap: 8px; color: var(--color-text-secondary); }
+.curriculum-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.curriculum-gallery img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 10px; background: var(--color-border); }
+.curriculum-gallery button { border: 0; color: #b42318; background: transparent; cursor: pointer; }
+.curriculum-upload input { margin-top: 6px; }
+.curriculum-instruction { padding: 12px; border: 1px solid var(--color-border); border-radius: 10px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.curriculum-comment-tabs { display: flex; gap: 8px; border-bottom: 1px solid var(--color-border); }
+.curriculum-comment-tabs button { border: 0; border-bottom: 2px solid transparent; padding: 10px; background: transparent; color: var(--color-text-secondary); cursor: pointer; }
+.curriculum-comment-tabs button.active { border-color: var(--color-primary); color: var(--color-primary); }
+.curriculum-comments { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow: auto; }
+.curriculum-comments > div { padding: 10px; border-radius: 8px; background: var(--color-bg-elevated); }
+.curriculum-comments span { margin-left: 8px; color: var(--color-text-secondary); font-size: 12px; }
+.curriculum-comment-form { display: flex; gap: 10px; align-items: flex-end; }
+.curriculum-comment-form textarea { flex: 1; min-height: 70px; }
+.curriculum-formats { display: flex; flex-direction: column; gap: 8px; }
+.curriculum-formats > div { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 10px; border: 1px solid var(--color-border); border-radius: 8px; }
+.curriculum-formats > div.inactive { opacity: .6; }
+@media (max-width: 900px) { .curriculum-layout { grid-template-columns: 1fr; } .curriculum-plans-list { position: static; } .curriculum-lesson { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .curriculum-header, .curriculum-plan-header, .curriculum-module-header { flex-direction: column; } .curriculum-workspace { padding: 12px; } .curriculum-comment-form { flex-direction: column; align-items: stretch; } }

@@ -1,8 +1,30 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+jest.mock('./services/api', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+    interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } },
+  },
+}));
+
+jest.mock('./services/authService', () => ({
+  authService: {
+    getStoredUser: () => null,
+    isAuthenticated: () => false,
+    login: jest.fn(),
+    logout: jest.fn(),
+  },
+}));
+
+jest.mock('react-markdown', () => () => null);
+
+test('redirects an unauthenticated user to login', async () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: 'RoboMan' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Войти' })).toBeInTheDocument();
 });

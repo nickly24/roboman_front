@@ -14,6 +14,11 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
   const [branches, setBranches] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [instructions, setInstructions] = useState([]);
+  const [curriculum, setCurriculum] = useState(null);
+  const [curriculumLoading, setCurriculumLoading] = useState(false);
+  const [curriculumMode, setCurriculumMode] = useState('PLAN');
+  const [previousLessonId, setPreviousLessonId] = useState('');
+  const [curriculumImageUrls, setCurriculumImageUrls] = useState({});
   const [formData, setFormData] = useState({
     branch_id: lesson?.branch_id || '',
     teacher_id: lesson?.teacher_id || (isOwner ? '' : user?.profile?.id),
@@ -24,6 +29,7 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
     instruction_id: lesson?.instruction_id || '',
     is_fixed_salary_2000: lesson?.is_fixed_salary_2000 === true || lesson?.is_fixed_salary_2000 === 1,
   });
+  const hasExistingCurriculumLink = !!lesson?.curriculum_run_id;
 
   useEffect(() => {
     loadBranches();
@@ -32,6 +38,50 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
       loadTeachers();
     }
   }, [isOwner]);
+
+  useEffect(() => {
+    if (lesson || !formData.branch_id) {
+      setCurriculum(null);
+      return;
+    }
+    let active = true;
+    setCurriculumLoading(true);
+    apiClient.get(API_ENDPOINTS.BRANCH_CURRICULUM(formData.branch_id))
+      .then((response) => {
+        if (!active) return;
+        const progress = response.data?.data;
+        setCurriculum(progress?.enabled ? progress : null);
+        setCurriculumMode(progress?.is_completed ? 'OFF_PLAN_PAUSE' : 'PLAN');
+        setPreviousLessonId('');
+        setFormData((prev) => ({ ...prev, instruction_id: '' }));
+      })
+      .catch(() => { if (active) setCurriculum(null); })
+      .finally(() => { if (active) setCurriculumLoading(false); });
+    return () => { active = false; };
+  }, [formData.branch_id, lesson]);
+
+  const selectedCurriculumLesson = curriculumMode === 'REPEAT'
+    ? curriculum?.previous_lessons?.find((item) => String(item.id) === String(previousLessonId))
+    : curriculum?.current_lesson;
+
+  useEffect(() => {
+    let active = true;
+    const urls = {};
+    const load = async () => {
+      const images = selectedCurriculumLesson?.images || [];
+      await Promise.all(images.map(async (image) => {
+        try {
+          const response = await apiClient.get(API_ENDPOINTS.CURRICULUM_LESSON_IMAGE(image.id), { responseType: 'blob' });
+          urls[image.id] = URL.createObjectURL(response.data);
+        } catch (_) {}
+      }));
+      if (active) setCurriculumImageUrls(urls);
+      else Object.values(urls).forEach(URL.revokeObjectURL);
+    };
+    setCurriculumImageUrls({});
+    if (selectedCurriculumLesson && ['PLAN', 'REPEAT'].includes(curriculumMode)) load();
+    return () => { active = false; Object.values(urls).forEach(URL.revokeObjectURL); };
+  }, [selectedCurriculumLesson, curriculumMode]);
 
   const loadBranches = async () => {
     try {
@@ -118,7 +168,14 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
         is_fixed_salary_2000: formData.is_fixed_salary_2000,
       };
 
-      if (!formData.is_creative) {
+      if (curriculum && !lesson) {
+        payload.curriculum_mode = curriculumMode;
+        if (curriculumMode === 'REPEAT') payload.curriculum_lesson_id = Number(previousLessonId);
+        if (curriculumMode === 'PLAN') payload.curriculum_lesson_id = curriculum.current_lesson?.id;
+        if (['OFF_PLAN_REPLACE', 'OFF_PLAN_PAUSE'].includes(curriculumMode)) {
+          payload.instruction_id = formData.instruction_id ? Number(formData.instruction_id) : null;
+        }
+      } else if (!formData.is_creative && !hasExistingCurriculumLink) {
         payload.instruction_id = parseInt(formData.instruction_id);
       }
 
@@ -139,6 +196,10 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
         } else {
           const updatePayload = { ...payload };
           delete updatePayload.branch_id;
+          if (hasExistingCurriculumLink) {
+            delete updatePayload.is_creative;
+            delete updatePayload.instruction_id;
+          }
           await apiClient.put(API_ENDPOINTS.LESSON(lesson.id), updatePayload);
         }
       } else {
@@ -171,11 +232,57 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
       <Select
         label="Филиал"
         value={formData.branch_id}
-        onChange={(e) => setFormData({ ...formData, branch_id: e.target.value })}
+        onChange={(e) => setFormData({ ...formData, branch_id: e.target.value, instruction_id: '' })}
         options={branches}
         required
         disabled={!!lesson}
       />
+
+      {curriculumLoading && <p className="form-hint">Загрузка учебного плана…</p>}
+
+      {hasExistingCurriculumLink && <div className="lesson-curriculum-panel">
+        <strong>{lesson.curriculum_plan_name}</strong>
+        <p className="form-hint">{lesson.curriculum_module_name} · {lesson.curriculum_lesson_name}</p>
+        <span className="lesson-curriculum-complete">Связь с учебным планом зафиксирована</span>
+      </div>}
+
+      {!lesson && curriculum && (
+        <div className="lesson-curriculum-panel">
+          <div className="lesson-curriculum-heading">
+            <div>
+              <strong>{curriculum.plan_name}</strong>
+              <span>Пройдено {curriculum.closed_lessons} из {curriculum.total_lessons}</span>
+            </div>
+            {curriculum.is_completed && <span className="lesson-curriculum-complete">План завершён</span>}
+          </div>
+          {curriculum.last_lesson && <p className="form-hint">Последний урок: {curriculum.last_lesson.module_name} · {curriculum.last_lesson.name}</p>}
+          <Select
+            label="Как отметить занятие"
+            value={curriculumMode}
+            onChange={(e) => { setCurriculumMode(e.target.value); setPreviousLessonId(''); setFormData({ ...formData, instruction_id: '' }); }}
+            options={[
+              ...(!curriculum.is_completed ? [{ value: 'PLAN', label: 'Текущий урок по плану' }] : []),
+              ...(curriculum.previous_lessons?.length ? [{ value: 'REPEAT', label: 'Повторить предыдущий урок' }] : []),
+              ...(!curriculum.is_completed ? [{ value: 'OFF_PLAN_REPLACE', label: 'Вне плана — заменить текущий урок' }] : []),
+              { value: 'OFF_PLAN_PAUSE', label: 'Вне плана — не продвигаться' },
+            ]}
+          />
+          {curriculumMode === 'REPEAT' && <Select
+            label="Предыдущий урок"
+            value={previousLessonId}
+            onChange={(e) => setPreviousLessonId(e.target.value)}
+            options={(curriculum.previous_lessons || []).map((item) => ({ value: item.id, label: `${item.module_name} · ${item.name}` }))}
+            required
+          />}
+          {['PLAN', 'REPEAT'].includes(curriculumMode) && selectedCurriculumLesson && <div className="lesson-curriculum-current">
+            <span>{selectedCurriculumLesson.module_name}</span>
+            <h3>{selectedCurriculumLesson.name}</h3>
+            <p>{selectedCurriculumLesson.internal_description || 'Внутреннее описание не заполнено'}</p>
+            <div className="lesson-curriculum-meta"><span>{selectedCurriculumLesson.format_name}</span><span>{selectedCurriculumLesson.instruction_name || 'Инструкция удалена или не прикреплена'}</span></div>
+            {Object.values(curriculumImageUrls).length > 0 && <div className="lesson-curriculum-images">{Object.entries(curriculumImageUrls).map(([id, url]) => <img key={id} src={url} alt={selectedCurriculumLesson.name} />)}</div>}
+          </div>}
+        </div>
+      )}
 
       <Input
         type="datetime-local"
@@ -204,7 +311,7 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
         />
       </div>
 
-      <div className="form-group">
+      {!curriculum && !hasExistingCurriculumLink && <div className="form-group">
         <label className="checkbox-label">
           <input
             type="checkbox"
@@ -214,9 +321,9 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
           />
           <span>Творческое занятие</span>
         </label>
-      </div>
+      </div>}
 
-      {!formData.is_creative && (
+      {!curriculum && !hasExistingCurriculumLink && !formData.is_creative && (
         <Select
           label="Инструкция"
           value={formData.instruction_id}
@@ -224,6 +331,16 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
           options={instructions}
           required={!formData.is_creative}
           disabled={!!lesson && !isOwner}
+        />
+      )}
+
+      {curriculum && !lesson && ['OFF_PLAN_REPLACE', 'OFF_PLAN_PAUSE'].includes(curriculumMode) && (
+        <Select
+          label="Инструкция для внепланового занятия"
+          value={formData.instruction_id}
+          onChange={(e) => setFormData({ ...formData, instruction_id: e.target.value })}
+          options={instructions}
+          placeholder="Без инструкции"
         />
       )}
 

@@ -50,6 +50,23 @@ export const API_ENDPOINTS = {
   INSTRUCTION: (id) => `/instructions/${id}`,
   INSTRUCTION_PDF: (id) => `/instructions/${id}/pdf`,
   INSTRUCTION_PHOTO: (id) => `/instructions/${id}/photo`,
+  INSTRUCTION_COMMENTS: (id) => `/instructions/${id}/comments`,
+
+  // Учебные планы
+  LESSON_FORMATS: '/lesson-formats',
+  LESSON_FORMAT: (id) => `/lesson-formats/${id}`,
+  CURRICULUM_PLANS: '/curriculum-plans',
+  CURRICULUM_PLAN: (id) => `/curriculum-plans/${id}`,
+  CURRICULUM_MODULES: (planId) => `/curriculum-plans/${planId}/modules`,
+  CURRICULUM_MODULE: (id) => `/curriculum-modules/${id}`,
+  CURRICULUM_MODULES_REORDER: (planId) => `/curriculum-plans/${planId}/modules/reorder`,
+  CURRICULUM_LESSONS: (moduleId) => `/curriculum-modules/${moduleId}/lessons`,
+  CURRICULUM_LESSON: (id) => `/curriculum-lessons/${id}`,
+  CURRICULUM_LESSONS_REORDER: (moduleId) => `/curriculum-modules/${moduleId}/lessons/reorder`,
+  CURRICULUM_LESSON_IMAGES: (lessonId) => `/curriculum-lessons/${lessonId}/images`,
+  CURRICULUM_LESSON_IMAGE: (id) => `/curriculum-lesson-images/${id}`,
+  CURRICULUM_LESSON_COMMENTS: (id) => `/curriculum-lessons/${id}/comments`,
+  BRANCH_CURRICULUM: (branchId) => `/branches/${branchId}/curriculum`,
   
   // Settings
   SETTINGS: '/settings',
