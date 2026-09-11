@@ -554,9 +554,9 @@ const Instructions = () => {
                 />
                 <div className="file-field">
                   <label className="input-label">
-                    PDF файл <span style={{ color: '#dc2626' }}>*</span>
+                    PDF файл <span style={{ color: 'var(--color-error)' }}>*</span>
                   </label>
-                  <div style={{ color: '#dc2626', fontSize: 12, marginBottom: 6 }}>
+                  <div style={{ color: 'var(--color-error)', fontSize: 12, marginBottom: 6 }}>
                     Файлы не больше 10 MB
                   </div>
                   <input

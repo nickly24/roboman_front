@@ -1,7 +1,7 @@
 import React from 'react';
 import './KPICard.css';
 
-const KPICard = ({ title, value, subtitle, trend, icon, color = '#0369a1' }) => {
+const KPICard = ({ title, value, subtitle, trend, icon, color = 'var(--color-primary)' }) => {
   return (
     <div className="kpi-card" style={{ '--accent-color': color }}>
       <div className="kpi-card-content">

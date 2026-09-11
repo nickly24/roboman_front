@@ -244,19 +244,19 @@ const TeacherDashboard = () => {
                 value={formatCurrency(kpi.salary_sum)}
                 subtitle="Предварительный расчёт"
                 icon={<IconRevenue />}
-                color="#059669"
+                color="var(--color-success)"
               />
               <KPICard
                 title="Занятий за период"
                 value={formatNumber(kpi.lessons_count)}
                 icon={<IconLessons />}
-                color="#0369a1"
+                color="var(--color-chart-1)"
               />
               <KPICard
                 title="Всего детей"
                 value={formatNumber(kpi.total_children_sum)}
                 icon={<IconPeople />}
-                color="#7c3aed"
+                color="var(--color-chart-2)"
               />
             </>
           )}
@@ -266,7 +266,7 @@ const TeacherDashboard = () => {
               value={formatNumber(total.total_lessons_count)}
               subtitle="Накопительно"
               icon={<IconStar />}
-              color="#ea580c"
+              color="var(--color-orange)"
             />
           )}
         </div>

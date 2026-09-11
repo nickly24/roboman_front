@@ -51,7 +51,7 @@
 .analytics-tab.active {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: var(--color-text-inverse);
+  color: var(--color-on-primary);
 }
 
 .analytics-filters {
@@ -209,7 +209,7 @@
 
 .analytics-slider-value {
   font-weight: var(--font-weight-medium);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .analytics-slider input[type="range"] {

@@ -36,7 +36,7 @@ const TABS = [
 ];
 
 const WEEKDAYS = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+const COLORS = ['var(--color-chart-4)', 'var(--color-chart-1)', 'var(--color-chart-3)', 'var(--color-error)', 'var(--color-chart-5)', 'var(--color-chart-6)'];
 
 const buildPeriodParams = (periodMode, month, rangeStart, rangeEnd) => {
   const params = new URLSearchParams();
@@ -481,9 +481,9 @@ const Analytics = () => {
                     <YAxis stroke="var(--color-text-secondary)" tick={{ fill: 'var(--color-text-secondary)', fontSize: 12 }} />
                     <Tooltip contentStyle={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} />
                     <Legend />
-                    <Line type="monotone" dataKey="children" stroke="#3b82f6" name="Всего детей" strokeWidth={2} dot={{ r: 4 }} />
-                    <Line type="monotone" dataKey="paid" stroke="#10b981" name="Платные" strokeWidth={2} dot={{ r: 4 }} />
-                    <Line type="monotone" dataKey="trial" stroke="#f59e0b" name="Пробные" strokeWidth={2} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="children" stroke="var(--color-chart-4)" name="Всего детей" strokeWidth={2} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="paid" stroke="var(--color-chart-1)" name="Платные" strokeWidth={2} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="trial" stroke="var(--color-chart-3)" name="Пробные" strokeWidth={2} dot={{ r: 4 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -521,8 +521,8 @@ const Analytics = () => {
                     <YAxis tickFormatter={formatChartCurrency} stroke="var(--color-text-secondary)" tick={{ fill: 'var(--color-text-secondary)', fontSize: 12 }} />
                     <Tooltip formatter={(v) => formatCurrency(v)} contentStyle={{ background: 'var(--color-bg-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} />
                     <Legend />
-                    <Bar dataKey="revenue" fill="#3b82f6" name="Выручка" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="salary" fill="#f59e0b" name="Зарплаты" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="revenue" fill="var(--color-chart-4)" name="Выручка" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="salary" fill="var(--color-chart-3)" name="Зарплаты" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -574,7 +574,7 @@ const Analytics = () => {
                     <ReferenceLine x={0} stroke="var(--color-border)" />
                     <Bar dataKey="diffPct" name="% от среднего по филиалу" radius={[0, 4, 4, 0]}>
                       {teacherVsBranchAvgChartData.map((row, i) => (
-                        <Cell key={i} fill={Number(row.diffPct) >= 0 ? '#10b981' : '#ef4444'} />
+                        <Cell key={i} fill={Number(row.diffPct) >= 0 ? 'var(--color-chart-1)' : 'var(--color-error)'} />
                       ))}
                     </Bar>
                   </BarChart>

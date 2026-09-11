@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 import Button from '../../components/Button/Button';
 import Input from '../../components/Input/Input';
 import { IconSun, IconMoon } from '../../components/Icons/SidebarIcons';
+import Brand from '../../components/Brand/Brand';
 import './Login.css';
 
 const Login = () => {
@@ -45,8 +46,9 @@ const Login = () => {
       </button>
       <div className="login-container">
         <div className="login-header">
-          <h1 className="login-title">RoboMan</h1>
-          <p className="login-subtitle">Система учёта занятий по робототехнике</p>
+          <Brand />
+          <h1 className="login-title">С возвращением</h1>
+          <p className="login-subtitle">Войдите, чтобы продолжить работу</p>
         </div>
         
         <form onSubmit={handleSubmit} className="login-form">
@@ -54,6 +56,8 @@ const Login = () => {
           
           <Input
             label="Логин"
+            autoComplete="username"
+            placeholder="Ваш логин"
             type="text"
             value={login}
             onChange={(e) => setLogin(e.target.value)}
@@ -64,6 +68,8 @@ const Login = () => {
           
           <Input
             label="Пароль"
+            autoComplete="current-password"
+            placeholder="Введите пароль"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

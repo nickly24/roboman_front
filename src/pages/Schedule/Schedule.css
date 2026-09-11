@@ -64,7 +64,7 @@
 .schedule-day-tab.active {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: var(--color-text-inverse);
+  color: var(--color-on-primary);
 }
 
 /* Сетка дней: горизонтальный скролл на десктопе, один столбец на мобиле */
@@ -173,18 +173,18 @@
 .schedule-segment-group-time {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .schedule-segment-group-count {
   font-size: var(--font-size-sm);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   flex: 1;
 }
 
 .schedule-segment-group-chevron {
   font-size: 10px;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 /* --- Группа в развёрнутом виде --- */
@@ -206,7 +206,7 @@
   cursor: pointer;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   transition: background 0.15s;
 }
 

@@ -1,114 +1,12 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import Modal from '../../components/Modal/Modal';
-import Button from '../../components/Button/Button';
-import { formatCurrency, formatDateTime } from '../../utils/format';
-import { calcReferralAmount, calcIncomeNet } from '../../utils/incomeCalc';
-
-const OperationDetailModal = ({ isOpen, onClose, operation, type, onDelete }) => {
-  if (!operation) return null;
-
-  const renderContent = () => {
-    if (type === 'income') {
-      const tax = parseFloat(operation.tax_amount) || 0;
-      const referral = calcReferralAmount(operation);
-      const costs = tax + referral;
-      const profit = calcIncomeNet(operation);
-      return (
-        <div className="operation-detail">
-          <dl>
-            <dt>Филиал</dt>
-            <dd>{operation.branch_name}</dd>
-            <dt>Владелец</dt>
-            <dd>{operation.owner_name}</dd>
-            <dt>Сумма</dt>
-            <dd className="amount-positive">{formatCurrency(operation.amount)}</dd>
-            <dt>Издержки (налог + реф.)</dt>
-            <dd className="amount-negative">{formatCurrency(costs)}</dd>
-            <dt>Налог</dt>
-            <dd>{formatCurrency(operation.tax_amount)}</dd>
-            {operation.referral_percent != null && operation.referral_percent > 0 && (
-              <>
-                <dt>Рефералка</dt>
-                <dd>
-                  {operation.referral_percent}% = {formatCurrency(referral)}
-                  {operation.referral_comment ? ` — ${operation.referral_comment}` : ''}
-                </dd>
-              </>
-            )}
-            <dt>Прибыль</dt>
-            <dd className="amount-positive">{formatCurrency(profit)}</dd>
-            <dt>Создано</dt>
-            <dd>{formatDateTime(operation.created_at)}</dd>
-          </dl>
-        </div>
-      );
-    }
-    if (type === 'salary') {
-      return (
-        <div className="operation-detail">
-          <dl>
-            <dt>Кто платит</dt>
-            <dd>{operation.owner_name}</dd>
-            <dt>Преподаватель</dt>
-            <dd>{operation.teacher_name}</dd>
-            <dt>Период</dt>
-            <dd>{operation.period_type === '1_15' ? '1–15 число' : operation.period_type === '16_end' ? '16–конец' : 'Весь месяц'}</dd>
-            <dt>Сумма</dt>
-            <dd className="amount-negative">{formatCurrency(operation.amount)}</dd>
-            <dt>Создано</dt>
-            <dd>{formatDateTime(operation.created_at)}</dd>
-          </dl>
-        </div>
-      );
-    }
-    if (type === 'expense') {
-      return (
-        <div className="operation-detail">
-          <dl>
-            <dt>Кто потратил</dt>
-            <dd>{operation.owner_name}</dd>
-            <dt>Описание</dt>
-            <dd>{operation.name}</dd>
-            <dt>Сумма</dt>
-            <dd className="amount-negative">{formatCurrency(operation.amount)}</dd>
-            <dt>Создано</dt>
-            <dd>{formatDateTime(operation.created_at)}</dd>
-          </dl>
-        </div>
-      );
-    }
-    if (type === 'transfer') {
-      return (
-        <div className="operation-detail">
-          <dl>
-            <dt>От кого</dt>
-            <dd>{operation.from_owner_name}</dd>
-            <dt>Кому</dt>
-            <dd>{operation.to_owner_name}</dd>
-            <dt>Сумма</dt>
-            <dd>{formatCurrency(operation.amount)}</dd>
-            <dt>Создано</dt>
-            <dd>{formatDateTime(operation.created_at)}</dd>
-          </dl>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const titles = { income: 'Поступление', salary: 'Зарплата', expense: 'Прочий расход', transfer: 'Перевод' };
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title={titles[type] || 'Операция'} size="small">
-      {renderContent()}
-      <div className="modal-actions">
-        {onDelete && (
-          <Button variant="danger" onClick={() => { onDelete(operation); onClose(); }}>Удалить</Button>
-        )}
-        <Button variant="secondary" onClick={onClose}>Закрыть</Button>
-      </div>
-    </Modal>
-  );
-};
-
-export default OperationDetailModal;
+import { calcIncomeNet, calcReferralAmount } from '../../utils/incomeCalc';
+import Icon from './AccountingIcons';
+import { amountSign, errorText, money, operationTypes, salaryPeriod } from './accountingData';
+export default function OperationDetailModal({ operation: op, onClose, onDelete }) {
+  const [confirm, setConfirm] = useState(false), [saving, setSaving] = useState(false), [error, setError] = useState(''); const busy = useRef(false);
+  const close = () => { if (!busy.current) onClose(); };
+  const remove = async () => { if (busy.current) return; busy.current = true; setSaving(true); setError(''); try { await onDelete(op); } catch (e) { setError(errorText(e)); } finally { busy.current = false; setSaving(false); } };
+  const fields = op.type === 'income' ? [['Филиал', op.branch_name], ['Получатель', op.owner_name], ['Налог', money(op.tax_amount)], ['Рефералка', `${money(calcReferralAmount(op))}${op.referral_percent ? ` · ${op.referral_percent}% ${op.referral_from_net ? 'после налога' : 'от суммы'}` : ''}`], ['После удержаний', money(calcIncomeNet(op))], ...(op.referral_comment ? [['Комментарий', op.referral_comment]] : [])] : op.type === 'salary' ? [['Преподаватель', op.teacher_name], ['Кто платит', op.owner_name], ['Период', salaryPeriod(op.period_type)]] : op.type === 'expense' ? [['Описание', op.name], ['Кто потратил', op.owner_name]] : [['От кого', op.from_owner_name], ['Кому', op.to_owner_name]];
+  return <Modal isOpen title={operationTypes[op.type].single} onClose={close} size="accounting-detail"><div className="ac-detail"><div className={`ac-detail-amount ac-type-${op.type}`}><Icon name={operationTypes[op.type].icon} /><strong>{amountSign(op)}{money(op.amount)}</strong></div><dl>{fields.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value || '—'}</dd></div>)}<div><dt>Дата записи</dt><dd>{op.created_at ? new Date(op.created_at).toLocaleString('ru-RU') : '—'}</dd></div></dl>{confirm && <div className="ac-delete-confirm"><strong>Удалить эту операцию?</strong><p>Запись исчезнет из листа, его итоги и остатки пересчитаются.</p></div>}{error && <div className="ac-error" role="alert">{error}</div>}<footer className="ac-form-footer">{confirm ? <><button className="od-control" disabled={saving} onClick={() => setConfirm(false)}>Оставить запись</button><button className="ac-danger-btn" disabled={saving} onClick={remove}>{saving ? 'Удаляем…' : 'Удалить операцию'}</button></> : <><button className="od-text-btn ac-negative" onClick={() => setConfirm(true)}><Icon name="trash" />Удалить</button><button className="od-control" onClick={close}>Закрыть</button></>}</footer></div></Modal>;
+}

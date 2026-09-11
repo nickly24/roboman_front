@@ -37,7 +37,7 @@
 .kpi-card-icon {
   font-size: var(--font-size-xl);
   opacity: 0.85;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   display: flex;
   align-items: center;
   justify-content: center;

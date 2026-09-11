@@ -1,10 +1,1 @@
-/**
- * Design System — Border Radius Tokens
- */
-
-:root {
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
-}
+:root { --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px; }

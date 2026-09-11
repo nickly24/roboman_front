@@ -1,703 +1,153 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Area, Bar, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import apiClient from '../../services/api';
 import { API_ENDPOINTS } from '../../config/api';
-import { formatCurrency, formatDateTime, formatNumber, getCurrentMonth } from '../../utils/format';
 import Layout from '../../components/Layout/Layout';
-import Card from '../../components/Card/Card';
-import KPICard from '../../components/KPICard/KPICard';
-import Button from '../../components/Button/Button';
-import Input from '../../components/Input/Input';
-import Select from '../../components/Select/Select';
-import DepartmentSelector from '../../components/DepartmentSelector/DepartmentSelector';
-import LoadingSpinner from '../../components/Loading/LoadingSpinner';
+import Modal from '../../components/Modal/Modal';
+import { IconLessons, IconPeople, IconBranches, IconTeachers } from '../../components/Icons/SidebarIcons';
+import { formatCurrency, formatNumber, getCurrentMonth } from '../../utils/format';
 import useMediaQuery from '../../hooks/useMediaQuery';
-import {
-  IconRevenue,
-  IconProfit,
-  IconPeople,
-  IconTarget,
-  IconChartBar,
-  IconLessons,
-  IconChartLine,
-  IconFilter,
-  IconChevronDown,
-  IconChevronUp,
-} from '../../components/Icons/SidebarIcons';
-import {
-  Line,
-  ComposedChart,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
-import './Dashboard.css';
+import { chartSeries, countLabel, itemsFrom, lessonRevenue, loadDashboardData, monthLabel, number, periodLabel, summarizeLessons } from './dashboardData';
+import { FiltersControl, Hint, PeriodControl } from './DashboardControls';
+import DashIcon from './DashboardIcons';
+import './OwnerDashboard.css';
 
-// Функция для расчёта KPI из списка занятий (fallback)
-const calculateKPIFromLessons = (lessons) => {
-  if (!lessons || lessons.length === 0) {
-    return { revenue: 0, paid_children: 0, trial_children: 0, total_children: 0, salary: 0 };
-  }
-  
-  let revenue = 0;
-  let paid_children = 0;
-  let trial_children = 0;
-  let total_children = 0;
-  let salary = 0;
-  
-  lessons.forEach((lesson) => {
-    const paid = lesson.paid_children || 0;
-    const trial = lesson.trial_children || 0;
-    const total = paid + trial;
-    
-    paid_children += paid;
-    trial_children += trial;
-    total_children += total;
-    
-    // Выручка = платные * цена (если есть price_snapshot или revenue)
-    if (lesson.revenue !== undefined && lesson.revenue !== null) {
-      revenue += lesson.revenue;
-    } else if (lesson.price_snapshot && paid > 0) {
-      revenue += lesson.price_snapshot * paid;
-    }
-    
-    // Зарплата преподавателя
-    if (lesson.teacher_salary !== undefined && lesson.teacher_salary !== null) {
-      salary += lesson.teacher_salary;
-    }
-  });
-  
-  return { revenue, paid_children, trial_children, total_children, salary };
-};
+const EMPTY = [];
+const MONEY_SERIES = [
+  { key: 'revenue', label: 'Выручка', color: 'var(--color-primary)' },
+  { key: 'profit', label: 'Прибыль', color: 'var(--color-secondary)' },
+  { key: 'salary', label: 'Зарплаты', color: 'var(--color-chart-3)' },
+];
+const shortDate = value => new Date(value.length === 7 ? `${value}-01T12:00:00` : `${value}T12:00:00`).toLocaleDateString('ru-RU', value.length === 7 ? { month: 'short', year: '2-digit' } : { day: 'numeric', month: 'short' });
+const lessonDate = value => new Date(value).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+const lessonTime = value => new Date(value).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+const compactMoney = value => Math.abs(value) >= 1000000 ? `${(value / 1000000).toLocaleString('ru-RU', { maximumFractionDigits: 1 })} млн` : Math.abs(value) >= 1000 ? `${(value / 1000).toLocaleString('ru-RU', { maximumFractionDigits: 1 })} тыс.` : value;
+const instruction = lesson => lesson.is_creative ? 'Творческое занятие' : lesson.instruction_title || lesson.instruction_name || 'Тема не указана';
 
-const OwnerDashboard = () => {
-  const isMobile = useMediaQuery('(max-width: 768px)');
-  const [loading, setLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState(null);
-  const [periodMode, setPeriodMode] = useState('month'); // month | range
-  const [month, setMonth] = useState(getCurrentMonth());
-  const [rangeStartMonth, setRangeStartMonth] = useState(''); // YYYY-MM
-  const [rangeEndMonth, setRangeEndMonth] = useState(''); // YYYY-MM
-  const [filters, setFilters] = useState({
-    department_id: '',
-    branch_id: '',
-    teacher_id: '',
-  });
-  const [selectedDepartment, setSelectedDepartment] = useState('');
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [expandedBranches, setExpandedBranches] = useState(new Set());
-  const [branchesOptions, setBranchesOptions] = useState([]);
-  const [teachersOptions, setTeachersOptions] = useState([]);
+function FinancialTooltip({ active, payload, label, cumulative }) {
+  if (!active || !payload?.length) return null;
+  return <div className="od-chart-tooltip"><header>{shortDate(label)}<span>{cumulative ? 'Накопительно' : 'За период'}</span></header>{payload.map(item => <div key={item.dataKey}><span><i style={{ background: item.color }} />{item.name}</span><strong>{formatCurrency(item.value)}</strong></div>)}</div>;
+}
+function Metric({ title, value, children, icon, help, accent = false }) {
+  return <div className={`od-metric ${accent ? 'od-metric-accent' : ''}`}><div className="od-metric-label">{icon}<span>{title}</span>{help && <Hint label={`Как считается: ${title.toLowerCase()}`}>{help}</Hint>}</div><strong className="od-metric-value">{value}</strong><div className="od-metric-caption">{children}</div></div>;
+}
+function EmptyState({ children }) { return <div className="od-empty"><IconLessons /><p>{children || 'За этот период занятий пока нет'}</p></div>; }
 
+function DetailPanel({ detail, period, onClose }) {
+  const [page, setPage] = useState(0), [query, setQuery] = useState('');
+  const lessons = useMemo(() => [...detail.lessons].sort((a, b) => new Date(b.starts_at) - new Date(a.starts_at)), [detail.lessons]);
+  const filtered = lessons.filter(lesson => `${lesson.branch_name} ${lesson.teacher_name} ${instruction(lesson)}`.toLocaleLowerCase('ru').includes(query.toLocaleLowerCase('ru')));
+  const revenue = lessons.reduce((sum, lesson) => sum + lessonRevenue(lesson), 0);
+  const salary = lessons.reduce((sum, lesson) => sum + number(lesson.teacher_salary), 0);
+  return <Modal isOpen onClose={onClose} title={detail.title} size="dashboard">
+    <div className="od-detail">
+      <p className="od-detail-period">{periodLabel(period)} · {countLabel(lessons.length, ['занятие', 'занятия', 'занятий'])}</p>
+      <div className="od-detail-totals"><div><span>Выручка</span><strong>{formatCurrency(revenue)}</strong></div><div><span>Зарплаты</span><strong>{formatCurrency(salary)}</strong></div><div><span>Прибыль</span><strong className={revenue - salary < 0 ? 'od-negative' : ''}>{formatCurrency(revenue - salary)}</strong></div></div>
+      {lessons.length > 5 && <label className="od-search"><DashIcon name="search" /><input aria-label="Поиск занятий" placeholder="Филиал, преподаватель или тема…" value={query} onChange={e => { setQuery(e.target.value); setPage(0); }} /></label>}
+      <div className="od-detail-lessons">{filtered.slice(page * 10, page * 10 + 10).map(lesson => <details className="od-lesson-detail" key={lesson.id} open={lessons.length === 1 ? true : undefined}>
+        <summary><span className="od-detail-date">{lessonDate(lesson.starts_at)}<small>{lessonTime(lesson.starts_at)}</small></span><span className="od-detail-name">{lesson.branch_name}<small>{lesson.teacher_name}</small></span><strong>{formatCurrency(lessonRevenue(lesson))}</strong><DashIcon name="chevron" /></summary>
+        <div className="od-lesson-expanded"><p>{instruction(lesson)}</p><dl><div><dt>Платные посещения</dt><dd>{number(lesson.paid_children)}</dd></div><div><dt>Пробные посещения</dt><dd>{number(lesson.trial_children)}</dd></div><div><dt>Зарплата</dt><dd>{formatCurrency(lesson.teacher_salary)}</dd></div><div><dt>Прибыль</dt><dd>{formatCurrency(lessonRevenue(lesson) - number(lesson.teacher_salary))}</dd></div></dl></div>
+      </details>)}</div>
+      {!filtered.length && <EmptyState>Занятия не найдены</EmptyState>}
+      {filtered.length > 10 && <div className="od-pagination"><span>{page * 10 + 1}–{Math.min(filtered.length, page * 10 + 10)} из {filtered.length}</span><div><button className="od-icon-btn" disabled={page === 0} aria-label="Предыдущая страница" onClick={() => setPage(p => p - 1)}><DashIcon name="arrow" style={{ transform: 'rotate(180deg)' }} /></button><button className="od-icon-btn" disabled={(page + 1) * 10 >= filtered.length} aria-label="Следующая страница" onClick={() => setPage(p => p + 1)}><DashIcon name="arrow" /></button></div></div>}
+    </div>
+  </Modal>;
+}
+
+export default function OwnerDashboard() {
+  const [period, setPeriod] = useState(() => ({ start: getCurrentMonth(), end: getCurrentMonth() }));
+  const [filters, setFilters] = useState({});
+  const [data, setData] = useState(null), [loading, setLoading] = useState(true), [error, setError] = useState(''), [reload, setReload] = useState(0);
+  const [options, setOptions] = useState({}), [optionsLoading, setOptionsLoading] = useState(true), [optionsError, setOptionsError] = useState(false), [optionsReload, setOptionsReload] = useState(0);
+  const [cumulative, setCumulative] = useState(true), [visibleSeries, setVisibleSeries] = useState(['revenue', 'profit']);
+  const [rankType, setRankType] = useState('branches'), [rankExpanded, setRankExpanded] = useState(false), [tableMode, setTableMode] = useState('lessons'), [detail, setDetail] = useState(null);
+  const mobile = useMediaQuery('(max-width: 600px)');
   useEffect(() => {
-    loadDashboard();
-  }, [month, rangeStartMonth, rangeEndMonth, periodMode, filters, selectedDepartment]);
-
+    const controller = new AbortController();
+    setLoading(true); setError(''); setDetail(null);
+    loadDashboardData(period, filters, controller.signal).then(result => {
+      if (!controller.signal.aborted) setData({ ...result, period });
+    }).catch(() => {
+      if (!controller.signal.aborted) setError('Не удалось обновить дашборд.');
+    }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [period, filters, reload]);
   useEffect(() => {
-    Promise.all([
-      apiClient.get(API_ENDPOINTS.BRANCHES),
-      apiClient.get(API_ENDPOINTS.TEACHERS),
-    ]).then(([brResp, teachResp]) => {
-      if (brResp.data?.ok) {
-        const data = brResp.data.data;
-        const list = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
-        setBranchesOptions([{ value: '', label: 'Все филиалы' }, ...list.map((b) => ({ value: String(b.id), label: b.name || `Филиал #${b.id}` }))]);
-      }
-      if (teachResp.data?.ok) {
-        const data = teachResp.data.data;
-        const list = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
-        setTeachersOptions([{ value: '', label: 'Все преподаватели' }, ...list.filter((t) => t.status === 'working').map((t) => ({ value: String(t.id), label: t.full_name || `Преподаватель #${t.id}` }))]);
-      }
-    }).catch(() => {});
-  }, []);
+    const controller = new AbortController();
+    setOptionsLoading(true); setOptionsError(false);
+    Promise.all([API_ENDPOINTS.BRANCHES, API_ENDPOINTS.DEPARTMENTS, API_ENDPOINTS.TEACHERS].map(url => apiClient.get(`${url}?limit=500`, { signal: controller.signal }))).then(responses => {
+      if (controller.signal.aborted) return;
+      const [branches, departments, teachers] = responses.map(itemsFrom);
+      const option = (item, name) => ({ value: String(item.id), label: name || `№ ${item.id}` });
+      setOptions({ branch_id: branches.map(b => option(b, b.name)), department_id: departments.map(d => option(d, d.name)), teacher_id: teachers.map(t => option(t, t.full_name)) });
+    }).catch(() => { if (!controller.signal.aborted) setOptionsError(true); }).finally(() => { if (!controller.signal.aborted) setOptionsLoading(false); });
+    return () => controller.abort();
+  }, [optionsReload]);
 
-  const kpi = dashboardData?.kpi;
-  const series_by_month = dashboardData?.series_by_month || [];
-  const top_branches = dashboardData?.top_branches || [];
-  const top_teachers = dashboardData?.top_teachers || [];
-  const lessonsFromData = dashboardData?.lessons || [];
-  const lessons = Array.isArray(lessonsFromData?.items)
-    ? lessonsFromData.items
-    : Array.isArray(lessonsFromData)
-      ? lessonsFromData
-      : [];
+  const lessons = data?.lessons || EMPTY;
+  const summary = useMemo(() => summarizeLessons(lessons), [lessons]);
+  const monthly = summary.days.length > 62;
+  const chart = useMemo(() => chartSeries(monthly ? summary.months : summary.days, cumulative), [summary, monthly, cumulative]);
+  const ranked = useMemo(() => [...summary[rankType]].sort((a, b) => rankType === 'branches' ? b.revenue - a.revenue : b.count - a.count), [summary, rankType]);
+  const recent = useMemo(() => [...lessons].sort((a, b) => new Date(b.starts_at) - new Date(a.starts_at)).slice(0, 5), [lessons]);
+  const kpi = data?.kpi || {};
+  const revenue = number(kpi.revenue_sum), profit = revenue - summary.salary;
+  const paid = number(kpi.paid_sum), trial = number(kpi.trial_sum), visits = paid + trial;
+  const paidPercent = visits ? paid / visits * 100 : 0;
+  const lessonCount = number(kpi.lessons_count);
+  const average = lessonCount ? visits / lessonCount : 0;
+  const rankMax = Math.max(1, ...ranked.map(row => rankType === 'branches' ? row.revenue : row.count));
+  const activeFilters = Object.entries(filters).filter(([, value]) => value);
+  const showGroup = group => setDetail({ title: group.name, lessons: group.lessons });
+  const toggleSeries = key => setVisibleSeries(prev => prev.includes(key) ? prev.length > 1 ? prev.filter(value => value !== key) : prev : [...prev, key]);
 
-  // Группировка занятий по филиалам с выручкой, зарплатой и прибылью
-  const lessonsByBranch = useMemo(() => {
-    if (!lessons || lessons.length === 0) return [];
-    const map = new Map();
-    lessons.forEach((lesson) => {
-      const branchId = lesson.branch_id ?? '';
-      const branchName = lesson.branch_name || 'Без филиала';
-      const branchKey = String(branchId || branchName);
-      if (!map.has(branchKey)) {
-        map.set(branchKey, { branchId, branchName, lessons: [], revenue: 0, salary: 0, profit: 0 });
-      }
-      const row = map.get(branchKey);
-      row.lessons.push(lesson);
-      const rev = Number(lesson.revenue) || (lesson.price_snapshot && lesson.paid_children ? lesson.price_snapshot * (lesson.paid_children || 0) : 0);
-      const sal = Number(lesson.teacher_salary) || 0;
-      row.revenue += rev;
-      row.salary += sal;
-      row.profit += rev - sal;
-    });
-    return Array.from(map.values()).sort((a, b) => (a.branchName || '').localeCompare(b.branchName || ''));
-  }, [lessons]);
-
-  // Линейный график роста выручки, зарплат и прибыли по дням (с первого по последний)
-  const revenueSalaryProfitChartData = useMemo(() => {
-    if (!lessons || lessons.length === 0) return [];
-
-    const getDateKey = (dateStr) => {
-      if (!dateStr) return null;
-      const d = new Date(dateStr);
-      if (Number.isNaN(d.getTime())) return null;
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${day}`;
-    };
-
-    // Суммы по каждому дню
-    const byDay = new Map(); // dateKey -> { revenue, salary, profit }
-
-    lessons.forEach((lesson) => {
-      const dateKey = getDateKey(lesson.starts_at || lesson.date || lesson.scheduled_at);
-      if (!dateKey) return;
-
-      const revenue = Number(lesson.revenue) || (lesson.price_snapshot && lesson.paid_children
-        ? lesson.price_snapshot * (lesson.paid_children || 0)
-        : 0);
-      const salary = Number(lesson.teacher_salary) || 0;
-      const profit = revenue - salary;
-
-      if (!byDay.has(dateKey)) {
-        byDay.set(dateKey, { dateKey, revenue: 0, salary: 0, profit: 0 });
-      }
-      const row = byDay.get(dateKey);
-      row.revenue += revenue;
-      row.salary += salary;
-      row.profit += profit;
-    });
-
-    const sortedDays = Array.from(byDay.keys()).sort();
-    if (sortedDays.length === 0) return [];
-
-    // Нарастающий итог: для каждого дня — сумма с начала по этот день
-    let cumRevenue = 0;
-    let cumSalary = 0;
-    let cumProfit = 0;
-    const result = sortedDays.map((dateKey) => {
-      const day = byDay.get(dateKey);
-      cumRevenue += day.revenue;
-      cumSalary += day.salary;
-      cumProfit += day.profit;
-      return {
-        dateKey,
-        revenue: cumRevenue,
-        salary: cumSalary,
-        profit: cumProfit,
-      };
-    });
-
-    return result;
-  }, [lessons]);
-
-  const formatPeriodLabel = (period) => {
-    const s = String(period || '');
-    const [y, m] = s.split('-').map(Number);
-    if (!y || !m) return s;
-    const d = new Date(Date.UTC(y, m - 1, 1));
-    return d.toLocaleDateString('ru-RU', { month: 'short', year: '2-digit' });
-  };
-
-  const formatChartDateLabel = (dateKey) => {
-    const s = String(dateKey || '');
-    const parts = s.split('-').map(Number);
-    if (parts.length < 3) return s;
-    const [y, m, day] = parts;
-    const d = new Date(y, m - 1, day);
-    return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-  };
-
-  const buildPeriodParams = () => {
-    const params = new URLSearchParams();
-
-    if (periodMode === 'range' && rangeStartMonth && rangeEndMonth) {
-      // На UI выбираем месяц-диапазон, на API отправляем start/end ISO datetime
-      // start = 1-е число стартового месяца 00:00
-      // end = 1-е число месяца ПОСЛЕ конечного 00:00 (эксклюзивно)
-      const startIso = `${rangeStartMonth}-01T00:00:00`;
-      const [endY, endM] = rangeEndMonth.split('-').map(Number);
-      const endDate = new Date(Date.UTC(endY, (endM || 1) - 1, 1, 0, 0, 0));
-      endDate.setUTCMonth(endDate.getUTCMonth() + 1);
-      const endIso = endDate.toISOString().slice(0, 19);
-
-      params.append('start', startIso);
-      params.append('end', endIso);
-      return params;
-    }
-
-    // по умолчанию — месяц
-    params.append('month', month);
-    return params;
-  };
-
-  const loadDashboard = async () => {
-    setLoading(true);
-    try {
-      const params = buildPeriodParams();
-      if (selectedDepartment) params.append('department_id', selectedDepartment);
-      if (filters.department_id) params.append('department_id', filters.department_id);
-      if (filters.branch_id) params.append('branch_id', filters.branch_id);
-      if (filters.teacher_id) params.append('teacher_id', filters.teacher_id);
-
-      const response = await apiClient.get(`${API_ENDPOINTS.DASHBOARD_OWNER}?${params}`);
-      if (response.data.ok) {
-        const data = response.data.data;
-        console.log('Dashboard data from backend:', data); // Для отладки
-        
-        // Загружаем также список занятий для fallback расчёта (опционально, не ломаем дашборд при ошибке)
-        let lessonsList = [];
-        try {
-          const lessonsParams = buildPeriodParams();
-          lessonsParams.append('limit', '100'); // max_limit=500; нам хватит
-          if (selectedDepartment) lessonsParams.append('department_id', selectedDepartment);
-          if (filters.department_id) lessonsParams.append('department_id', filters.department_id);
-          if (filters.branch_id) lessonsParams.append('branch_id', filters.branch_id);
-          if (filters.teacher_id) lessonsParams.append('teacher_id', filters.teacher_id);
-          
-          const lessonsResponse = await apiClient.get(`${API_ENDPOINTS.LESSONS}?${lessonsParams}`);
-          if (lessonsResponse.data.ok) {
-            const lessonsData = lessonsResponse.data.data;
-            lessonsList = Array.isArray(lessonsData?.items) ? lessonsData.items : (Array.isArray(lessonsData) ? lessonsData : []);
-          }
-        } catch (lessonsError) {
-          console.warn('Не удалось загрузить занятия для fallback расчёта (это не критично):', lessonsError.response?.data || lessonsError.message);
-          // Продолжаем работу без списка занятий - дашборд всё равно покажет KPI с бэкенда
-        }
-        
-        // Fallback расчёт если KPI пустые или нулевые, но есть занятия
-        if (data.kpi && lessonsList.length > 0) {
-          const calculatedKpi = calculateKPIFromLessons(lessonsList);
-          // Используем расчётные значения если бэкенд вернул нули
-          if ((!data.kpi.revenue_sum || data.kpi.revenue_sum === 0) && calculatedKpi.revenue > 0) {
-            console.warn('Backend returned zero revenue, using calculated value:', calculatedKpi);
-            data.kpi = {
-              ...data.kpi,
-              revenue_sum: calculatedKpi.revenue,
-              paid_sum: calculatedKpi.paid_children,
-              trial_sum: calculatedKpi.trial_children,
-            };
-          }
-        }
-        
-        // Сохраняем список занятий для расчёта прибыли
-        setDashboardData({ ...data, lessons: lessonsList });
-      }
-    } catch (error) {
-      console.error('Ошибка загрузки дашборда:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading && !dashboardData) {
-    return (
-      <Layout>
-        <LoadingSpinner size="large" text="Загрузка дашборда..." />
-      </Layout>
-    );
-  }
-
-  if (!dashboardData) {
-    return (
-      <Layout>
-        <div className="dashboard-error">Не удалось загрузить данные дашборда</div>
-      </Layout>
-    );
-  }
-  
-  // Расчёт прибыли из занятий (выручка - зарплаты)
-  const calculateProfit = () => {
-    if (!lessons || lessons.length === 0) {
-      // Если занятий нет, пытаемся использовать KPI с бэкенда
-      if (kpi && kpi.revenue_sum !== undefined) {
-        // Но зарплаты в KPI нет, поэтому вернём только выручку как fallback
-        return kpi.revenue_sum || 0;
-      }
-      return 0;
-    }
-    
-    let totalRevenue = 0;
-    let totalSalary = 0;
-    
-    lessons.forEach((lesson) => {
-      if (lesson.revenue !== undefined && lesson.revenue !== null) {
-        totalRevenue += lesson.revenue;
-      }
-      if (lesson.teacher_salary !== undefined && lesson.teacher_salary !== null) {
-        totalSalary += lesson.teacher_salary;
-      }
-    });
-    
-    return totalRevenue - totalSalary;
-  };
-  
-  const profit = calculateProfit();
-
-  const toggleBranch = (branchKey) => {
-    setExpandedBranches((prev) => {
-      const next = new Set(prev);
-      if (next.has(branchKey)) next.delete(branchKey);
-      else next.add(branchKey);
-      return next;
-    });
-  };
-
-  return (
-    <Layout>
-      <div className="dashboard">
-        <div className="dashboard-header">
-          <h1 className="dashboard-title">Дашборд</h1>
+  return <Layout dashboard>
+    <div className="owner-overview">
+      <h1 className="od-mobile-title">Обзор клуба</h1>
+      <div className="od-toolbar"><PeriodControl value={period} onChange={setPeriod} /><span className="od-toolbar-divider" /><FiltersControl value={filters} onChange={setFilters} options={options} loading={optionsLoading} error={optionsError} onRetry={() => setOptionsReload(n => n + 1)} /><div className="od-toolbar-end"><button className={`od-icon-btn ${loading ? 'is-loading' : ''}`} aria-label="Обновить дашборд" title="Обновить данные" disabled={loading} onClick={() => setReload(n => n + 1)}><DashIcon name="refresh" /></button><Link className="od-control od-journal-link" to="/lessons"><IconLessons /><span>Журнал занятий</span><DashIcon name="arrow" /></Link></div></div>
+      {activeFilters.length > 0 && <div className="od-applied-filters">{activeFilters.map(([key, value]) => { const name = options[key]?.find(option => option.value === value)?.label || 'Выбран фильтр'; return <button key={key} onClick={() => setFilters(prev => ({ ...prev, [key]: '' }))} aria-label={`Убрать фильтр: ${name}`}>{name}<DashIcon name="close" /></button>; })}<button className="od-reset" onClick={() => setFilters({})}>Сбросить</button></div>}
+      <div className="od-live-status" role="status">{loading ? 'Обновляем данные…' : error ? '' : 'Данные обновлены'}</div>
+      {error && <div className="od-error" role="alert"><span>{error}{data && ` Показаны последние загруженные данные за ${periodLabel(data.period)}.`}</span><button className="od-text-btn" onClick={() => setReload(n => n + 1)}>Повторить</button></div>}
+      {!data && loading ? <div className="od-loading" aria-label="Загрузка дашборда"><div /><div /><div /></div> : data && <div className={`od-results ${loading ? 'od-refreshing' : ''}`} aria-busy={loading}>
+        <section className="od-metrics" aria-label="Главные показатели">
+          <Metric title="Выручка" value={formatCurrency(revenue)} accent icon={<DashIcon name="ruble" />} help="Выручка по занятиям за выбранный период. Это начисления, а не фактическое поступление денег.">{lessonCount ? `${formatCurrency(revenue / lessonCount)} на занятие` : 'Нет начислений за период'}</Metric>
+          <Metric title="Прибыль" value={<span className={profit < 0 ? 'od-negative' : ''}>{formatCurrency(profit)}</span>} icon={<DashIcon name="trend" />} help="Выручка минус зарплаты преподавателей. Прочие расходы здесь не учитываются.">Зарплаты <span>{formatCurrency(summary.salary)}</span></Metric>
+          <Metric title="Занятия" value={formatNumber(lessonCount)} icon={<IconLessons />}>{countLabel(summary.branches.length, ['филиал', 'филиала', 'филиалов'])} <span className="od-caption-separator">/</span> {countLabel(summary.teachers.length, ['преподаватель', 'преподавателя', 'преподавателей'])}</Metric>
+          <Metric title="Посещения" value={formatNumber(visits)} icon={<IconPeople />} help="Сумма посещений всех занятий. Один ребёнок может учитываться несколько раз, если посетил несколько занятий."><span>{paid} платных</span><span className="od-caption-separator">/</span>{trial} пробных</Metric>
+        </section>
+        <div className="od-primary-grid">
+          <section className="od-panel od-finance" aria-labelledby="od-finance-title">
+            <header className="od-panel-heading"><div><h2 id="od-finance-title">Финансовая динамика</h2><p>{cumulative ? 'Нарастающим итогом' : monthly ? 'По месяцам' : 'В дни занятий'}</p></div><div className="od-segment"><button aria-pressed={cumulative} onClick={() => setCumulative(true)}>Накопительно</button><button aria-pressed={!cumulative} onClick={() => setCumulative(false)}>{monthly ? 'По месяцам' : 'По дням'}</button></div></header>
+            <div className="od-chart-legend">{MONEY_SERIES.map(item => <button key={item.key} aria-pressed={visibleSeries.includes(item.key)} onClick={() => toggleSeries(item.key)}><i style={{ background: item.color }} />{item.label}</button>)}<Hint label="Как читать график">Нажмите на название показателя, чтобы скрыть или показать его. Наведите на график для точных сумм. На телефоне — коснитесь точки.</Hint></div>
+            {chart.length ? <div className="od-chart" role="img" aria-label={`Финансовая динамика за ${periodLabel(data.period)}. Выручка ${formatCurrency(revenue)}, прибыль ${formatCurrency(profit)}.`}><ResponsiveContainer width="100%" height="100%"><ComposedChart data={chart} margin={{ top: 12, right: 12, left: 0, bottom: 0 }} accessibilityLayer>
+              <defs><linearGradient id="od-revenue-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.2} /><stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} /></linearGradient></defs>
+              <CartesianGrid vertical={false} strokeDasharray="3 5" stroke="var(--color-border)" />
+              <XAxis dataKey="id" tickFormatter={shortDate} axisLine={false} tickLine={false} tickMargin={10} minTickGap={mobile ? 42 : 36} tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }} />
+              <YAxis width={64} tickFormatter={compactMoney} axisLine={false} tickLine={false} tickMargin={8} tickCount={4} tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }} />
+              <Tooltip content={<FinancialTooltip cumulative={cumulative} />} cursor={{ stroke: 'var(--color-text-muted)', strokeDasharray: '3 4' }} wrapperStyle={{ outline: 'none', zIndex: 5 }} />
+              {visibleSeries.includes('revenue') && (cumulative ? <Area dataKey="revenue" name="Выручка" type="linear" stroke="var(--color-primary)" strokeWidth={2.5} fill="url(#od-revenue-fill)" dot={chart.length === 1 ? { r: 4 } : false} activeDot={{ r: 4, stroke: 'var(--color-bg-surface)', strokeWidth: 3 }} isAnimationActive={false} /> : <Bar dataKey="revenue" name="Выручка" fill="var(--color-primary)" radius={[3, 3, 0, 0]} maxBarSize={28} isAnimationActive={false} />)}
+              {visibleSeries.includes('profit') && <Line dataKey="profit" name="Прибыль" type="linear" stroke="var(--color-secondary)" strokeWidth={2} dot={chart.length === 1 ? { r: 4 } : false} activeDot={{ r: 4 }} isAnimationActive={false} />}
+              {visibleSeries.includes('salary') && <Line dataKey="salary" name="Зарплаты" type="linear" stroke="var(--color-chart-3)" strokeWidth={1.5} strokeDasharray="4 4" dot={chart.length === 1 ? { r: 4 } : false} isAnimationActive={false} />}
+            </ComposedChart></ResponsiveContainer></div> : <EmptyState />}
+            <footer className="od-finance-footer"><span>После зарплат <strong>{revenue > 0 ? `${Math.round(profit / revenue * 100)}% выручки` : '—'}</strong></span><button className="od-text-btn" onClick={() => { setTableMode('months'); document.getElementById('od-period-details')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }}>По месяцам <DashIcon name="arrow" /></button></footer>
+          </section>
+          <section className="od-panel od-ranking" aria-label="Результаты филиалов и преподавателей">
+            <header className="od-panel-heading"><div className="od-tabs"><button aria-pressed={rankType === 'branches'} onClick={() => { setRankType('branches'); setRankExpanded(false); }}><IconBranches />Филиалы</button><button aria-pressed={rankType === 'teachers'} onClick={() => { setRankType('teachers'); setRankExpanded(false); }}><IconTeachers />Преподаватели</button></div></header>
+            <div className="od-ranking-caption"><span>{rankType === 'branches' ? 'По выручке' : 'По количеству занятий'}</span><span>{countLabel(ranked.length, rankType === 'branches' ? ['филиал', 'филиала', 'филиалов'] : ['преподаватель', 'преподавателя', 'преподавателей'])}</span></div>
+            {ranked.length ? <div className={`od-rank-list ${rankExpanded ? 'is-expanded' : ''}`}>{ranked.slice(0, rankExpanded ? undefined : 5).map((row, index) => <button className="od-rank-row" key={row.id} onClick={() => showGroup(row)} aria-label={`Подробнее: ${row.name}`}><span className="od-rank-number">{String(index + 1).padStart(2, '0')}</span><span className="od-rank-name"><span>{row.name}</span><span className="od-rank-track"><i style={{ width: `${Math.max(0, (rankType === 'branches' ? row.revenue : row.count) / rankMax * 100)}%` }} /></span></span><span className="od-rank-value">{rankType === 'branches' ? formatCurrency(row.revenue) : row.count}<small>{rankType === 'branches' ? `${row.count} зан.` : formatCurrency(row.revenue)}</small></span><DashIcon name="chevron" /></button>)}</div> : <EmptyState />}
+            <footer className="od-rank-footer">{ranked.length > 5 ? <button className="od-text-btn" onClick={() => setRankExpanded(v => !v)}>{rankExpanded ? 'Свернуть список' : `Показать все · ${ranked.length}`}<DashIcon name="arrow" /></button> : <span>Нажмите на строку для деталей</span>}</footer>
+          </section>
         </div>
-
-        <div className="dashboard-filters-wrap">
-          <button
-            type="button"
-            className="dashboard-filters-toggle"
-            onClick={() => setFiltersOpen((v) => !v)}
-            aria-expanded={filtersOpen}
-            aria-controls="dashboard-filters-content"
-          >
-            <span className="dashboard-filters-toggle-icon"><IconFilter /></span>
-            <span className="dashboard-filters-toggle-label">Фильтр</span>
-            <span className={`dashboard-filters-toggle-chevron ${filtersOpen ? 'open' : ''}`}>
-              {filtersOpen ? <IconChevronUp /> : <IconChevronDown />}
-            </span>
-          </button>
-          <div id="dashboard-filters-content" className={`dashboard-filters-content ${filtersOpen ? 'open' : ''}`}>
-            <Card className="dashboard-filters">
-              <div className="filters-grid">
-                <div className="period-mode">
-              <div className="period-mode-label">Период</div>
-              <div className="period-mode-buttons">
-                <button
-                  type="button"
-                  className={`period-btn ${periodMode === 'month' ? 'active' : ''}`}
-                  onClick={() => setPeriodMode('month')}
-                >
-                  Месяц
-                </button>
-                <button
-                  type="button"
-                  className={`period-btn ${periodMode === 'range' ? 'active' : ''}`}
-                  onClick={() => setPeriodMode('range')}
-                >
-                  Диапазон
-                </button>
-              </div>
-            </div>
-
-            {periodMode === 'month' ? (
-              <Input
-                type="month"
-                label="Месяц"
-                value={month}
-                onChange={(e) => setMonth(e.target.value)}
-              />
-            ) : (
-              <>
-                <Input
-                  type="month"
-                  label="Месяц начала"
-                  value={rangeStartMonth}
-                  onChange={(e) => setRangeStartMonth(e.target.value)}
-                />
-                <Input
-                  type="month"
-                  label="Месяц конца"
-                  value={rangeEndMonth}
-                  onChange={(e) => setRangeEndMonth(e.target.value)}
-                />
-              </>
-            )}
-            <DepartmentSelector
-              value={selectedDepartment}
-              onChange={(e) => setSelectedDepartment(e.target.value)}
-              label="Отдел"
-            />
-            <Select
-              label="Филиал"
-              value={filters.branch_id}
-              onChange={(e) => setFilters({ ...filters, branch_id: e.target.value })}
-              options={branchesOptions}
-              placeholder="Все филиалы"
-            />
-            <Select
-              label="Преподаватель"
-              value={filters.teacher_id}
-              onChange={(e) => setFilters({ ...filters, teacher_id: e.target.value })}
-              options={teachersOptions}
-              placeholder="Все преподаватели"
-            />
-            <div className="filters-actions">
-              <Button onClick={loadDashboard} variant="primary">Применить</Button>
-              <Button
-                onClick={() => {
-                  setFilters({ department_id: '', branch_id: '', teacher_id: '' });
-                  setSelectedDepartment('');
-                  setPeriodMode('month');
-                  setRangeStartMonth('');
-                  setRangeEndMonth('');
-                  setMonth(getCurrentMonth());
-                }}
-                variant="secondary"
-              >
-                Сбросить
-              </Button>
-            </div>
-              </div>
-            </Card>
-          </div>
+        <div className="od-secondary-grid">
+          <section className="od-panel od-recent" id="od-period-details">
+            <header className="od-panel-heading"><div className="od-tabs"><button aria-pressed={tableMode === 'lessons'} onClick={() => setTableMode('lessons')}>Последние занятия</button><button aria-pressed={tableMode === 'months'} onClick={() => setTableMode('months')}>По месяцам</button></div>{lessons.length > 0 && <button className="od-text-btn" onClick={() => setDetail({ title: 'Занятия за период', lessons })}>Все {lessons.length}<DashIcon name="arrow" /></button>}</header>
+            {tableMode === 'lessons' ? recent.length ? <div className="od-recent-list"><div className="od-recent-labels"><span>Дата</span><span>Филиал / преподаватель</span><span>Посещения</span><span>Выручка</span><span /></div>{recent.map(lesson => <button className="od-recent-row" key={lesson.id} onClick={() => setDetail({ title: 'Детали занятия', lessons: [lesson] })}><span className="od-recent-date">{lessonDate(lesson.starts_at)}<small>{lessonTime(lesson.starts_at)}</small></span><span className="od-recent-name">{lesson.branch_name}<small>{lesson.teacher_name}</small></span><span className="od-recent-visits">{number(lesson.paid_children) + number(lesson.trial_children)}<small>{number(lesson.trial_children) ? `${lesson.trial_children} проб.` : 'платные'}</small></span><strong>{formatCurrency(lessonRevenue(lesson))}</strong><DashIcon name="chevron" /></button>)}</div> : <EmptyState /> : summary.months.length ? <div className="od-month-table"><div className="od-month-row od-month-labels"><span>Месяц</span><span>Занятия</span><span>Выручка</span><span>Прибыль</span></div>{summary.months.map(row => <button className="od-month-row" key={row.id} onClick={() => setDetail({ title: monthLabel(row.id), lessons: row.lessons })}><span>{monthLabel(row.id, true)}</span><span>{row.count}</span><strong>{formatCurrency(row.revenue)}</strong><strong className={row.profit < 0 ? 'od-negative' : ''}>{formatCurrency(row.profit)}</strong></button>)}</div> : <EmptyState />}
+          </section>
+          <section className="od-panel od-attendance" aria-labelledby="od-attendance-title"><header className="od-panel-heading"><h2 id="od-attendance-title">Посещаемость</h2><Hint label="О посещаемости">Платные и пробные посещения за выбранный период. Доля пробных посещений не равна конверсии в оплату.</Hint></header><div className="od-attendance-body"><div className="od-attendance-total"><strong>{formatNumber(visits)}</strong><span>посещений за период</span></div><div className="od-attendance-bar" aria-hidden="true"><span style={{ width: `${paidPercent}%` }} /><span style={{ width: `${visits ? 100 - paidPercent : 0}%` }} /></div><div className="od-attendance-legend"><div><span><i />Платные</span><strong>{paid}<small>{visits ? Math.round(paidPercent) : 0}%</small></strong></div><div><span><i />Пробные</span><strong>{trial}<small>{visits ? Math.round(100 - paidPercent) : 0}%</small></strong></div></div><div className="od-average"><IconPeople /><span>В среднем на занятии</span><strong>{average.toLocaleString('ru-RU', { maximumFractionDigits: 1 })}</strong></div></div></section>
         </div>
-
-        {kpi && (
-          <div className="dashboard-kpi">
-            <KPICard
-              title="Выручка"
-              value={formatCurrency(kpi.revenue_sum || kpi.revenue || 0)}
-              icon={<IconRevenue />}
-              color="var(--color-success)"
-            />
-            <KPICard
-              title="Прибыль"
-              value={formatCurrency(profit)}
-              subtitle={profit >= 0 ? 'Выручка - зарплаты' : 'Отрицательная'}
-              icon={<IconProfit />}
-              color={profit >= 0 ? 'var(--color-success)' : 'var(--color-error)'}
-            />
-            <KPICard
-              title="Платные дети"
-              value={formatNumber(kpi.paid_sum || kpi.paid_children_sum || kpi.paid_children || 0)}
-              icon={<IconPeople />}
-              color="var(--color-info)"
-            />
-            <KPICard
-              title="Пробные дети"
-              value={formatNumber(kpi.trial_sum || kpi.trial_children_sum || kpi.trial_children || 0)}
-              icon={<IconTarget />}
-              color="var(--color-primary)"
-            />
-            <KPICard
-              title="Всего детей"
-              value={formatNumber(kpi.total_children_sum || kpi.total_children || 0)}
-              icon={<IconChartBar />}
-              color="var(--color-primary)"
-            />
-            <KPICard
-              title="Занятий"
-              value={formatNumber(kpi.lessons_count || 0)}
-              icon={<IconLessons />}
-              color="var(--color-orange)"
-            />
-            <KPICard
-              title="Среднее на занятие"
-              value={kpi.avg_children_per_lesson ? formatNumber(kpi.avg_children_per_lesson.toFixed(1)) : 
-                     (kpi.lessons_count && kpi.lessons_count > 0 && kpi.total_children_sum ? 
-                      formatNumber((kpi.total_children_sum / kpi.lessons_count).toFixed(1)) : '0')}
-              icon={<IconChartLine />}
-              color="var(--color-secondary)"
-            />
-          </div>
-        )}
-
-        {revenueSalaryProfitChartData.length > 0 && (
-          <Card title="Рост выручки, зарплат и прибыли">
-            <ResponsiveContainer width="100%" height={isMobile ? 240 : 300}>
-              <ComposedChart data={revenueSalaryProfitChartData} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
-                <XAxis
-                  dataKey="dateKey"
-                  tickFormatter={formatChartDateLabel}
-                  interval="preserveStartEnd"
-                  minTickGap={24}
-                  stroke="var(--color-border)"
-                  tick={{ fill: 'var(--color-text-secondary)', fontSize: 12 }}
-                />
-                <YAxis
-                  tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-                  stroke="var(--color-border)"
-                  tick={{ fill: 'var(--color-text-secondary)', fontSize: 12 }}
-                />
-                <Tooltip
-                  formatter={(value, name) => [formatCurrency(value), name]}
-                  labelFormatter={formatChartDateLabel}
-                  contentStyle={{
-                    background: 'var(--color-bg-surface)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: 'var(--radius-md)',
-                  }}
-                  labelStyle={{ color: 'var(--color-text-primary)' }}
-                />
-                {!isMobile && <Legend />}
-                <Line type="monotone" dataKey="revenue" stroke="var(--color-info)" name="Выручка" strokeWidth={2} dot={{ r: 4, fill: 'var(--color-info)' }} />
-                <Line type="monotone" dataKey="salary" stroke="var(--color-orange)" name="Зарплаты" strokeWidth={2} dot={{ r: 4, fill: 'var(--color-orange)' }} />
-                <Line type="monotone" dataKey="profit" stroke="var(--color-success)" name="Прибыль" strokeWidth={2} dot={{ r: 4, fill: 'var(--color-success)' }} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </Card>
-        )}
-
-        <div className="dashboard-grid">
-          {top_branches && top_branches.length > 0 && (
-            <Card title="Топ филиалов">
-              <div className="dashboard-top-bars">
-                {top_branches.map((item) => {
-                  const name = item.branch_name || item.name || '—';
-                  const value = item.revenue_sum || item.revenue || 0;
-                  const maxVal = Math.max(...top_branches.map((b) => b.revenue_sum || b.revenue || 0), 1);
-                  const pct = (value / maxVal) * 100;
-                  return (
-                    <div key={String(item.branch_id || name)} className="dashboard-top-bar-row">
-                      <div className="dashboard-top-bar-label" title={name}>
-                        {name}
-                      </div>
-                      <div className="dashboard-top-bar-bar-wrap">
-                        <div className="dashboard-top-bar-track">
-                          <div
-                            className="dashboard-top-bar-fill dashboard-top-bar-fill-success"
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                        <div className="dashboard-top-bar-value">{formatCurrency(value)}</div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </Card>
-          )}
-
-          {top_teachers && top_teachers.length > 0 && (
-            <Card title="Топ преподавателей">
-              <div className="dashboard-top-bars">
-                {top_teachers.map((item) => {
-                  const name = item.teacher_name || item.name || '—';
-                  const value = item.lessons_count || 0;
-                  const maxVal = Math.max(...top_teachers.map((t) => t.lessons_count || 0), 1);
-                  const pct = (value / maxVal) * 100;
-                  return (
-                    <div key={String(item.teacher_id || name)} className="dashboard-top-bar-row">
-                      <div className="dashboard-top-bar-label" title={name}>
-                        {name}
-                      </div>
-                      <div className="dashboard-top-bar-bar-wrap">
-                        <div className="dashboard-top-bar-track">
-                          <div
-                            className="dashboard-top-bar-fill dashboard-top-bar-fill-primary"
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                        <div className="dashboard-top-bar-value">{formatNumber(value)} занятий</div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </Card>
-          )}
-        </div>
-
-        {lessonsByBranch.length > 0 && (
-          <Card title="Занятия за период">
-            <div className="lessons-by-branch">
-              {lessonsByBranch.map((group) => {
-                const branchKey = String(group.branchId || group.branchName);
-                const isOpen = expandedBranches.has(branchKey);
-                return (
-                  <div key={branchKey} className="lessons-branch-group">
-                    <button
-                      type="button"
-                      className={`lessons-branch-header ${isOpen ? 'open' : ''}`}
-                      onClick={() => toggleBranch(branchKey)}
-                      aria-expanded={isOpen}
-                    >
-                      <span className="lessons-branch-chevron">
-                        {isOpen ? <IconChevronUp /> : <IconChevronDown />}
-                      </span>
-                      <span className="lessons-branch-name">{group.branchName}</span>
-                      <span className="lessons-branch-stats lessons-branch-stats-inline">
-                        <span className="lessons-branch-stat-inline lessons-branch-stat-revenue">
-                          Выручка <strong>{formatCurrency(group.revenue)}</strong>
-                        </span>
-                        <span className="lessons-branch-stat-inline lessons-branch-stat-salary">
-                          Зарплата <strong>{formatCurrency(group.salary)}</strong>
-                        </span>
-                        <span className={`lessons-branch-stat-inline lessons-branch-stat-profit ${group.profit >= 0 ? 'positive' : 'negative'}`}>
-                          Прибыль <strong>{formatCurrency(group.profit)}</strong>
-                        </span>
-                      </span>
-                    </button>
-                    {isOpen && (
-                      <div className="lessons-branch-body">
-                        <div className="dashboard-lessons-cards">
-                          {group.lessons.map((lesson) => {
-                            const revenue = Number(lesson.revenue) || (lesson.price_snapshot && lesson.paid_children ? lesson.price_snapshot * (lesson.paid_children || 0) : 0);
-                            const salary = lesson.teacher_salary || 0;
-                            const profit = revenue - salary;
-                            return (
-                              <div key={lesson.id} className="dashboard-lesson-card">
-                                <div className="dashboard-lesson-card-time">
-                                  {formatDateTime(lesson.starts_at)}
-                                </div>
-                                <div className="dashboard-lesson-card-teacher">
-                                  <span
-                                    className="dashboard-lesson-teacher-dot"
-                                    style={{ backgroundColor: (lesson.teacher_color || lesson.teacherColor || '').trim() ? (String(lesson.teacher_color || lesson.teacherColor).trim().startsWith('#') ? String(lesson.teacher_color || lesson.teacherColor).trim() : `#${String(lesson.teacher_color || lesson.teacherColor).trim()}`) : '#94a3b8' }}
-                                    aria-hidden
-                                  />
-                                  {lesson.teacher_name || '—'}
-                                </div>
-                                <div className="dashboard-lesson-card-stats">
-                                  <span className="dashboard-lesson-stat dashboard-lesson-stat-paid">
-                                    <span className="dashboard-lesson-stat-label">Платные</span>
-                                    <span className="dashboard-lesson-stat-value">{lesson.paid_children ?? 0}</span>
-                                  </span>
-                                  <span className="dashboard-lesson-stat dashboard-lesson-stat-trial">
-                                    <span className="dashboard-lesson-stat-label">пробные</span>
-                                    <span className="dashboard-lesson-stat-value">{lesson.trial_children ?? 0}</span>
-                                  </span>
-                                  <span className="dashboard-lesson-stat dashboard-lesson-stat-total">
-                                    <span className="dashboard-lesson-stat-label">всего</span>
-                                    <span className="dashboard-lesson-stat-value">{lesson.total_children ?? 0}</span>
-                                  </span>
-                                </div>
-                                <div className="dashboard-lesson-card-instruction">
-                                  {lesson.is_creative ? 'Творческое' : (lesson.instruction_name || '—')}
-                                </div>
-                                <div className="dashboard-lesson-card-finance">
-                                  <span className="dashboard-lesson-revenue">{formatCurrency(revenue)}</span>
-                                  <span className="dashboard-lesson-salary">{formatCurrency(salary)}</span>
-                                  <span className={`dashboard-lesson-profit ${profit >= 0 ? 'positive' : 'negative'}`}>
-                                    {formatCurrency(profit)}
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
-        )}
-      </div>
-    </Layout>
-  );
-};
-
-export default OwnerDashboard;
+      </div>}
+      {detail && <DetailPanel key={detail.title} detail={detail} period={data.period} onClose={() => setDetail(null)} />}
+    </div>
+  </Layout>;
+}

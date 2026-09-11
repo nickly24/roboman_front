@@ -223,7 +223,7 @@ const Teachers = () => {
     <Layout>
       <div className="teachers-page">
         <div className="teachers-header">
-          <h1 className="teachers-title">Преподаватели</h1>
+          <div><h1 className="teachers-title">Преподаватели</h1><p className="page-description">Команда, занятость и условия работы</p></div>
           <Button variant="primary" onClick={openCreate}>
             Создать преподавателя
           </Button>

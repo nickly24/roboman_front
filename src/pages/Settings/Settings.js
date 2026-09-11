@@ -65,7 +65,7 @@ const Settings = () => {
     <Layout>
       <div className="settings-page">
         <div className="settings-header">
-          <h1 className="settings-title">Настройки</h1>
+          <div><h1 className="settings-title">Настройки</h1><p className="page-description">Общие параметры работы клуба</p></div>
         </div>
 
         <Card title="Настройки расчёта зарплаты">

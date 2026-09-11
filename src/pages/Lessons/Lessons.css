@@ -289,20 +289,20 @@ html.theme-dark .lesson-badge-paid {
 }
 
 .lessons-calendar-event-stat-total .lessons-calendar-event-stat-value {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-weight: 600;
 }
 
 html.theme-dark .lessons-calendar-event-stat-paid .lessons-calendar-event-stat-value {
-  color: #34d399;
+  color: var(--color-success);
 }
 
 html.theme-dark .lessons-calendar-event-stat-trial .lessons-calendar-event-stat-value {
-  color: #22d3ee;
+  color: var(--color-secondary);
 }
 
 html.theme-dark .lessons-calendar-event-stat-total .lessons-calendar-event-stat-value {
-  color: #818cf8;
+  color: var(--color-primary-text);
 }
 
 .lessons-calendar-event-finance {
@@ -347,19 +347,19 @@ html.theme-dark .lessons-calendar-event-stat-total .lessons-calendar-event-stat-
 }
 
 html.theme-dark .lessons-calendar-event-finance-revenue .lessons-calendar-event-finance-value {
-  color: #60a5fa;
+  color: var(--color-info);
 }
 
 html.theme-dark .lessons-calendar-event-finance-salary .lessons-calendar-event-finance-value {
-  color: #fb923c;
+  color: var(--color-orange);
 }
 
 html.theme-dark .lessons-calendar-event-finance-profit-positive .lessons-calendar-event-finance-value {
-  color: #34d399;
+  color: var(--color-success);
 }
 
 html.theme-dark .lessons-calendar-event-finance-profit-negative .lessons-calendar-event-finance-value {
-  color: #f87171;
+  color: var(--color-error);
 }
 
 /* Кнопка «Редактировать» в списке — фирменный оранжевый/жёлтый */
@@ -372,7 +372,7 @@ html.theme-dark .lessons-calendar-event-finance-profit-negative .lessons-calenda
 .lessons-btn-edit:hover {
   background-color: var(--color-orange) !important;
   border-color: var(--color-orange) !important;
-  color: #fff !important;
+  color: var(--color-on-primary) !important;
 }
 
 /* Календарь: панель — слева переключатель, справа Редактировать */
@@ -401,7 +401,7 @@ html.theme-dark .lessons-calendar-event-finance-profit-negative .lessons-calenda
   margin-left: 12px;
   padding: 0;
   font-size: var(--font-size-sm);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   background: none;
   border: none;
   cursor: pointer;
@@ -512,39 +512,39 @@ html.theme-dark .lessons-calendar-event-badge {
 
 /* Тёмная тема — итоги дня */
 html.theme-dark .lessons-calendar-summary-row-revenue {
-  background: rgba(96, 165, 250, 0.2);
-  color: #93c5fd;
+  background: var(--color-info-light);
+  color: var(--color-info);
 }
 
 html.theme-dark .lessons-calendar-summary-row-revenue span:last-child {
-  color: #60a5fa;
+  color: var(--color-info);
 }
 
 html.theme-dark .lessons-calendar-summary-row-salary {
-  background: rgba(251, 146, 60, 0.2);
-  color: #fdba74;
+  background: var(--color-orange-light);
+  color: var(--color-orange);
 }
 
 html.theme-dark .lessons-calendar-summary-row-salary span:last-child {
-  color: #fb923c;
+  color: var(--color-orange);
 }
 
 html.theme-dark .lessons-calendar-summary-row-profit.lessons-calendar-summary-profit-positive {
-  background: rgba(16, 185, 129, 0.2);
-  color: #6ee7b7;
+  background: var(--color-success-light);
+  color: var(--color-success);
 }
 
 html.theme-dark .lessons-calendar-summary-row-profit.lessons-calendar-summary-profit-positive span:last-child {
-  color: #34d399;
+  color: var(--color-success);
 }
 
 html.theme-dark .lessons-calendar-summary-row-profit.lessons-calendar-summary-profit-negative {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
+  background: var(--color-error-light);
+  color: var(--color-error);
 }
 
 html.theme-dark .lessons-calendar-summary-row-profit.lessons-calendar-summary-profit-negative span:last-child {
-  color: #f87171;
+  color: var(--color-error);
 }
 
 .lessons-calendar-week-summary {
@@ -647,19 +647,19 @@ html.theme-dark .lessons-calendar-summary-row-profit.lessons-calendar-summary-pr
 }
 
 .lessons-weekly-bar-revenue {
-  background: #3b82f6;
+  background: var(--color-info);
 }
 
 .lessons-weekly-bar-salary {
-  background: #f97316;
+  background: var(--color-orange);
 }
 
 .lessons-weekly-bar-profit-pos {
-  background: #10b981;
+  background: var(--color-success);
 }
 
 .lessons-weekly-bar-profit-neg {
-  background: #ef4444;
+  background: var(--color-error);
 }
 
 .lessons-weekly-bar-value {
@@ -680,11 +680,11 @@ html.theme-dark .lessons-calendar-summary-row-profit.lessons-calendar-summary-pr
 }
 
 html.theme-dark .lessons-weekly-bar-value.profit-pos {
-  color: #34d399;
+  color: var(--color-success);
 }
 
 html.theme-dark .lessons-weekly-bar-value.profit-neg {
-  color: #f87171;
+  color: var(--color-error);
 }
 
 .lessons-groups {
@@ -755,7 +755,7 @@ html.theme-dark .lessons-weekly-bar-value.profit-neg {
 
 .lessons-group-toggle {
   font-size: 10px;
-  color: #9ca3af;
+  color: var(--color-text-muted);
 }
 
 .branch-invoice-item {

@@ -84,7 +84,7 @@ const Salary = () => {
     <Layout>
       <div className="salary-page">
         <div className="salary-header">
-          <h1 className="salary-title">Зарплата по отделам</h1>
+          <div><h1 className="salary-title">Зарплата по отделам</h1><p className="page-description">Начисления преподавателям за выбранный период</p></div>
           <p className="salary-subtitle">Зарплата преподавателей в каждом из ваших отделов за выбранный период</p>
         </div>
 

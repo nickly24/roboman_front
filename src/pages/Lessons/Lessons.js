@@ -1,1012 +1,141 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import apiClient from '../../services/api';
 import { API_ENDPOINTS } from '../../config/api';
-import { formatCurrency, formatDateTime, getCurrentMonth } from '../../utils/format';
+import { formatCurrency, getCurrentMonth } from '../../utils/format';
 import Layout from '../../components/Layout/Layout';
-import Card from '../../components/Card/Card';
-import Table from '../../components/Table/Table';
-import Button from '../../components/Button/Button';
-import Input from '../../components/Input/Input';
-import Select from '../../components/Select/Select';
 import Modal from '../../components/Modal/Modal';
-import DepartmentSelector from '../../components/DepartmentSelector/DepartmentSelector';
-import LoadingSpinner from '../../components/Loading/LoadingSpinner';
 import InvoiceModal from '../../components/InvoiceModal/InvoiceModal';
+import { IconSchedule, IconLessons, IconPeople, IconTeachers, IconBranches, IconChevronLeft, IconChevronRight } from '../../components/Icons/SidebarIcons';
+import { FiltersControl, Hint, PeriodControl } from '../Dashboard/DashboardControls';
+import DashIcon from '../Dashboard/DashboardIcons';
+import { countLabel, itemsFrom } from '../Dashboard/dashboardData';
+import useMediaQuery from '../../hooks/useMediaQuery';
 import LessonForm from './LessonForm';
+import { addDays, fetchCalendarLessons, inPeriod, lessonTopic, localDateKey, monthBounds, monthOf, startOfWeek, teacherColor, totalsFor, weekLabel, weeksOfMonth } from './lessonCalendarData';
+import '../Dashboard/OwnerDashboard.css';
 import './Lessons.css';
+import './LessonWorkspace.css';
 
-const Lessons = () => {
+const Plus = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>;
+const Edit = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m16 3 5 5-12 12H4v-5L16 3Zm-3 3 5 5" /></svg>;
+const Trash = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7" /></svg>;
+const FILTER_FIELDS = [{ key: 'branch_id', label: 'Филиалы', all: 'Все филиалы' }, { key: 'department_id', label: 'Отделы', all: 'Все отделы' }, { key: 'teacher_id', label: 'Преподаватели', all: 'Все преподаватели' }];
+const timeLabel = value => new Date(value).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+const dayLabel = value => new Date(value).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+const fullDayLabel = value => new Date(value).toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+const modeNames = { PLAN: 'По учебному плану', REPEAT: 'Повтор', OFF_PLAN_REPLACE: 'Вне плана · замена', OFF_PLAN_PAUSE: 'Вне плана · без продвижения' };
+
+function LessonEvent({ lesson, isOwner, onOpen }) {
+  const paid = Number(lesson.paid_children) || 0, trial = Number(lesson.trial_children) || 0;
+  return <button className="lc-event" style={{ '--teacher-color': teacherColor(lesson) }} onClick={() => onOpen(lesson)} aria-label={`${timeLabel(lesson.starts_at)}, ${lesson.branch_name}, ${lesson.teacher_name || 'занятие'}`}>
+    <span className="lc-event-top"><strong>{timeLabel(lesson.starts_at)}</strong><DashIcon name="chevron" /></span>
+    <span className="lc-event-branch">{lesson.branch_name}</span>
+    {isOwner && <span className="lc-event-teacher"><i />{lesson.teacher_name || 'Преподаватель'}</span>}
+    <span className="lc-event-topic">{lessonTopic(lesson)}</span>
+    <span className="lc-event-bottom"><span><IconPeople />{paid + trial}{trial > 0 && <small>· {trial} проб.</small>}</span><strong>{formatCurrency(isOwner ? lesson.revenue : lesson.teacher_salary)}</strong></span>
+    {!!lesson.is_salary_free && <span className="lc-no-salary">Без начисления зарплаты</span>}
+  </button>;
+}
+
+export default function Lessons() {
   const { isOwner, user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [lessons, setLessons] = useState([]);
+  const smallScreen = useMediaQuery('(max-width: 900px)');
   const [month, setMonth] = useState(getCurrentMonth());
+  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
+  const [selectedDay, setSelectedDay] = useState(() => localDateKey(new Date()));
   const [viewMode, setViewMode] = useState('calendar');
-  const [weekOffset, setWeekOffset] = useState(0);
-  const [showInvoices, setShowInvoices] = useState(false);
-  const [selectedDepartment, setSelectedDepartment] = useState('');
-  const [filters, setFilters] = useState({
-    branch_id: '',
-    teacher_id: '',
-  });
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingLesson, setEditingLesson] = useState(null);
-  const [invoiceData, setInvoiceData] = useState(null);
-  const [teacherBranches, setTeacherBranches] = useState([]);
-  const [collapsedBranchIds, setCollapsedBranchIds] = useState(new Set());
-  const [branchesOptions, setBranchesOptions] = useState([]);
-  const [teachersOptions, setTeachersOptions] = useState([]);
-  const [calendarEditMode, setCalendarEditMode] = useState(false);
+  const [filters, setFilters] = useState({});
+  const [records, setRecords] = useState([]), [loading, setLoading] = useState(true), [error, setError] = useState(''), [reload, setReload] = useState(0);
+  const [options, setOptions] = useState({}), [optionsLoading, setOptionsLoading] = useState(true), [optionsError, setOptionsError] = useState(false), [optionsReload, setOptionsReload] = useState(0);
+  const [form, setForm] = useState(null), [preview, setPreview] = useState(null), [confirmation, setConfirmation] = useState(null), [saving, setSaving] = useState(false), [actionError, setActionError] = useState('');
+  const [showInvoices, setShowInvoices] = useState(false), [invoiceData, setInvoiceData] = useState(null);
+  const swipe = useRef(null), calendarRef = useRef(null);
+  const today = localDateKey(new Date());
+  const title = isOwner ? 'Журнал занятий' : 'Мои занятия';
 
   useEffect(() => {
-    loadLessons();
-  }, [month, filters, selectedDepartment]);
-
+    const controller = new AbortController();
+    setLoading(true); setError('');
+    fetchCalendarLessons(month, weekStart, filters, controller.signal).then(data => { if (!controller.signal.aborted) setRecords(data); }).catch(() => { if (!controller.signal.aborted) { setRecords([]); setError('Не удалось загрузить занятия. Попробуйте ещё раз.'); } }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [month, weekStart, filters, reload]);
   useEffect(() => {
-    if (isOwner) {
-      Promise.all([
-        apiClient.get(API_ENDPOINTS.BRANCHES),
-        apiClient.get(API_ENDPOINTS.TEACHERS),
-      ]).then(([brResp, teachResp]) => {
-        if (brResp.data?.ok) {
-          const data = brResp.data.data;
-          const list = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
-          setBranchesOptions([{ value: '', label: 'Все филиалы' }, ...list.map((b) => ({ value: String(b.id), label: b.name || `Филиал #${b.id}` }))]);
-        }
-        if (teachResp.data?.ok) {
-          const data = teachResp.data.data;
-          const list = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
-          setTeachersOptions([{ value: '', label: 'Все преподаватели' }, ...list.filter((t) => t.status === 'working').map((t) => ({ value: String(t.id), label: t.full_name || `Преподаватель #${t.id}` }))]);
-        }
-      }).catch(() => {});
-    }
-  }, [isOwner]);
+    const controller = new AbortController();
+    setOptionsLoading(true); setOptionsError(false);
+    const urls = isOwner ? [API_ENDPOINTS.BRANCHES, API_ENDPOINTS.DEPARTMENTS, API_ENDPOINTS.TEACHERS] : user?.profile?.id ? [API_ENDPOINTS.TEACHER_BRANCHES(user.profile.id)] : [];
+    Promise.all(urls.map(url => apiClient.get(`${url}?limit=500`, { signal: controller.signal }))).then(responses => {
+      if (controller.signal.aborted) return;
+      const [branches = [], departments = [], teachers = []] = responses.map(itemsFrom);
+      const option = (id, name) => ({ value: String(id), label: name || `№ ${id}` });
+      const teacherDepartments = [...new Map(branches.filter(b => b.department_id != null).map(b => [String(b.department_id), option(b.department_id, b.department_name)])).values()];
+      setOptions({ branch_id: branches.map(b => option(b.id ?? b.branch_id, b.name || b.branch_name)), department_id: isOwner ? departments.map(d => option(d.id, d.name)) : teacherDepartments, teacher_id: teachers.map(t => option(t.id, t.full_name)) });
+    }).catch(() => { if (!controller.signal.aborted) setOptionsError(true); }).finally(() => { if (!controller.signal.aborted) setOptionsLoading(false); });
+    return () => controller.abort();
+  }, [isOwner, user?.profile?.id, optionsReload]);
 
-  useEffect(() => {
-    if (!isOwner && user?.profile?.id) {
-      apiClient.get(API_ENDPOINTS.TEACHER_BRANCHES(user.profile.id)).then((resp) => {
-        if (resp.data?.ok) {
-          const data = resp.data.data;
-          const list = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
-          setTeacherBranches(list);
-        }
-      }).catch(() => setTeacherBranches([]));
-    }
-  }, [isOwner, user?.profile?.id]);
+  const bounds = useMemo(() => monthBounds(month), [month]);
+  const monthLessons = useMemo(() => records.filter(lesson => inPeriod(lesson, bounds.start, bounds.end)), [records, bounds]);
+  const monthTotals = useMemo(() => totalsFor(monthLessons), [monthLessons]);
+  const weekDays = useMemo(() => Array.from({ length: 7 }, (_, index) => { const date = addDays(weekStart, index); return { date, key: localDateKey(date) }; }), [weekStart]);
+  const byDay = useMemo(() => { const map = new Map(); records.forEach(lesson => { const key = localDateKey(lesson.starts_at); if (!map.has(key)) map.set(key, []); map.get(key).push(lesson); }); return map; }, [records]);
+  const weekLessons = useMemo(() => records.filter(lesson => inPeriod(lesson, weekStart, addDays(weekStart, 7))), [records, weekStart]);
+  const weekTotals = useMemo(() => totalsFor(weekLessons), [weekLessons]);
+  const weeks = useMemo(() => weeksOfMonth(month).map(date => ({ date, key: localDateKey(date), totals: totalsFor(monthLessons.filter(lesson => inPeriod(lesson, date, addDays(date, 7)))) })), [month, monthLessons]);
+  const groups = useMemo(() => {
+    const map = new Map(); monthLessons.forEach(lesson => { const key = String(lesson.branch_id); if (!map.has(key)) map.set(key, { id: lesson.branch_id, name: lesson.branch_name, lessons: [] }); map.get(key).lessons.push(lesson); });
+    return [...map.values()].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ru'));
+  }, [monthLessons]);
 
-  useEffect(() => {
-    setWeekOffset(0);
-  }, [month]);
-
-  const loadLessons = async () => {
-    setLoading(true);
+  const chooseMonth = value => {
+    const date = value === getCurrentMonth() ? new Date() : monthBounds(value).start;
+    setMonth(value); setWeekStart(startOfWeek(date)); setSelectedDay(localDateKey(date));
+  };
+  const chooseWeek = date => { setWeekStart(date); setSelectedDay(today >= localDateKey(date) && today <= localDateKey(addDays(date, 6)) ? today : localDateKey(date)); };
+  const shiftWeek = direction => { const date = addDays(weekStart, direction * 7); setMonth(monthOf(addDays(date, 3))); chooseWeek(date); };
+  const goToday = () => { setMonth(getCurrentMonth()); chooseWeek(startOfWeek(new Date())); setSelectedDay(today); };
+  const createLesson = date => setForm({ lesson: null, initialValues: { branch_id: filters.branch_id || '', teacher_id: isOwner ? filters.teacher_id || '' : user?.profile?.id, starts_at: `${date || (month === getCurrentMonth() ? today : localDateKey(bounds.start))}T10:00` } });
+  const editLesson = lesson => { setPreview(null); setForm({ lesson }); };
+  const openConfirmation = (type, lesson) => { setActionError(''); setConfirmation({ type, lesson }); };
+  const confirmAction = async () => {
+    setSaving(true); setActionError('');
     try {
-      const params = new URLSearchParams({ month, limit: '500', sort: 'starts_at', order: 'asc' });
-      if (selectedDepartment) params.append('department_id', selectedDepartment);
-      if (filters.branch_id) params.append('branch_id', filters.branch_id);
-      if (filters.teacher_id) params.append('teacher_id', filters.teacher_id);
-
-      const response = await apiClient.get(`${API_ENDPOINTS.LESSONS}?${params}`);
-      if (response.data.ok) {
-        // Бэкенд возвращает {items: [...], limit, offset}
-        const lessonsData = response.data.data;
-        if (lessonsData && Array.isArray(lessonsData.items)) {
-          setLessons(lessonsData.items);
-        } else if (Array.isArray(lessonsData)) {
-          // На случай, если бэкенд вернёт массив напрямую
-          setLessons(lessonsData);
-        } else {
-          console.error('Неожиданный формат данных:', lessonsData);
-          setLessons([]);
-        }
-      } else {
-        console.error('Ошибка API:', response.data.error);
-        setLessons([]);
-      }
-    } catch (error) {
-      console.error('Ошибка загрузки занятий:', error);
-      setLessons([]);
-    } finally {
-      setLoading(false);
-    }
+      if (confirmation.type === 'delete') await apiClient.delete(API_ENDPOINTS.LESSON(confirmation.lesson.id));
+      else await apiClient.put(confirmation.lesson.is_salary_free ? API_ENDPOINTS.LESSON_SALARY_PAID(confirmation.lesson.id) : API_ENDPOINTS.LESSON_SALARY_FREE(confirmation.lesson.id));
+      setConfirmation(null); setPreview(null); setReload(n => n + 1);
+    } catch (err) { setActionError(err.response?.data?.error?.message || 'Не удалось выполнить действие. Попробуйте ещё раз.'); }
+    finally { setSaving(false); }
   };
-
-  const handleCreate = () => {
-    setEditingLesson(null);
-    setIsModalOpen(true);
+  const selectAdjacentDay = direction => {
+    const next = addDays(new Date(`${selectedDay}T12:00:00`), direction);
+    const nextWeek = startOfWeek(next);
+    if (localDateKey(nextWeek) !== localDateKey(weekStart)) { setMonth(monthOf(addDays(nextWeek, 3))); setWeekStart(nextWeek); }
+    setSelectedDay(localDateKey(next));
   };
+  const currentDayLessons = byDay.get(selectedDay) || [];
 
-  const handleEdit = (lesson) => {
-    setEditingLesson(lesson);
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = async (lessonId) => {
-    if (!window.confirm('Вы уверены, что хотите удалить это занятие?')) {
-      return;
-    }
-
-    try {
-      await apiClient.delete(API_ENDPOINTS.LESSON(lessonId));
-      loadLessons();
-    } catch (error) {
-      alert('Ошибка удаления занятия');
-      console.error(error);
-    }
-  };
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setEditingLesson(null);
-    loadLessons();
-  };
-
-  const handleInvoice = (branchId, branchName) => {
-    // Фильтруем занятия по филиалу
-    const branchLessons = lessons.filter(l => l.branch_id === branchId || l.branch_id?.toString() === branchId?.toString());
-    if (branchLessons.length > 0) {
-      setInvoiceData({
-        branchName,
-        lessons: branchLessons,
-        month,
-      });
-    }
-  };
-
-  const handleInvoiceClose = () => {
-    setInvoiceData(null);
-  };
-
-  const handleSalaryToggle = async (lesson) => {
-    if (!isOwner) return;
-    const makeFree = !lesson.is_salary_free;
-    const message = makeFree
-      ? 'Сделать это занятие бесплатным (зарплата не начисляется)?'
-      : 'Сделать это занятие платным (зарплата начисляется)?';
-    if (!window.confirm(message)) return;
-    try {
-      const endpoint = makeFree
-        ? API_ENDPOINTS.LESSON_SALARY_FREE(lesson.id)
-        : API_ENDPOINTS.LESSON_SALARY_PAID(lesson.id);
-      await apiClient.put(endpoint);
-      loadLessons();
-    } catch (error) {
-      alert('Не удалось изменить оплату занятия');
-      // eslint-disable-next-line no-console
-      console.error(error);
-    }
-  };
-
-  const isCurrentMonth = (value) => {
-    const now = new Date();
-    const current = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    return value === current;
-  };
-
-  const getMonthStart = (value) => {
-    const [year, mon] = value.split('-');
-    const d = new Date(Number(year), Number(mon) - 1, 1);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  };
-
-  const getMonthEndExclusive = (value) => {
-    const [year, mon] = value.split('-');
-    const d = new Date(Number(year), Number(mon), 1);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  };
-
-  const getWeekStart = (date) => {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = (day + 6) % 7;
-    d.setDate(d.getDate() - diff);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  };
-
-  const addDays = (date, days) => {
-    const d = new Date(date);
-    d.setDate(d.getDate() + days);
-    return d;
-  };
-
-  const weekIntersectsMonth = (weekStartDate, monthStartDate, monthEndDateExclusive) => {
-    const weekEndDateExclusive = addDays(weekStartDate, 7);
-    return weekStartDate < monthEndDateExclusive && weekEndDateExclusive > monthStartDate;
-  };
-
-  const formatWeekRange = (startDate) => {
-    const endDate = addDays(startDate, 6);
-    const fmt = new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: '2-digit' });
-    return `${fmt.format(startDate)} – ${fmt.format(endDate)}`;
-  };
-
-  const toLocalDateKey = (date) => {
-    const d = date instanceof Date ? date : new Date(date);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  };
-
-  const formatTime = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(date);
-  };
-
-  const getDayTotals = (dayLessons) => {
-    const revenueSum = dayLessons.reduce((sum, lesson) => sum + Number(lesson.revenue || 0), 0);
-    const salarySum = dayLessons.reduce((sum, lesson) => sum + Number(lesson.teacher_salary || 0), 0);
-    return {
-      revenueSum,
-      salarySum,
-      profit: revenueSum - salarySum,
-    };
-  };
-
-  // Для преподавателя — уникальные отделы: названия из занятий (department_name), затем из филиалов
-  const teacherDepartments = React.useMemo(() => {
-    const map = new Map();
-    lessons.forEach((l) => {
-      if (l.department_id != null && !map.has(l.department_id)) {
-        const name = l.department_name && String(l.department_name).trim();
-        map.set(l.department_id, { value: String(l.department_id), label: name || `Отдел #${l.department_id}` });
-      }
-    });
-    teacherBranches.forEach((b) => {
-      if (b.department_id != null && !map.has(b.department_id)) {
-        const name = (b.department_name && String(b.department_name).trim()) || null;
-        map.set(b.department_id, { value: String(b.department_id), label: name || `Отдел #${b.department_id}` });
-      }
-    });
-    return Array.from(map.values()).sort((a, b) => (a.label || '').localeCompare(b.label || ''));
-  }, [lessons, teacherBranches]);
-
-  // Группируем занятия по филиалам для кнопок "Выставить счет"
-  const branchesWithLessons = React.useMemo(() => {
-    const branchesMap = new Map();
-    lessons.forEach(lesson => {
-      const branchId = lesson.branch_id;
-      const branchName = lesson.branch_name || `Филиал #${branchId}`;
-      if (!branchesMap.has(branchId)) {
-        branchesMap.set(branchId, {
-          id: branchId,
-          name: branchName,
-          lessonsCount: 0,
-        });
-      }
-      branchesMap.get(branchId).lessonsCount += 1;
-    });
-    return Array.from(branchesMap.values());
-  }, [lessons]);
-
-  const renderCurriculum = (_, row) => {
-    if (!row.curriculum_mode) return '—';
-    const modeLabels = {
-      PLAN: 'По плану',
-      REPEAT: 'Повтор',
-      OFF_PLAN_REPLACE: 'Вне плана · замена',
-      OFF_PLAN_PAUSE: 'Вне плана · без продвижения',
-    };
-    return (
-      <div className="lesson-curriculum-cell">
-        <strong>{modeLabels[row.curriculum_mode] || row.curriculum_mode}</strong>
-        {row.curriculum_lesson_name && <span>{row.curriculum_plan_name} · {row.curriculum_module_name} · {row.curriculum_lesson_name}</span>}
-      </div>
-    );
-  };
-
-  const baseDate = React.useMemo(() => {
-    if (isCurrentMonth(month)) {
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-      now.setDate(now.getDate() + weekOffset * 7);
-      return now;
-    }
-    const [year, mon] = month.split('-');
-    const d = new Date(Number(year), Number(mon) - 1, 1);
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() + weekOffset * 7);
-    return d;
-  }, [month, weekOffset]);
-
-  const weekStart = React.useMemo(() => getWeekStart(baseDate), [baseDate]);
-  const weekEndExclusive = React.useMemo(() => addDays(weekStart, 7), [weekStart]);
-  const monthStart = React.useMemo(() => getMonthStart(month), [month]);
-  const monthEndExclusive = React.useMemo(() => getMonthEndExclusive(month), [month]);
-
-  const canGoPrevWeek = React.useMemo(() => {
-    const prevWeekStart = addDays(weekStart, -7);
-    return weekIntersectsMonth(prevWeekStart, monthStart, monthEndExclusive);
-  }, [weekStart, monthStart, monthEndExclusive]);
-
-  const canGoNextWeek = React.useMemo(() => {
-    const nextWeekStart = addDays(weekStart, 7);
-    return weekIntersectsMonth(nextWeekStart, monthStart, monthEndExclusive);
-  }, [weekStart, monthStart, monthEndExclusive]);
-
-  const weekDays = React.useMemo(() => {
-    const fmt = new Intl.DateTimeFormat('ru-RU', { weekday: 'short', day: '2-digit', month: '2-digit' });
-    return Array.from({ length: 7 }, (_, i) => {
-      const date = addDays(weekStart, i);
-      return {
-        date,
-        key: toLocalDateKey(date),
-        label: fmt.format(date),
-        isOutsideMonth: date < monthStart || date >= monthEndExclusive,
-      };
-    });
-  }, [weekStart, monthStart, monthEndExclusive]);
-
-  const weekLessonsByDay = React.useMemo(() => {
-    const map = new Map();
-    weekDays.forEach((day) => map.set(day.key, []));
-    lessons
-      .filter((lesson) => {
-        const dt = new Date(lesson.starts_at);
-        return dt >= weekStart && dt < weekEndExclusive;
-      })
-      .sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at))
-      .forEach((lesson) => {
-        const dt = new Date(lesson.starts_at);
-        const key = toLocalDateKey(dt);
-        if (!map.has(key)) {
-          map.set(key, []);
-        }
-        map.get(key).push(lesson);
-      });
-    return map;
-  }, [lessons, weekDays, weekStart, weekEndExclusive]);
-
-  const weekTotals = React.useMemo(() => {
-    const all = [];
-    weekLessonsByDay.forEach((dayLessons) => all.push(...dayLessons));
-    return getDayTotals(all);
-  }, [weekLessonsByDay]);
-
-  const weeklyChartData = React.useMemo(() => {
-    const result = [];
-    let wStart = getWeekStart(new Date(monthStart));
-    const end = new Date(monthEndExclusive);
-    while (wStart < end) {
-      if (weekIntersectsMonth(wStart, monthStart, monthEndExclusive)) {
-        const wEnd = addDays(wStart, 7);
-        const weekLessons = lessons.filter((l) => {
-          const dt = new Date(l.starts_at);
-          return dt >= wStart && dt < wEnd;
-        });
-        const t = getDayTotals(weekLessons);
-        result.push({
-          weekKey: wStart.getTime(),
-          label: formatWeekRange(wStart),
-          revenue: Number(t.revenueSum) || 0,
-          salary: Number(t.salarySum) || 0,
-          profit: Number(t.profit) || 0,
-        });
-      }
-      wStart = addDays(wStart, 7);
-    }
-    return result;
-  }, [lessons, monthStart, monthEndExclusive]);
-
-  const groupedLessons = React.useMemo(() => {
-    const branchesMap = new Map();
-    lessons.forEach((lesson) => {
-      const branchId = lesson.branch_id ?? 'unknown';
-      const branchName = lesson.branch_name || `Филиал #${branchId}`;
-      if (!branchesMap.has(branchId)) {
-        branchesMap.set(branchId, {
-          id: branchId,
-          name: branchName,
-          lessons: [],
-        });
-      }
-      branchesMap.get(branchId).lessons.push(lesson);
-    });
-    return Array.from(branchesMap.values());
-  }, [lessons]);
-
-  const columns = isOwner
-    ? [
-        { key: 'starts_at', title: 'Дата/Время', render: (value) => formatDateTime(value) },
-        { key: 'branch_name', title: 'Филиал' },
-        { key: 'teacher_name', title: 'Преподаватель' },
-        { key: 'paid_children', title: 'Платные', align: 'center' },
-        { key: 'trial_children', title: 'Пробные', align: 'center' },
-        { key: 'total_children', title: 'Всего', align: 'center' },
-        { key: 'curriculum', title: 'Учебный план', render: renderCurriculum },
-        {
-          key: 'instruction',
-          title: 'Инструкция',
-          render: (_, row) => {
-            if (row.curriculum_mode?.startsWith('OFF_PLAN') && !row.instruction_name) return 'Внеплановое занятие';
-            if (row.curriculum_mode && !row.instruction_name) return 'Без инструкции';
-            if (row.is_creative) return 'Творческое';
-            return row.instruction_name || '—';
-          },
-        },
-        {
-          key: 'is_salary_free',
-          title: 'Оплата',
-          render: (value) => (
-            <span className={`lesson-badge ${value ? 'lesson-badge-free' : 'lesson-badge-paid'}`}>
-              {value ? 'Бесплатное' : 'Платное'}
-            </span>
-          ),
-          align: 'center',
-        },
-        { key: 'revenue', title: 'Выручка', render: (value) => value ? `${value.toLocaleString('ru-RU')} ₽` : '-', align: 'right' },
-        { 
-          key: 'profit', 
-          title: 'Прибыль', 
-          render: (_, row) => {
-            const revenue = row.revenue || 0;
-            const salary = row.teacher_salary || 0;
-            const profit = revenue - salary;
-            return (
-              <span style={{ color: profit >= 0 ? '#059669' : '#dc2626', fontWeight: 500 }}>
-                {profit.toLocaleString('ru-RU')} ₽
-              </span>
-            );
-          }, 
-          align: 'right' 
-        },
-        {
-          key: 'actions',
-          title: 'Действия',
-          render: (_, row) => (
-            <div className="table-actions">
-              <Button size="small" className="lessons-btn-edit" variant="secondary" onClick={() => handleEdit(row)}>
-                Редактировать
-              </Button>
-              <Button size="small" variant="secondary" onClick={() => handleSalaryToggle(row)}>
-                {row.is_salary_free ? 'Сделать платным' : 'Сделать бесплатным'}
-              </Button>
-              <Button size="small" variant="danger" onClick={() => handleDelete(row.id)}>
-                Удалить
-              </Button>
-            </div>
-          ),
-        },
-      ]
-    : [
-        { key: 'starts_at', title: 'Дата/Время', render: (value) => formatDateTime(value) },
-        { key: 'branch_name', title: 'Филиал' },
-        { key: 'paid_children', title: 'Платные', align: 'center' },
-        { key: 'trial_children', title: 'Пробные', align: 'center' },
-        { key: 'total_children', title: 'Всего', align: 'center' },
-        { key: 'curriculum', title: 'Учебный план', render: renderCurriculum },
-        {
-          key: 'instruction',
-          title: 'Инструкция',
-          render: (_, row) => {
-            if (row.curriculum_mode?.startsWith('OFF_PLAN') && !row.instruction_name) return 'Внеплановое занятие';
-            if (row.curriculum_mode && !row.instruction_name) return 'Без инструкции';
-            if (row.is_creative) return 'Творческое';
-            return row.instruction_name || 'По инструкции';
-          },
-        },
-        {
-          key: 'is_salary_free',
-          title: 'Оплата',
-          render: (value) => (
-            <span className={`lesson-badge ${value ? 'lesson-badge-free' : 'lesson-badge-paid'}`}>
-              {value ? 'Бесплатное' : 'Платное'}
-            </span>
-          ),
-          align: 'center',
-        },
-        { key: 'teacher_salary', title: 'Зарплата', render: (value) => value ? `${value.toLocaleString('ru-RU')} ₽` : '-', align: 'right' },
-        {
-          key: 'actions',
-          title: 'Действия',
-          render: (_, row) => (
-            <div className="table-actions">
-              <Button size="small" className="lessons-btn-edit" variant="secondary" onClick={() => handleEdit(row)}>
-                Редактировать
-              </Button>
-            </div>
-          ),
-        },
-      ];
-
-  const groupedColumns = React.useMemo(() => columns.filter((col) => col.key !== 'branch_name'), [columns]);
-
-  return (
-    <Layout>
-      <div className="lessons-page">
-        <div className="lessons-header">
-          <h1 className="lessons-title">{isOwner ? 'Занятия' : 'Мои занятия'}</h1>
-          <div className="lessons-header-actions">
-            <Button onClick={handleCreate} variant="primary">
-              Создать занятие
-            </Button>
-          </div>
-        </div>
-
-        <Card className="lessons-filters">
-          <div className="filters-grid">
-            <Input
-              type="month"
-              label="Период"
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-            />
-            {isOwner && (
-              <>
-                <DepartmentSelector
-                  value={selectedDepartment}
-                  onChange={(e) => setSelectedDepartment(e.target.value)}
-                  label="Отдел"
-                />
-                <Select
-                  label="Филиал"
-                  value={filters.branch_id}
-                  onChange={(e) => setFilters({ ...filters, branch_id: e.target.value })}
-                  options={branchesOptions}
-                  placeholder="Все филиалы"
-                />
-                <Select
-                  label="Преподаватель"
-                  value={filters.teacher_id}
-                  onChange={(e) => setFilters({ ...filters, teacher_id: e.target.value })}
-                  options={teachersOptions}
-                  placeholder="Все преподаватели"
-                />
-              </>
-            )}
-            {!isOwner && teacherDepartments.length > 0 && (
-              <div className="department-selector">
-                <Select
-                  label="Отдел"
-                  value={selectedDepartment}
-                  onChange={(e) => setSelectedDepartment(e.target.value)}
-                  options={teacherDepartments}
-                  placeholder="Все отделы"
-                />
-              </div>
-            )}
-            <div className="filters-actions">
-              <Button onClick={loadLessons} variant="primary">Применить</Button>
-              <Button
-                onClick={() => {
-                  setFilters({ branch_id: '', teacher_id: '' });
-                  setSelectedDepartment('');
-                  setMonth(getCurrentMonth());
-                }}
-                variant="secondary"
-              >
-                Сбросить
-              </Button>
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          {loading ? (
-            <LoadingSpinner size="medium" text="Загрузка занятий..." />
-          ) : viewMode === 'calendar' ? (
-            <div className="lessons-calendar">
-              <div className="lessons-calendar-toolbar">
-                <div className="lessons-view-toggle lessons-view-toggle-inline">
-                  <Button
-                    size="small"
-                    variant={viewMode === 'calendar' ? 'primary' : 'secondary'}
-                    onClick={() => setViewMode('calendar')}
-                  >
-                    Календарь
-                  </Button>
-                  <Button
-                    size="small"
-                    variant={viewMode === 'list' ? 'primary' : 'secondary'}
-                    onClick={() => setViewMode('list')}
-                  >
-                    Список
-                  </Button>
-                </div>
-                <div className="lessons-calendar-edit-mode">
-                  <Button
-                    size="small"
-                    className="lessons-btn-edit"
-                    variant={calendarEditMode ? 'primary' : 'secondary'}
-                    onClick={() => setCalendarEditMode(!calendarEditMode)}
-                  >
-                    Редактировать
-                  </Button>
-                  {calendarEditMode && (
-                    <span className="lessons-calendar-edit-hint">
-                      Выберите занятие для редактирования
-                      <button type="button" className="lessons-calendar-edit-cancel" onClick={() => setCalendarEditMode(false)}>
-                        Отмена
-                      </button>
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="lessons-calendar-header">
-                <Button
-                  size="small"
-                  variant="secondary"
-                  onClick={() => setWeekOffset((prev) => prev - 1)}
-                  disabled={!canGoPrevWeek}
-                >
-                  ← Неделя
-                </Button>
-                <div className="lessons-calendar-range">{formatWeekRange(weekStart)}</div>
-                <Button
-                  size="small"
-                  variant="secondary"
-                  onClick={() => setWeekOffset((prev) => prev + 1)}
-                  disabled={!canGoNextWeek}
-                >
-                  Неделя →
-                </Button>
-              </div>
-              <div className="lessons-calendar-grid">
-                {weekDays.map((day) => {
-                  const dayLessons = weekLessonsByDay.get(day.key) || [];
-                  const totals = getDayTotals(dayLessons);
-                  return (
-                    <div
-                      key={day.key}
-                      className={`lessons-calendar-day${day.isOutsideMonth ? ' lessons-calendar-day-outside' : ''}`}
-                    >
-                      <div className="lessons-calendar-day-header">{day.label}</div>
-                      <div className="lessons-calendar-events">
-                        {dayLessons.length === 0 ? (
-                          <div className="lessons-calendar-empty">
-                            {day.isOutsideMonth
-                              ? day.date < monthStart
-                                ? 'Предыдущий месяц'
-                                : 'Следующий месяц'
-                              : 'Нет занятий'}
-                          </div>
-                        ) : (
-                          dayLessons.map((lesson) => {
-                            const raw = lesson.teacher_color ?? lesson.teacherColor;
-                            const barColor = (typeof raw === 'string' && raw.trim())
-                              ? (raw.trim().startsWith('#') ? raw.trim() : `#${raw.trim()}`)
-                              : '#94a3b8';
-                            return (
-                            <div
-                              key={lesson.id}
-                              className={`lessons-calendar-event${calendarEditMode ? ' lessons-calendar-event-selectable' : ''}`}
-                              role={calendarEditMode ? 'button' : undefined}
-                              tabIndex={calendarEditMode ? 0 : undefined}
-                              onClick={calendarEditMode ? () => handleEdit(lesson) : undefined}
-                              onKeyDown={calendarEditMode ? (e) => e.key === 'Enter' && handleEdit(lesson) : undefined}
-                            >
-                              <div
-                                className="lessons-calendar-event-bar"
-                                style={{ backgroundColor: barColor }}
-                                aria-hidden
-                              />
-                              <div className="lessons-calendar-event-time">
-                                {formatTime(lesson.starts_at)}
-                              </div>
-                              <div className="lessons-calendar-event-branch">
-                                {lesson.branch_name || 'Филиал'}
-                              </div>
-                              <div className="lessons-calendar-event-teacher">
-                                {lesson.teacher_name || 'Преподаватель'}
-                              </div>
-                              {lesson.is_salary_free ? (
-                                <div className="lessons-calendar-event-badge">Бесплатное занятие</div>
-                              ) : null}
-                              <div className="lessons-calendar-event-stats">
-                                <span className="lessons-calendar-event-stat lessons-calendar-event-stat-paid">
-                                  <span className="lessons-calendar-event-stat-label">Платные</span>
-                                  <span className="lessons-calendar-event-stat-value">{lesson.paid_children ?? 0}</span>
-                                </span>
-                                <span className="lessons-calendar-event-stat lessons-calendar-event-stat-trial">
-                                  <span className="lessons-calendar-event-stat-label">пробные</span>
-                                  <span className="lessons-calendar-event-stat-value">{lesson.trial_children ?? 0}</span>
-                                </span>
-                                <span className="lessons-calendar-event-stat lessons-calendar-event-stat-total">
-                                  <span className="lessons-calendar-event-stat-label">всего</span>
-                                  <span className="lessons-calendar-event-stat-value">{lesson.total_children ?? 0}</span>
-                                </span>
-                              </div>
-                              {isOwner && (
-                                <div className="lessons-calendar-event-finance">
-                                  <div className="lessons-calendar-event-finance-row lessons-calendar-event-finance-revenue">
-                                    <span className="lessons-calendar-event-finance-label">Выручка</span>
-                                    <span className="lessons-calendar-event-finance-value">{formatCurrency(lesson.revenue)}</span>
-                                  </div>
-                                  <div className="lessons-calendar-event-finance-row lessons-calendar-event-finance-salary">
-                                    <span className="lessons-calendar-event-finance-label">Зарплата</span>
-                                    <span className="lessons-calendar-event-finance-value">{formatCurrency(lesson.teacher_salary)}</span>
-                                  </div>
-                                  <div className={`lessons-calendar-event-finance-row lessons-calendar-event-finance-profit ${((lesson.revenue || 0) - (lesson.teacher_salary || 0)) >= 0 ? 'lessons-calendar-event-finance-profit-positive' : 'lessons-calendar-event-finance-profit-negative'}`}>
-                                    <span className="lessons-calendar-event-finance-label">Прибыль</span>
-                                    <span className="lessons-calendar-event-finance-value">{formatCurrency((lesson.revenue || 0) - (lesson.teacher_salary || 0))}</span>
-                                  </div>
-                                </div>
-                              )}
-                              {!isOwner && (
-                                <div className="lessons-calendar-event-finance">
-                                  <div className="lessons-calendar-event-finance-row lessons-calendar-event-finance-salary">
-                                    <span className="lessons-calendar-event-finance-label">Зарплата</span>
-                                    <span className="lessons-calendar-event-finance-value">{formatCurrency(lesson.teacher_salary)}</span>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                            );
-                          })
-                        )}
-                      </div>
-                      {dayLessons.length > 0 && (
-                        <div className="lessons-calendar-summary">
-                          {isOwner ? (
-                            <>
-                              <div className="lessons-calendar-summary-row lessons-calendar-summary-row-revenue">
-                                <span>Выручка</span>
-                                <span>{formatCurrency(totals.revenueSum)}</span>
-                              </div>
-                              <div className="lessons-calendar-summary-row lessons-calendar-summary-row-salary">
-                                <span>Зарплаты</span>
-                                <span>{formatCurrency(totals.salarySum)}</span>
-                              </div>
-                              <div className={`lessons-calendar-summary-row lessons-calendar-summary-row-profit ${totals.profit >= 0 ? 'lessons-calendar-summary-profit-positive' : 'lessons-calendar-summary-profit-negative'}`}>
-                                <span>Прибыль</span>
-                                <span>{formatCurrency(totals.profit)}</span>
-                              </div>
-                            </>
-                          ) : (
-                            <div className="lessons-calendar-summary-row lessons-calendar-summary-row-salary">
-                              <span>Зарплата</span>
-                              <span>{formatCurrency(totals.salarySum)}</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="lessons-calendar-week-summary">
-                <div className="lessons-calendar-week-summary-title">Итого за неделю</div>
-                {isOwner ? (
-                  <div className="lessons-calendar-week-summary-rows">
-                    <div className="lessons-calendar-summary-row lessons-calendar-summary-row-revenue">
-                      <span>Выручка</span>
-                      <span>{formatCurrency(weekTotals.revenueSum)}</span>
-                    </div>
-                    <div className="lessons-calendar-summary-row lessons-calendar-summary-row-salary">
-                      <span>Зарплаты</span>
-                      <span>{formatCurrency(weekTotals.salarySum)}</span>
-                    </div>
-                    <div className={`lessons-calendar-summary-row lessons-calendar-summary-row-profit ${weekTotals.profit >= 0 ? 'lessons-calendar-summary-profit-positive' : 'lessons-calendar-summary-profit-negative'}`}>
-                      <span>Прибыль</span>
-                      <span>{formatCurrency(weekTotals.profit)}</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="lessons-calendar-week-summary-rows">
-                    <div className="lessons-calendar-summary-row lessons-calendar-summary-row-salary">
-                      <span>Зарплата</span>
-                      <span>{formatCurrency(weekTotals.salarySum)}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-              {weeklyChartData.length > 0 && (() => {
-                const maxRevenue = Math.max(...weeklyChartData.map((w) => w.revenue), 1);
-                const maxSalary = Math.max(...weeklyChartData.map((w) => w.salary), 1);
-                const maxProfit = Math.max(...weeklyChartData.map((w) => Math.abs(w.profit)), 1);
-                return (
-                <div className="lessons-calendar-weekly-chart">
-                  <div className="lessons-calendar-week-summary-title">Понедельные итоги</div>
-                  <div className="lessons-weekly-bars">
-                    {isOwner && (
-                      <div className="lessons-weekly-bar-row lessons-weekly-bar-header">
-                        <div className="lessons-weekly-bar-label" />
-                        <div className="lessons-weekly-bar-cols">
-                          <div className="lessons-weekly-bar-cell">
-                            <span className="lessons-weekly-bar-col-label">Выручка</span>
-                          </div>
-                          <div className="lessons-weekly-bar-cell">
-                            <span className="lessons-weekly-bar-col-label">Зарплаты</span>
-                          </div>
-                          <div className="lessons-weekly-bar-cell">
-                            <span className="lessons-weekly-bar-col-label">Прибыль</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {!isOwner && (
-                      <div className="lessons-weekly-bar-row lessons-weekly-bar-header">
-                        <div className="lessons-weekly-bar-label" />
-                        <div className="lessons-weekly-bar-cols">
-                          <div className="lessons-weekly-bar-cell">
-                            <span className="lessons-weekly-bar-col-label">Зарплата</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {weeklyChartData.map((week) => (
-                      <div key={week.weekKey} className="lessons-weekly-bar-row">
-                        <div className="lessons-weekly-bar-label">{week.label}</div>
-                        <div className="lessons-weekly-bar-cols">
-                          {isOwner && (
-                            <>
-                              <div className="lessons-weekly-bar-cell">
-                                <div className="lessons-weekly-bar-track">
-                                  <div
-                                    className="lessons-weekly-bar-fill lessons-weekly-bar-revenue"
-                                    style={{ width: `${(week.revenue / maxRevenue) * 100}%` }}
-                                  />
-                                </div>
-                                <span className="lessons-weekly-bar-value">{formatCurrency(week.revenue)}</span>
-                              </div>
-                              <div className="lessons-weekly-bar-cell">
-                                <div className="lessons-weekly-bar-track">
-                                  <div
-                                    className="lessons-weekly-bar-fill lessons-weekly-bar-salary"
-                                    style={{ width: `${(week.salary / maxSalary) * 100}%` }}
-                                  />
-                                </div>
-                                <span className="lessons-weekly-bar-value">{formatCurrency(week.salary)}</span>
-                              </div>
-                              <div className="lessons-weekly-bar-cell">
-                                <div className="lessons-weekly-bar-track">
-                                  <div
-                                    className={`lessons-weekly-bar-fill ${week.profit >= 0 ? 'lessons-weekly-bar-profit-pos' : 'lessons-weekly-bar-profit-neg'}`}
-                                    style={{ width: `${(Math.abs(week.profit) / maxProfit) * 100}%` }}
-                                  />
-                                </div>
-                                <span className={`lessons-weekly-bar-value ${week.profit >= 0 ? 'profit-pos' : 'profit-neg'}`}>
-                                  {formatCurrency(week.profit)}
-                                </span>
-                              </div>
-                            </>
-                          )}
-                          {!isOwner && (
-                            <div className="lessons-weekly-bar-cell">
-                              <div className="lessons-weekly-bar-track">
-                                <div
-                                  className="lessons-weekly-bar-fill lessons-weekly-bar-salary"
-                                  style={{ width: `${(week.salary / maxSalary) * 100}%` }}
-                                />
-                              </div>
-                              <span className="lessons-weekly-bar-value">{formatCurrency(week.salary)}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                );
-              })()}
-            </div>
-          ) : lessons.length === 0 ? (
-            <Table
-              columns={groupedColumns}
-              data={[]}
-              loading={false}
-              emptyMessage="Нет занятий за выбранный период"
-            />
-          ) : (
-            <div className="lessons-groups">
-              <div className="lessons-view-toggle lessons-view-toggle-inline">
-                <Button
-                  size="small"
-                  variant={viewMode === 'calendar' ? 'primary' : 'secondary'}
-                  onClick={() => setViewMode('calendar')}
-                >
-                  Календарь
-                </Button>
-                <Button
-                  size="small"
-                  variant={viewMode === 'list' ? 'primary' : 'secondary'}
-                  onClick={() => setViewMode('list')}
-                >
-                  Список
-                </Button>
-              </div>
-              {groupedLessons.map((group) => {
-                const groupKey = String(group.id);
-                const isCollapsed = collapsedBranchIds.has(groupKey);
-                const groupSalary = group.lessons.reduce((s, l) => s + Number(l.teacher_salary ?? 0), 0);
-                return (
-                  <div key={groupKey} className="lessons-group">
-                    <button
-                      type="button"
-                      className={`lessons-group-header lessons-group-header-clickable ${isCollapsed ? 'lessons-group-header-collapsed' : ''}`}
-                      onClick={() => setCollapsedBranchIds((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(groupKey)) next.delete(groupKey);
-                        else next.add(groupKey);
-                        return next;
-                      })}
-                    >
-                      <span className="lessons-group-title">{group.name}</span>
-                      <span className="lessons-group-meta">
-                        <span className="lessons-group-count">{group.lessons.length} занятий</span>
-                        {!isOwner && groupSalary > 0 && (
-                          <span className="lessons-group-salary">{formatCurrency(groupSalary)}</span>
-                        )}
-                        <span className="lessons-group-toggle" aria-hidden>{isCollapsed ? '▼' : '▲'}</span>
-                      </span>
-                    </button>
-                    {!isCollapsed && (
-                      <Table
-                        columns={groupedColumns}
-                        data={group.lessons}
-                        loading={false}
-                        emptyMessage="Нет занятий"
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </Card>
-
-        {isOwner && branchesWithLessons.length > 0 && (
-          <Card title="Выставить счета по филиалам">
-            <div className="lessons-invoices-toggle">
-              <Button
-                size="small"
-                variant="secondary"
-                onClick={() => setShowInvoices((prev) => !prev)}
-              >
-                {showInvoices ? 'Скрыть список' : 'Показать список'}
-              </Button>
-            </div>
-            {showInvoices && (
-              <div className="branches-invoices">
-                {branchesWithLessons.map(branch => (
-                  <div key={branch.id} className="branch-invoice-item">
-                    <div className="branch-invoice-info">
-                      <strong>{branch.name}</strong>
-                      <span className="branch-invoice-count">{branch.lessonsCount} занятий</span>
-                    </div>
-                    <Button
-                      size="small"
-                      variant="primary"
-                      onClick={() => handleInvoice(branch.id, branch.name)}
-                    >
-                      📄 Выставить счёт
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        )}
-
-        <Modal
-          isOpen={isModalOpen}
-          onClose={handleModalClose}
-          title={editingLesson ? 'Редактировать занятие' : 'Создать занятие'}
-          size="medium"
-        >
-          <LessonForm
-            lesson={editingLesson}
-            onSuccess={handleModalClose}
-            onCancel={handleModalClose}
-          />
-        </Modal>
-
-        {invoiceData && (
-          <InvoiceModal
-            isOpen={!!invoiceData}
-            onClose={handleInvoiceClose}
-            branchName={invoiceData.branchName}
-            lessons={invoiceData.lessons}
-            month={invoiceData.month}
-          />
-        )}
-      </div>
-    </Layout>
-  );
-};
-
-export default Lessons;
+  return <Layout headerTitle={title} className="layout-lessons-workspace">
+    <div className="lesson-workspace">
+      <h1 className="od-mobile-title">{title}</h1>
+      <div className="lc-toolbar"><PeriodControl value={{ start: month, end: month }} onChange={value => chooseMonth(value.start)} allowRange={false} showArrows={false} title="Месяц занятий" /><FiltersControl value={filters} onChange={setFilters} options={options} loading={optionsLoading} error={optionsError} onRetry={() => setOptionsReload(n => n + 1)} title="Фильтры занятий" fields={isOwner ? FILTER_FIELDS : FILTER_FIELDS.slice(0, 2)} /><div className="lc-toolbar-actions"><div className="lc-view-switch" aria-label="Вид занятий"><button aria-label="Календарь" aria-pressed={viewMode === 'calendar'} onClick={() => setViewMode('calendar')}><IconSchedule /><span>Календарь</span></button><button aria-label="Список" aria-pressed={viewMode === 'list'} onClick={() => setViewMode('list')}><IconLessons /><span>Список</span></button></div><button aria-label="Добавить занятие" className="od-primary-btn lc-create" onClick={() => createLesson()}><Plus /><span>Добавить занятие</span></button></div></div>
+      {Object.values(filters).some(Boolean) && <div className="od-applied-filters">{Object.entries(filters).filter(([, value]) => value).map(([key, value]) => { const name = options[key]?.find(item => item.value === value)?.label || 'Выбран фильтр'; return <button key={key} aria-label={`Убрать фильтр: ${name}`} onClick={() => setFilters(previous => ({ ...previous, [key]: '' }))}>{name}<DashIcon name="close" /></button>; })}<button className="od-reset" onClick={() => setFilters({})}>Сбросить</button></div>}
+      <div className="lc-month-summary"><span className="lc-summary-period">За месяц</span><span><IconLessons /><strong>{loading ? '…' : monthTotals.count}</strong> занятий</span><span><IconPeople /><strong>{loading ? '…' : monthTotals.paid + monthTotals.trial}</strong> посещений</span>{isOwner && <span className="lc-month-revenue">Выручка <strong>{loading ? '…' : formatCurrency(monthTotals.revenue)}</strong></span>}<span className="lc-month-salary">Зарплата <strong>{loading ? '…' : formatCurrency(monthTotals.salary)}</strong></span>{isOwner && <button className="od-text-btn lc-invoice-action" disabled={loading || !groups.length} onClick={() => setShowInvoices(true)}><IconLessons />Выставить счета<DashIcon name="arrow" /></button>}</div>
+      {error && <div className="od-error" role="alert"><span>{error}</span><button className="od-text-btn" onClick={() => setReload(n => n + 1)}>Повторить</button></div>}
+      <div className="od-live-status" role="status">{loading ? 'Загрузка занятий…' : `${countLabel(weekTotals.count, ['занятие', 'занятия', 'занятий'])} за неделю`}</div>
+      {viewMode === 'calendar' ? <section className={`lc-calendar ${loading ? 'lc-refreshing' : ''}`} aria-busy={loading} ref={calendarRef}>
+        <header className="lc-calendar-header"><div className="lc-week-navigation"><button className="od-icon-btn" aria-label="Предыдущая неделя" onClick={() => shiftWeek(-1)}><IconChevronLeft /></button><button className="od-icon-btn" aria-label="Следующая неделя" onClick={() => shiftWeek(1)}><IconChevronRight /></button><h2>{weekLabel(weekStart)}</h2><button className="od-control lc-today" onClick={goToday}>Сегодня</button></div><span className="lc-week-count">{loading ? 'Обновляем…' : countLabel(weekTotals.count, ['занятие', 'занятия', 'занятий'])}<Hint label="Работа с календарём">Нажмите на занятие для подробностей и редактирования. Кнопка + добавит занятие на выбранный день. Стрелки переключают недели, включая соседние месяцы.</Hint></span></header>
+        {smallScreen ? <div className="lc-mobile-calendar"><div className="lc-day-strip" aria-label="Дни недели">{weekDays.map(day => <button key={day.key} aria-pressed={selectedDay === day.key} aria-label={fullDayLabel(day.date)} className={`${selectedDay === day.key ? 'selected' : ''} ${day.key === today ? 'today' : ''}`} onClick={() => setSelectedDay(day.key)}><span>{day.date.toLocaleDateString('ru-RU', { weekday: 'short' })}</span><strong>{day.date.getDate()}</strong><i className={(byDay.get(day.key) || []).length ? 'has-lessons' : ''} /></button>)}</div><div className="lc-mobile-day" onTouchStart={event => { swipe.current = { x: event.touches[0].clientX, y: event.touches[0].clientY }; }} onTouchEnd={event => { if (!swipe.current) return; const dx = event.changedTouches[0].clientX - swipe.current.x, dy = event.changedTouches[0].clientY - swipe.current.y; if (Math.abs(dx) > 70 && Math.abs(dy) < 45) selectAdjacentDay(dx < 0 ? 1 : -1); swipe.current = null; }}><div className="lc-mobile-day-title"><h3>{fullDayLabel(`${selectedDay}T12:00:00`)}</h3><button className="od-icon-btn" aria-label={`Добавить занятие на ${dayLabel(`${selectedDay}T12:00:00`)}`} onClick={() => createLesson(selectedDay)}><Plus /></button></div>{loading ? <div className="lc-day-loading">Загружаем занятия…</div> : currentDayLessons.length ? currentDayLessons.map(lesson => <LessonEvent key={lesson.id} lesson={lesson} isOwner={isOwner} onOpen={setPreview} />) : <div className="lc-empty-day"><IconSchedule /><p>На этот день занятий нет</p><button className="od-text-btn" onClick={() => createLesson(selectedDay)}><Plus />Добавить занятие</button></div>}</div></div> : <div className="lc-week-grid">{weekDays.map(day => {
+          const dayLessons = byDay.get(day.key) || [], total = totalsFor(dayLessons);
+          return <section key={day.key} className={`lc-day ${day.key === today ? 'lc-day-today' : ''} ${monthOf(day.date) !== month ? 'lc-day-adjacent' : ''}`}><header className="lc-day-header"><div><span>{day.date.toLocaleDateString('ru-RU', { weekday: 'short' })}</span><strong>{day.date.getDate()}</strong>{monthOf(day.date) !== month && <small>{day.date.toLocaleDateString('ru-RU', { month: 'short' })}</small>}</div><button className="od-icon-btn lc-day-add" aria-label={`Добавить занятие на ${dayLabel(day.date)}`} onClick={() => createLesson(day.key)}><Plus /></button></header><div className="lc-day-events">{loading ? <div className="lc-event-skeleton" /> : dayLessons.length ? dayLessons.map(lesson => <LessonEvent key={lesson.id} lesson={lesson} isOwner={isOwner} onOpen={setPreview} />) : <button className="lc-empty-slot" onClick={() => createLesson(day.key)} aria-label={`Добавить занятие на ${dayLabel(day.date)}`}><Plus /><span>Нет занятий</span></button>}</div>{!loading && dayLessons.length > 0 && <footer className="lc-day-total"><span>{total.paid + total.trial} посещ.</span><strong>{formatCurrency(isOwner ? total.revenue : total.salary)}</strong></footer>}</section>;
+        })}</div>}
+        <footer className="lc-week-total"><span>За неделю</span><span>Платные <strong>{loading ? '…' : weekTotals.paid}</strong></span><span>Пробные <strong>{loading ? '…' : weekTotals.trial}</strong></span>{isOwner && <span className="lc-total-revenue">Выручка <strong>{loading ? '…' : formatCurrency(weekTotals.revenue)}</strong></span>}<span>Зарплаты <strong>{loading ? '…' : formatCurrency(weekTotals.salary)}</strong></span>{isOwner && <span>Прибыль <strong className={weekTotals.revenue - weekTotals.salary < 0 ? 'od-negative' : ''}>{loading ? '…' : formatCurrency(weekTotals.revenue - weekTotals.salary)}</strong></span>}</footer>
+      </section> : <section className="lc-list" aria-label="Занятия по филиалам" aria-busy={loading}>{loading ? <div className="lc-list-empty">Загружаем занятия…</div> : groups.length ? groups.map((group, index) => <details className="lc-list-group" key={group.id} open={index === 0 ? true : undefined}><summary><IconBranches /><strong>{group.name}</strong><span>{countLabel(group.lessons.length, ['занятие', 'занятия', 'занятий'])}</span><DashIcon name="chevron" /></summary><div className="lc-list-items">{group.lessons.map(lesson => <button className="lc-list-row" key={lesson.id} onClick={() => setPreview(lesson)}><span className="lc-list-date">{dayLabel(lesson.starts_at)}<small>{timeLabel(lesson.starts_at)}</small></span><span className="lc-list-topic">{lessonTopic(lesson)}<small>{isOwner ? lesson.teacher_name : modeNames[lesson.curriculum_mode] || ''}</small></span><span className="lc-list-visits"><IconPeople />{(Number(lesson.paid_children) || 0) + (Number(lesson.trial_children) || 0)}</span><strong>{formatCurrency(isOwner ? lesson.revenue : lesson.teacher_salary)}</strong><DashIcon name="chevron" /></button>)}</div></details>) : <div className="lc-list-empty"><IconLessons /><p>За выбранный месяц занятий нет</p><button className="od-text-btn" onClick={() => createLesson()}>Добавить занятие</button></div>}</section>}
+      {viewMode === 'calendar' && <section className="lc-week-overview" aria-label="Быстрый переход по неделям месяца"><div className="lc-week-overview-label">Недели месяца<span>{isOwner ? 'Выручка' : 'Зарплата'}</span></div><div className="lc-week-pills">{weeks.map(week => <button key={week.key} className={week.key === localDateKey(weekStart) ? 'selected' : ''} aria-pressed={week.key === localDateKey(weekStart)} onClick={() => chooseWeek(week.date)} title={`Зарплаты: ${formatCurrency(week.totals.salary)}${isOwner ? ` · Прибыль: ${formatCurrency(week.totals.revenue - week.totals.salary)}` : ''}`}><span>{weekLabel(week.date)}</span><strong>{loading ? '…' : formatCurrency(isOwner ? week.totals.revenue : week.totals.salary)}</strong><small>{loading ? '…' : countLabel(week.totals.count, ['занятие', 'занятия', 'занятий'])}</small><i style={{ width: `${loading ? 0 : Math.max(0, (isOwner ? week.totals.revenue : week.totals.salary) / Math.max(1, ...weeks.map(w => isOwner ? w.totals.revenue : w.totals.salary)) * 100)}%` }} /></button>)}</div></section>}
+      <Modal isOpen={!!preview} onClose={() => setPreview(null)} title="Занятие" size="lesson-preview">{preview && <div className="lc-preview"><div className="lc-preview-date"><IconSchedule /><span>{fullDayLabel(preview.starts_at)} · {timeLabel(preview.starts_at)}</span></div><h3>{preview.branch_name}</h3>{isOwner && <p className="lc-preview-teacher"><IconTeachers /><i style={{ background: teacherColor(preview) }} />{preview.teacher_name}</p>}<div className="lc-preview-topic"><IconLessons /><div><strong>{lessonTopic(preview)}</strong>{preview.curriculum_mode && <><span>{modeNames[preview.curriculum_mode] || preview.curriculum_mode}</span><small>{[preview.curriculum_plan_name, preview.curriculum_module_name, preview.curriculum_lesson_name].filter(Boolean).join(' · ')}</small></>}</div></div><div className="lc-preview-visits"><div><span>Платные</span><strong>{preview.paid_children ?? 0}</strong></div><div><span>Пробные</span><strong>{preview.trial_children ?? 0}</strong></div><div><span>Всего</span><strong>{(Number(preview.paid_children) || 0) + (Number(preview.trial_children) || 0)}</strong></div></div><dl className="lc-preview-finance">{isOwner && <div><dt>Выручка</dt><dd>{formatCurrency(preview.revenue)}</dd></div>}<div><dt>Зарплата преподавателя</dt><dd>{formatCurrency(preview.teacher_salary)}</dd></div>{isOwner && <div><dt>Прибыль</dt><dd className={Number(preview.revenue) - Number(preview.teacher_salary) < 0 ? 'od-negative' : ''}>{formatCurrency(Number(preview.revenue) - Number(preview.teacher_salary))}</dd></div>}</dl>{!!preview.is_salary_free && <p className="lc-no-salary">За это занятие зарплата не начисляется</p>}<footer className="lc-preview-actions"><button className="od-primary-btn" onClick={() => editLesson(preview)}><Edit />Редактировать</button>{isOwner && <><button className="od-control" onClick={() => openConfirmation('salary', preview)}>{preview.is_salary_free ? 'Начислять зарплату' : 'Без зарплаты'}</button><button className="od-icon-btn lc-delete" aria-label="Удалить занятие" title="Удалить занятие" onClick={() => openConfirmation('delete', preview)}><Trash /></button></>}</footer></div>}</Modal>
+      <Modal isOpen={!!form} onClose={() => setForm(null)} title={form?.lesson ? 'Редактировать занятие' : 'Добавить занятие'} size="medium">{form && <LessonForm lesson={form.lesson} initialValues={form.initialValues} onSuccess={() => { setForm(null); setReload(n => n + 1); }} onCancel={() => setForm(null)} />}</Modal>
+      <Modal isOpen={!!confirmation} onClose={() => { if (!saving) setConfirmation(null); }} title={confirmation?.type === 'delete' ? 'Удалить занятие?' : 'Изменить начисление зарплаты?'} size="small">{confirmation && <div className="lc-confirm"><p>{dayLabel(confirmation.lesson.starts_at)} · {timeLabel(confirmation.lesson.starts_at)}<br /><strong>{confirmation.lesson.branch_name}</strong></p><p>{confirmation.type === 'delete' ? 'Занятие будет удалено из журнала и расчётов.' : confirmation.lesson.is_salary_free ? 'За занятие снова будет начисляться зарплата преподавателю.' : 'Занятие останется в журнале, зарплата за него начисляться не будет.'}</p>{actionError && <p className="form-error" role="alert">{actionError}</p>}<div><button className="od-control" disabled={saving} onClick={() => setConfirmation(null)}>Отмена</button><button className={`od-primary-btn ${confirmation.type === 'delete' ? 'lc-danger-btn' : ''}`} disabled={saving} onClick={confirmAction}>{saving ? 'Сохраняем…' : confirmation.type === 'delete' ? 'Удалить занятие' : 'Подтвердить'}</button></div></div>}</Modal>
+      <Modal isOpen={showInvoices} onClose={() => setShowInvoices(false)} title="Счета по филиалам" size="medium"><div className="lc-invoices"><p>По занятиям за {new Date(`${month}-01T12:00:00`).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}{Object.values(filters).some(Boolean) ? ', с учётом выбранных фильтров' : ''}.</p>{groups.map(group => <button key={group.id} onClick={() => { setShowInvoices(false); setInvoiceData({ branchName: group.name, lessons: group.lessons, month }); }}><span><strong>{group.name}</strong><small>{countLabel(group.lessons.length, ['занятие', 'занятия', 'занятий'])}</small></span><strong>{formatCurrency(totalsFor(group.lessons).revenue)}</strong><DashIcon name="arrow" /></button>)}</div></Modal>
+      {invoiceData && <InvoiceModal isOpen onClose={() => setInvoiceData(null)} branchName={invoiceData.branchName} lessons={invoiceData.lessons} month={invoiceData.month} />}
+    </div>
+  </Layout>;
+}

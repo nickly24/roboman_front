@@ -44,10 +44,10 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.add('theme-transition');
     root.classList.toggle('theme-dark', theme === 'dark');
-    const t = setTimeout(() => root.classList.remove('theme-transition'), 1400);
-    return () => clearTimeout(t);
+    root.dataset.theme = theme;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = theme === 'dark' ? '#1e2120' : '#f8fafc';
   }, [theme]);
 
   const setTheme = (value) => {

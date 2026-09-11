@@ -179,7 +179,7 @@ const Branches = () => {
     <Layout>
       <div className="branches-page">
         <div className="branches-header">
-          <h1 className="branches-title">Филиалы</h1>
+          <div><h1 className="branches-title">Филиалы</h1><p className="page-description">Адреса, условия работы и преподаватели филиалов</p></div>
           <Button onClick={handleCreate} variant="primary">
             Создать филиал
           </Button>

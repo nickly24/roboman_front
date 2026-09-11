@@ -1,165 +1,61 @@
-/**
- * Design System — Тёмная тема
- * Dashdark X — тёмная версия
- * html.theme-dark применяется на document.documentElement
- */
-
+/* АЙТИ КЛУБ · Dark. No screen-specific theme overrides. */
 html.theme-dark {
-  color: var(--color-text-primary);
-}
-
-html.theme-dark {
-  /* === Primary / Brand (фиолетово-синий) === */
-  --color-primary: #6366f1;
-  --color-primary-hover: #818cf8;
-  --color-primary-light: rgba(99, 102, 241, 0.2);
-  --color-primary-shadow: rgba(99, 102, 241, 0.4);
-
-  /* === Secondary === */
-  --color-secondary: #22d3ee;
-  --color-secondary-light: rgba(34, 211, 238, 0.15);
-
-  /* === Neutral (тёмная палитра Dashdark X) === */
-  --color-white: #1a1c29;
-  --color-gray-50: #222437;
-  --color-gray-100: #222437;
-  --color-gray-200: #2d3047;
-  --color-gray-300: #3d4158;
-  --color-gray-400: #64748b;
-  --color-gray-500: #94a3b8;
-  --color-gray-600: #cbd5e1;
-  --color-gray-700: #e2e8f0;
-  --color-gray-800: #f1f5f9;
-  --color-gray-900: #f8fafc;
-
-  /* === Semantic === */
-  --color-success: #10b981;
-  --color-success-light: rgba(16, 185, 129, 0.2);
-  --color-error: #ef4444;
-  --color-error-light: rgba(239, 68, 68, 0.2);
-  --color-warning: #f59e0b;
-  --color-warning-light: rgba(245, 158, 11, 0.2);
-
-  /* === Дополнительные акценты === */
-  --color-orange: #fb923c;
-  --color-orange-light: rgba(251, 146, 60, 0.2);
-  --color-info: #60a5fa;
-  --color-info-light: rgba(96, 165, 250, 0.2);
-
-  /* === Text === */
-  --color-text-primary: #f9fafb;
-  --color-text-secondary: #d1d5db;
-  --color-text-muted: #9ca3af;
-  --color-text-inverse: #1a1c29;
-
-  /* === Background === */
-  --color-bg-base: #1a1c29;
-  --color-bg-surface: #222437;
-  --color-bg-elevated: #2d3047;
-  --color-bg-hover: #2d3047;
-  --color-bg-active: rgba(99, 102, 241, 0.2);
-
-  /* === Sidebar (тёмная) === */
-  --color-sidebar-bg: #1a1c29;
-  --color-sidebar-active: #2d3047;
-  --color-sidebar-purple: #2C2860;
-
-  /* === Border === */
-  --color-border: #3d4158;
-  --color-border-light: #2d3047;
-
-  /* === Overlay === */
-  --color-overlay: rgba(0, 0, 0, 0.6);
-
-  /* === Shadows === */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 6px 16px rgba(0, 0, 0, 0.6);
-  --shadow-primary: 0 4px 12px rgba(99, 102, 241, 0.35);
-  --shadow-primary-hover: 0 6px 16px rgba(99, 102, 241, 0.45);
-}
-
-/* Сайдбары — тёмный фиолетовый в тёмной теме */
-html.theme-dark .sidebar,
-html.theme-dark .crm-sidebar {
-  background: var(--color-sidebar-purple) !important;
-}
-
-
-/* Glassmorphism — матовое стекло при фоновом изображении (кроме сайдбара) */
-html.theme-dark .layout-main-with-bg .card,
-html.theme-dark .layout-main-with-bg .table-container,
-html.theme-dark .layout-main-with-bg .kpi-card,
-html.theme-dark .layout-main-with-bg .table-card,
-html.theme-dark .layout-main-with-bg .glass-card,
-html.theme-dark .layout-main-with-bg [data-glass="true"] {
-  background: rgba(34, 36, 55, 0.3) !important;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
-}
-
-/* Модалки и выпадающие меню (рендерятся вне layout-main) */
-html.theme-dark .modal,
-html.theme-dark .action-menu-popover {
-  background: rgba(34, 36, 55, 0.65) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-}
-
-/* Элементы расписания, слотов, занятий */
-html.theme-dark .layout-main-with-bg .schedule-day-tab:not(.active),
-html.theme-dark .layout-main-with-bg .schedule-segment-free,
-html.theme-dark .layout-main-with-bg .schedule-segment-group-expanded,
-html.theme-dark .layout-main-with-bg .schedule-segment-group-collapsed,
-html.theme-dark .layout-main-with-bg .schedule-slot-card,
-html.theme-dark .layout-main-with-bg .slots-tab:not(.active),
-html.theme-dark .layout-main-with-bg .slots-slot-card,
-html.theme-dark .layout-main-with-bg .slots-slot-item,
-html.theme-dark .layout-main-with-bg .slots-my-item,
-html.theme-dark .layout-main-with-bg .slots-time-row,
-html.theme-dark .layout-main-with-bg .slots-teacher-chip,
-html.theme-dark .layout-main-with-bg .lessons-filters,
-html.theme-dark .layout-main-with-bg .lessons-group-card,
-html.theme-dark .layout-main-with-bg .lessons-calendar-day,
-html.theme-dark .layout-main-with-bg .lessons-calendar-event,
-html.theme-dark .layout-main-with-bg .lessons-calendar-summary,
-html.theme-dark .layout-main-with-bg .instructions-filters,
-html.theme-dark .layout-main-with-bg .salary-filters,
-html.theme-dark .layout-main-with-bg .dashboard-filters,
-html.theme-dark .layout-main-with-bg .chip {
-  background: rgba(34, 36, 55, 0.3) !important;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-}
-
-/* Таблица: заголовок и ячейки с лёгким стеклом */
-html.theme-dark .layout-main-with-bg .table-header {
-  background: rgba(45, 48, 71, 0.4) !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-html.theme-dark .layout-main-with-bg .table-body {
-  background: transparent !important;
-}
-
-html.theme-dark .layout-main-with-bg .table-row:hover {
-  background: rgba(99, 102, 241, 0.15) !important;
-}
-
-/* Input, Select — лёгкое стекло в тёмной теме с фоном */
-html.theme-dark .layout-main-with-bg .input,
-html.theme-dark .layout-main-with-bg .select {
-  background: rgba(34, 36, 55, 0.4) !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  color-scheme: dark;
+  --color-primary: #9ddb00;
+  --color-primary-text: var(--color-primary);
+  --color-primary-hover: #b8e64c;
+  --color-primary-light: rgb(157 219 0 / 12%);
+  --color-primary-shadow: rgb(157 219 0 / 8%);
+  --color-on-primary: #1e2120;
+  --color-secondary: #25c6c3;
+  --color-secondary-light: #123639;
+  --color-lime: var(--color-primary);
+  --color-lime-light: var(--color-primary-light);
+  --color-white: #262a29;
+  --color-gray-50: #222624;
+  --color-gray-100: #2c302f;
+  --color-gray-200: #363b39;
+  --color-gray-300: #4b524f;
+  --color-gray-400: #737d78;
+  --color-gray-500: #96a19b;
+  --color-gray-600: #b0b9b4;
+  --color-gray-700: #cbd2ce;
+  --color-gray-800: #dce2df;
+  --color-gray-900: #e8ecf1;
+  --color-success: #53d48c;
+  --color-success-light: #14362a;
+  --color-error: #ff7e85;
+  --color-error-hover: #ffa0a4;
+  --color-error-light: #3b222b;
+  --color-warning: #f0c268;
+  --color-warning-light: #382f1e;
+  --color-orange: #edb376;
+  --color-orange-light: #382a20;
+  --color-info: #7abafa;
+  --color-info-light: #183044;
+  --color-text-primary: #e8ecf1;
+  --color-text-secondary: #b0b9b4;
+  --color-text-muted: #96a19b;
+  --color-text-inverse: #1e2120;
+  --color-bg-base: #1e2120;
+  --color-bg-surface: #262a29;
+  --color-bg-elevated: #2c302f;
+  --color-bg-hover: rgb(255 255 255 / 5%);
+  --color-bg-active: var(--color-primary-light);
+  --color-sidebar-bg: #222624;
+  --color-sidebar-active: var(--color-primary-light);
+  --color-border: rgb(255 255 255 / 6%);
+  --color-border-light: rgb(255 255 255 / 4%);
+  --color-overlay: rgb(0 0 0 / 65%);
+  --color-chart-1: var(--color-primary);
+  --color-chart-2: #25c6c3;
+  --color-chart-3: #edb376;
+  --color-chart-4: #7abafa;
+  --color-chart-5: #bd9ee5;
+  --color-chart-6: #ec9cae;
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 20%);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 20%);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 20%);
+  --shadow-lg: 0 12px 32px rgb(0 0 0 / 24%);
+  --shadow-xl: 0 24px 64px rgb(0 0 0 / 35%);
 }

@@ -78,7 +78,7 @@
 .instructions-branch-button:hover {
   background: var(--color-bg-hover);
   border-color: var(--color-primary);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .instructions-built-filter {
@@ -109,7 +109,7 @@
 
 .instructions-branches-toggle-all:hover {
   border-color: var(--color-primary);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .instructions-branches-count {
@@ -181,7 +181,7 @@
 .chip.active {
   background: var(--color-bg-active);
   border-color: var(--color-primary);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -240,9 +240,9 @@
 }
 
 .instructions-pagination__btn:hover:not(:disabled) {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   border-color: var(--color-primary);
-  background: var(--color-primary-light, rgba(99, 102, 241, 0.1));
+  background: var(--color-primary-light);
 }
 
 .instructions-pagination__btn:disabled {
@@ -284,20 +284,20 @@
 }
 
 .instructions-pagination__page:hover {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   border-color: var(--color-primary);
-  background: var(--color-primary-light, rgba(99, 102, 241, 0.1));
+  background: var(--color-primary-light);
 }
 
 .instructions-pagination__page--current {
-  color: #fff;
+  color: var(--color-on-primary);
   background: var(--color-primary);
   border-color: var(--color-primary);
   cursor: default;
 }
 
 .instructions-pagination__page--current:hover {
-  color: #fff;
+  color: var(--color-on-primary);
   background: var(--color-primary);
   border-color: var(--color-primary);
 }

@@ -6,8 +6,9 @@ import Input from '../../components/Input/Input';
 import Select from '../../components/Select/Select';
 import Button from '../../components/Button/Button';
 import './Lessons.css';
+import { localDateTime } from './lessonCalendarData';
 
-const LessonForm = ({ lesson, onSuccess, onCancel }) => {
+const LessonForm = ({ lesson, onSuccess, onCancel, initialValues = {} }) => {
   const { isOwner, user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -20,9 +21,9 @@ const LessonForm = ({ lesson, onSuccess, onCancel }) => {
   const [previousLessonId, setPreviousLessonId] = useState('');
   const [curriculumImageUrls, setCurriculumImageUrls] = useState({});
   const [formData, setFormData] = useState({
-    branch_id: lesson?.branch_id || '',
-    teacher_id: lesson?.teacher_id || (isOwner ? '' : user?.profile?.id),
-    starts_at: lesson?.starts_at ? new Date(lesson.starts_at).toISOString().slice(0, 16) : '',
+    branch_id: lesson?.branch_id || initialValues.branch_id || '',
+    teacher_id: lesson?.teacher_id || initialValues.teacher_id || (isOwner ? '' : user?.profile?.id),
+    starts_at: lesson?.starts_at ? localDateTime(lesson.starts_at) : initialValues.starts_at || '',
     paid_children: lesson?.paid_children || 0,
     trial_children: lesson?.trial_children || 0,
     is_creative: lesson?.is_creative !== undefined ? lesson.is_creative : false,

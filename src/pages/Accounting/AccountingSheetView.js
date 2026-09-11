@@ -1,235 +1,57 @@
-import React, { useState } from 'react';
-import Card from '../../components/Card/Card';
-import Button from '../../components/Button/Button';
-import { formatCurrency } from '../../utils/format';
-import { calcReferralAmount, calcIncomeNet } from '../../utils/incomeCalc';
-import AddIncomeModal from './AddIncomeModal';
-import AddSalaryModal from './AddSalaryModal';
-import AddExpenseModal from './AddExpenseModal';
-import AddTransferModal from './AddTransferModal';
-import OperationDetailModal from './OperationDetailModal';
+import React, { useMemo, useRef, useState } from 'react';
+import { Choice } from '../Calendar/CalendarFields';
+import { DashboardPopover, Hint } from '../Dashboard/DashboardControls';
 import apiClient from '../../services/api';
-import { API_ENDPOINTS } from '../../config/api';
+import { API_ENDPOINTS as API } from '../../config/api';
+import OperationModal from './OperationModal';
+import OperationDetailModal from './OperationDetailModal';
+import Icon from './AccountingIcons';
+import { amountSign, filterLedger, ledger, money, operationTypes, periodName, sheetPeriod, unpack } from './accountingData';
 
-const MONTH_NAMES = ['', 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-
-const OperationCard = ({ op, type, onSelect, isTransferIn }) => {
-  const labels = {
-    income: { short: 'Поступление', cls: 'op-income', sign: '+' },
-    salary: { short: 'Зарплата', cls: 'op-salary', sign: '−' },
-    expense: { short: 'Расход', cls: 'op-expense', sign: '−' },
-    transfer: { short: 'Перевод', cls: 'op-transfer', sign: '' },
+export function SheetSummary({ summary }) {
+  return <div className="ac-summary">{[
+    ['revenue', 'Поступления', 'income', 'Оплаты, внесённые в денежные листы'],
+    ['costs', 'Налог и рефералка', 'sheet', summary ? `Налог ${money(summary.costs_tax)} · рефералка ${money(summary.costs_referral)}` : 'Удержания с поступлений'],
+    ['expenses', 'Расходы', 'expense', summary ? `Зарплата ${money(summary.expenses_salaries)} · прочие ${money(summary.expenses_other)}` : 'Зарплата и прочие расходы'],
+    ['profit', 'Прибыль', 'wallet', 'Поступления за вычетом налога, рефералки, зарплаты и прочих расходов. Переводы между владельцами не меняют прибыль.'],
+  ].map(([key, title, icon, hint]) => <div className={`ac-stat ac-stat-${key}`} key={key}><div><span>{title}</span><Hint label={`О показателе «${title}»`}>{hint}</Hint></div><strong className={Number(summary?.[key]) < 0 ? 'ac-negative' : ''}>{summary ? money(summary[key]) : '—'}</strong><Icon name={icon} /></div>)}</div>;
+}
+const PAGE_SIZE = 20;
+export default function AccountingSheetView({ sheetData, onReload, refreshing, sheetOptions, onSwitch }) {
+  const { sheet, summary, owners = [] } = sheetData;
+  const [type, setType] = useState('all'), [owner, setOwner] = useState(''), [search, setSearch] = useState(''), [sort, setSort] = useState('newest'), [page, setPage] = useState(1);
+  const [adding, setAdding] = useState(null), [menu, setMenu] = useState(false), [selected, setSelected] = useState(null), [notice, setNotice] = useState('');
+  const anchor = useRef(null), journal = useRef(null);
+  const rows = useMemo(() => ledger(sheetData), [sheetData]);
+  const filtered = useMemo(() => filterLedger(rows, { type, owner, search, sort }), [rows, type, owner, search, sort]);
+  const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)), safePage = Math.min(page, pages);
+  const shown = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const filter = (set, value) => { set(value); setPage(1); };
+  const turnPage = value => { setPage(value); journal.current?.scrollIntoView?.({ block: 'start' }); };
+  const add = async (payload, kind) => {
+    const endpoint = { income: API.ACCOUNTING_INCOMES, salary: API.ACCOUNTING_SALARIES, expense: API.ACCOUNTING_EXPENSES, transfer: API.ACCOUNTING_TRANSFERS }[kind];
+    unpack(await apiClient.post(endpoint(sheet.id), payload));
+    setAdding(null); setNotice('Операция добавлена'); onReload();
   };
-  const l = labels[type] || {};
-  let title = l.short;
-  let sub = '';
-  let extra = null;
-  if (type === 'income') {
-    title = op.branch_name || 'Поступление';
-    sub = op.owner_name;
-    const tax = parseFloat(op.tax_amount) || 0;
-    const referral = calcReferralAmount(op);
-    const costs = tax + referral;
-    const profit = calcIncomeNet(op);
-    extra = (
-      <span className="op-card-extra">
-        издержки {formatCurrency(costs)} · прибыль {formatCurrency(profit)}
-      </span>
-    );
-  } else if (type === 'salary') {
-    title = `${op.owner_name} → ${op.teacher_name}`;
-    sub = op.period_type === '1_15' ? '1–15' : op.period_type === '16_end' ? '16–конец' : 'месяц';
-  } else if (type === 'expense') {
-    title = op.name;
-    sub = op.owner_name;
-  } else if (type === 'transfer') {
-    title = isTransferIn ? `← ${op.from_owner_name}` : `${op.from_owner_name} → ${op.to_owner_name}`;
-  }
-  const isNegative = type === 'salary' || type === 'expense' || (type === 'transfer' && !isTransferIn);
-  return (
-    <button
-      type="button"
-      className={`accounting-op-card ${l.cls}`}
-      onClick={() => onSelect(op, type)}
-    >
-      <span className="op-card-title">{title}</span>
-      {sub && <span className="op-card-sub">{sub}</span>}
-      {extra}
-      <span className={`op-card-amount ${isNegative ? 'negative' : 'positive'}`}>
-        {isNegative ? '−' : '+'}{formatCurrency(op.amount)}
-      </span>
-    </button>
-  );
-};
-
-const AccountingSheetView = ({ sheetData, onReload }) => {
-  const [addType, setAddType] = useState(null);
-  const [detailOp, setDetailOp] = useState(null);
-  const [detailType, setDetailType] = useState(null);
-
-  const { sheet, owners, branches, teachers, incomes, salaries, expenses, transfers, summary } = sheetData || {};
-  if (!sheet) return null;
-
-  const monthLabel = `${MONTH_NAMES[sheet.month]} ${sheet.year}`;
-
-  const handleAdd = async (payload, type) => {
-    const url = type === 'income' ? API_ENDPOINTS.ACCOUNTING_INCOMES(sheet.id)
-      : type === 'salary' ? API_ENDPOINTS.ACCOUNTING_SALARIES(sheet.id)
-      : type === 'expense' ? API_ENDPOINTS.ACCOUNTING_EXPENSES(sheet.id)
-      : API_ENDPOINTS.ACCOUNTING_TRANSFERS(sheet.id);
-    await apiClient.post(url, payload);
-    setAddType(null);
-    onReload();
+  const remove = async op => {
+    const endpoint = { income: API.ACCOUNTING_INCOME, salary: API.ACCOUNTING_SALARY, expense: API.ACCOUNTING_EXPENSE, transfer: API.ACCOUNTING_TRANSFER }[op.type];
+    unpack(await apiClient.delete(endpoint(op.id)));
+    setSelected(null); setNotice('Операция удалена'); onReload();
   };
-
-  const handleDelete = async (op, type) => {
-    if (!window.confirm('Удалить запись?')) return;
-    const url = type === 'income' ? API_ENDPOINTS.ACCOUNTING_INCOME(op.id)
-      : type === 'salary' ? API_ENDPOINTS.ACCOUNTING_SALARY(op.id)
-      : type === 'expense' ? API_ENDPOINTS.ACCOUNTING_EXPENSE(op.id)
-      : API_ENDPOINTS.ACCOUNTING_TRANSFER(op.id);
-    await apiClient.delete(url);
-    setDetailOp(null);
-    setDetailType(null);
-    onReload();
-  };
-
-  const ownerBalances = summary?.owner_balances || [];
-
-  return (
-    <div className="accounting-sheet-view">
-      <div className="sheet-view-header">
-        <h2 className="sheet-view-title">
-          {sheet.department_name} — {monthLabel}
-        </h2>
-        <div className="sheet-view-actions">
-          <Button size="small" variant="secondary" onClick={() => setAddType('income')}>+ Поступление</Button>
-          <Button size="small" variant="secondary" onClick={() => setAddType('salary')}>+ Зарплата</Button>
-          <Button size="small" variant="secondary" onClick={() => setAddType('expense')}>+ Расход</Button>
-          <Button size="small" variant="secondary" onClick={() => setAddType('transfer')}>+ Перевод</Button>
-        </div>
-      </div>
-
-      <div className="sheet-timeline-scroll">
-        <div className="sheet-timeline">
-          {ownerBalances.map((ob) => {
-            const ownerIncomes = (incomes || []).filter((i) => String(i.owner_id) === String(ob.owner_id));
-            const ownerSalaries = (salaries || []).filter((s) => String(s.owner_id) === String(ob.owner_id));
-            const ownerExpenses = (expenses || []).filter((e) => String(e.owner_id) === String(ob.owner_id));
-            const ownerTransfersOut = (transfers || []).filter((t) => String(t.from_owner_id) === String(ob.owner_id));
-            const ownerTransfersIn = (transfers || []).filter((t) => String(t.to_owner_id) === String(ob.owner_id));
-
-            return (
-              <div key={ob.owner_id} className="owner-row">
-                <div className="owner-row-label">
-                  <span className="owner-name">{ob.owner_name}</span>
-                  <span className="owner-balance">{formatCurrency(ob.balance)}</span>
-                </div>
-                <div className="owner-row-ops">
-                  {ownerIncomes.map((op) => (
-                    <OperationCard key={`i-${op.id}`} op={op} type="income" onSelect={(o, t) => { setDetailOp(o); setDetailType(t); }} />
-                  ))}
-                  {ownerSalaries.map((op) => (
-                    <OperationCard key={`s-${op.id}`} op={op} type="salary" onSelect={(o, t) => { setDetailOp(o); setDetailType(t); }} />
-                  ))}
-                  {ownerExpenses.map((op) => (
-                    <OperationCard key={`e-${op.id}`} op={op} type="expense" onSelect={(o, t) => { setDetailOp(o); setDetailType(t); }} />
-                  ))}
-                  {ownerTransfersOut.map((op) => (
-                    <OperationCard key={`to-${op.id}`} op={op} type="transfer" onSelect={(o, t) => { setDetailOp(o); setDetailType(t); }} />
-                  ))}
-                  {ownerTransfersIn.map((op) => (
-                    <OperationCard key={`ti-${op.id}`} op={op} type="transfer" isTransferIn onSelect={(o, t) => { setDetailOp(o); setDetailType(t); }} />
-                  ))}
-                  {ownerIncomes.length === 0 && ownerSalaries.length === 0 && ownerExpenses.length === 0 && ownerTransfersOut.length === 0 && ownerTransfersIn.length === 0 && (
-                    <span className="owner-row-empty">Нет операций</span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {summary && (
-        <Card className="sheet-summary-card" title="Сводка">
-          <div className="sheet-summary-grid">
-            <div className="summary-item">
-              <span className="summary-label">Выручка</span>
-              <span className="summary-value">{formatCurrency(summary.revenue)}</span>
-            </div>
-            <div className="summary-item">
-              <span className="summary-label">Издержки (налог + реф.)</span>
-              <span className="summary-value summary-costs">{formatCurrency(summary.costs)}</span>
-            </div>
-            <div className="summary-item">
-              <span className="summary-label">Расходы</span>
-              <span className="summary-value summary-expenses">{formatCurrency(summary.expenses)}</span>
-            </div>
-            <div className="summary-item">
-              <span className="summary-label">Прибыль</span>
-              <span className={`summary-value ${summary.profit >= 0 ? 'summary-profit' : 'summary-loss'}`}>
-                {formatCurrency(summary.profit)}
-              </span>
-            </div>
-            {!summary.balances_equal && summary.discrepancy > 0 && (
-              <div className="summary-item summary-discrepancy">
-                <span className="summary-label">Расхождение (к переводу)</span>
-                <span className="summary-value">{formatCurrency(summary.discrepancy)}</span>
-              </div>
-            )}
-          </div>
-        </Card>
-      )}
-
-      {addType === 'income' && (
-        <AddIncomeModal
-          isOpen
-          onClose={() => setAddType(null)}
-          onSuccess={(p) => handleAdd(p, 'income')}
-          sheet={sheet}
-          branches={branches}
-          owners={owners}
-        />
-      )}
-      {addType === 'salary' && (
-        <AddSalaryModal
-          isOpen
-          onClose={() => setAddType(null)}
-          onSuccess={(p) => handleAdd(p, 'salary')}
-          sheet={sheet}
-          owners={owners}
-          teachers={teachers}
-        />
-      )}
-      {addType === 'expense' && (
-        <AddExpenseModal
-          isOpen
-          onClose={() => setAddType(null)}
-          onSuccess={(p) => handleAdd(p, 'expense')}
-          owners={owners}
-        />
-      )}
-      {addType === 'transfer' && (
-        <AddTransferModal
-          isOpen
-          onClose={() => setAddType(null)}
-          onSuccess={(p) => handleAdd(p, 'transfer')}
-          owners={owners}
-        />
-      )}
-
-      {detailOp && detailType && (
-        <OperationDetailModal
-          isOpen
-          onClose={() => { setDetailOp(null); setDetailType(null); }}
-          operation={detailOp}
-          type={detailType}
-          onDelete={(op) => handleDelete(op, detailType)}
-        />
-      )}
-    </div>
-  );
-};
-
-export default AccountingSheetView;
+  const reset = () => { setType('all'); setOwner(''); setSearch(''); setPage(1); };
+  return <div className="ac-sheet-view">
+    <div className="ac-sheet-heading"><div><h2>{sheet.department_name}</h2><p>{periodName(sheetPeriod(sheet))} <span>· {rows.length} операций{refreshing ? ' · обновляем…' : ''}</span></p></div><div className="ac-sheet-actions">{sheetOptions.length > 1 && <Choice label="Перейти в лист" required value={String(sheet.id)} options={sheetOptions} onChange={onSwitch} />}<div ref={anchor}><button className="od-primary-btn" aria-expanded={menu} aria-haspopup="dialog" onClick={() => setMenu(true)}><Icon name="plus" />Добавить операцию<Icon name="down" /></button></div></div></div>
+    {menu && <DashboardPopover anchor={anchor} title="Новая операция" onClose={() => setMenu(false)} width={350}><div className="ac-action-menu">{Object.entries(operationTypes).map(([key, meta]) => <button key={key} onClick={() => { setMenu(false); setAdding(key); }}><span className={`ac-op-icon ac-type-${key}`}><Icon name={meta.icon} /></span><span><strong>{meta.single}</strong><small>{meta.description}</small></span><Icon name="right" /></button>)}</div></DashboardPopover>}
+    {notice && <div className="ac-notice" role="status"><Icon name="check" /><span>{notice}</span><button className="od-icon-btn" aria-label="Закрыть сообщение" onClick={() => setNotice('')}><Icon name="close" /></button></div>}
+    <SheetSummary summary={summary} />
+    <section className="ac-balances"><div className="ac-section-heading"><h3>Остатки у владельцев</h3><Hint label="Как считаются остатки">Поступления после удержаний минус выплаты и расходы, с учётом переводов. Выберите владельца, чтобы увидеть его операции.</Hint>{Number(summary?.discrepancy) > 0 && <span className="ac-discrepancy">К выравниванию: {money(summary.discrepancy)}</span>}</div><div className="ac-owner-grid">{(summary?.owner_balances || []).map(b => <button className={`ac-owner-card ${String(b.owner_id) === owner ? 'selected' : ''}`} aria-pressed={String(b.owner_id) === owner} key={b.owner_id} onClick={() => filter(setOwner, owner === String(b.owner_id) ? '' : String(b.owner_id))}><span className="ac-avatar">{b.owner_name.split(' ').filter(Boolean).slice(0, 2).map(n => n[0]).join('')}</span><span><strong>{b.owner_name}</strong><small>Получено {money(b.income_net)} · выплачено {money(Number(b.salary_paid) + Number(b.expenses_paid))}</small></span><b className={Number(b.balance) < 0 ? 'ac-negative' : ''}>{money(b.balance)}</b></button>)}</div></section>
+    <section className="ac-journal" aria-label="Журнал операций" ref={journal}><div className="ac-journal-heading"><h3>Операции</h3><span>{filtered.length} из {rows.length}</span><label className="ac-search"><Icon name="search" /><input aria-label="Поиск операций" placeholder="Филиал, преподаватель, описание…" value={search} onChange={e => filter(setSearch, e.target.value)} /></label></div>
+      <div className="ac-journal-filters"><div className="ac-type-tabs" aria-label="Тип операции">{[['all', 'Все'], ...Object.entries(operationTypes).map(([key, meta]) => [key, meta.label])].map(([key, label]) => <button key={key} aria-pressed={type === key} onClick={() => filter(setType, key)}>{label}<span>{key === 'all' ? rows.length : rows.filter(r => r.type === key).length}</span></button>)}</div><div className="ac-secondary-filters"><Choice label="Владелец" placeholder="Все владельцы" value={owner} options={owners.map(o => ({ value: String(o.id), label: o.full_name }))} onChange={value => filter(setOwner, value)} /><Choice label="Порядок" required value={sort} options={[{ value: 'newest', label: 'Сначала новые' }, { value: 'oldest', label: 'Сначала старые' }, { value: 'amount', label: 'По сумме' }]} onChange={value => filter(setSort, value)} />{(type !== 'all' || owner || search) && <button className="od-text-btn" onClick={reset}><Icon name="close" />Сбросить</button>}</div></div>
+      <div className="ac-ledger-head" aria-hidden="true"><span>Операция</span><span>Владелец</span><span>Дата записи</span><span>Сумма</span><span /></div>
+      {!shown.length ? <div className="ac-empty ac-empty-small"><Icon name={rows.length ? 'search' : 'sheet'} /><h3>{rows.length ? 'Ничего не найдено' : 'В листе пока нет операций'}</h3><p>{rows.length ? 'Измените поиск или сбросьте фильтры.' : 'Добавьте первое поступление, выплату или расход.'}</p><button className="od-control" onClick={rows.length ? reset : () => setMenu(true)}>{rows.length ? 'Сбросить фильтры' : 'Добавить операцию'}</button></div> : <div className="ac-ledger">{shown.map(op => { const sign = amountSign(op, owner); return <button key={op.key} className="ac-operation" onClick={() => setSelected(op)} aria-label={`${operationTypes[op.type].single}: ${op.title}, ${money(op.amount)}`}><span className="ac-operation-name"><span className={`ac-op-icon ac-type-${op.type}`}><Icon name={operationTypes[op.type].icon} /></span><span><strong>{op.title || operationTypes[op.type].single}</strong><small>{op.subtitle}</small></span></span><span className="ac-operation-party">{op.party}</span><time>{op.created_at ? new Date(op.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : '—'}</time><strong className={`ac-operation-amount ${sign === '+' ? 'ac-positive' : sign === '−' ? 'ac-negative' : 'ac-neutral'}`}>{sign}{money(op.amount)}</strong><Icon name="right" /></button>; })}</div>}
+      <footer className="ac-ledger-footer"><span>{filtered.length ? `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} из ${filtered.length}` : '0 операций'}</span><div><button className="od-icon-btn" aria-label="Предыдущая страница операций" disabled={safePage <= 1} onClick={() => turnPage(safePage - 1)}><Icon name="left" /></button><span>{safePage} / {pages}</span><button className="od-icon-btn" aria-label="Следующая страница операций" disabled={safePage >= pages} onClick={() => turnPage(safePage + 1)}><Icon name="right" /></button></div></footer>
+    </section>
+    {adding && <OperationModal type={adding} sheetData={sheetData} onClose={() => setAdding(null)} onSave={payload => add(payload, adding)} />}
+    {selected && <OperationDetailModal operation={selected} onClose={() => setSelected(null)} onDelete={remove} />}
+  </div>;
+}

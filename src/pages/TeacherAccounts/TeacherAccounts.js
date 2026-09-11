@@ -138,7 +138,7 @@ const TeacherAccounts = () => {
       <div className="teacher-accounts-page">
         <div className="teacher-accounts-header">
           <div>
-            <h1 className="teacher-accounts-title">Создание учеток для преподов</h1>
+            <h1 className="teacher-accounts-title">Учётные записи</h1>
             <div className="teacher-accounts-subtitle">
               Аккаунтов без учётки: {teachersWithoutAccount.length}
             </div>

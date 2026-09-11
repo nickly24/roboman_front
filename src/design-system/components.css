@@ -1,0 +1,152 @@
+/* Shared component contract. Loaded after screens; no page-local colours or typography. */
+.layout-content h1 { font-size: 27px; line-height: 1.25; letter-spacing: -.8px; font-weight: 720; color: var(--color-text-primary); }
+.layout-content h2 { font-size: 21px; line-height: 1.35; letter-spacing: -.4px; }
+.layout-content h3, .card-title { font-size: 15px; line-height: 1.4; font-weight: 650; letter-spacing: -.2px; }
+.page-description { color: var(--color-text-muted); font-size: 13px; margin-top: 6px; line-height: 1.6; }
+.card { border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); background: var(--color-bg-surface); border: 1px solid var(--color-border); min-width: 0; }
+.card-header { padding: 20px 22px 0; border-bottom: 0; gap: 16px; flex-wrap: wrap; }
+.card-body { padding: 22px; min-width: 0; }
+.card-title { color: var(--color-text-primary); }
+.card-subtitle { color: var(--color-text-muted); margin-top: 4px; font-size: 12px; }
+.btn { min-height: 40px; padding: 9px 16px; border-radius: var(--radius-md); font-size: 13px; line-height: 20px; font-weight: 600; transition: background .15s, border-color .15s, box-shadow .15s; }
+.btn-primary { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); box-shadow: var(--shadow-primary); }
+.btn-primary:hover:not(:disabled) { background: var(--color-primary-hover); border-color: var(--color-primary-hover); }
+.btn-secondary { background: var(--color-bg-surface); color: var(--color-text-secondary); }
+.btn-danger { background: var(--color-error-light); color: var(--color-error); border-color: var(--color-error-light); box-shadow: none; }
+.btn-danger:hover:not(:disabled) { background: var(--color-error-light); border-color: var(--color-error); color: var(--color-error); }
+.btn-small { min-height: 32px; padding: 5px 10px; font-size: 12px; }
+.btn-large { min-height: 46px; padding: 12px 20px; font-size: 14px; }
+.btn:disabled { opacity: .45; box-shadow: none; }
+.input-group, .select-group { min-width: 0; gap: 6px; }
+.input-label, .select-label, .form-label { font-size: 12px; line-height: 1.5; font-weight: 550; color: var(--color-text-secondary); }
+.input, .select, .textarea { width: 100%; min-height: 40px; padding: 9px 12px; border-radius: var(--radius-md); font-size: 13px; line-height: 20px; box-shadow: var(--shadow-xs); }
+.input::placeholder, textarea::placeholder { color: var(--color-text-muted); opacity: .85; }
+textarea { max-width: 100%; font: inherit; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-surface); color: var(--color-text-primary); padding: 12px; }
+.input:focus, .select:focus, textarea:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
+.input-error:focus, .select-error:focus { border-color: var(--color-error); box-shadow: 0 0 0 3px var(--color-error-light); }
+.input:disabled, .select:disabled { background: var(--color-bg-elevated); }
+.input-error-message, .select-error-message, .form-hint { font-size: 12px; line-height: 1.5; }
+.form-row { gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.form-actions { display: flex; gap: 10px; justify-content: flex-end; padding-top: 16px; border-top: 1px solid var(--color-border); }
+.form-error, .curriculum-error, .login-error { color: var(--color-error); background: var(--color-error-light); border: 1px solid var(--color-error-light); }
+.filters-grid { grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr)); gap: 14px; align-items: end; }
+.filters-actions { gap: 8px; flex-wrap: wrap; flex-direction: row; grid-column: 1 / -1; justify-content: flex-end; }
+:is(.dashboard-filters, .lessons-filters, .branches-filters, .instructions-filters, .schedule-filters, .salary-filters, .analytics-filters, .accounting-filters) .card-body { padding: 18px 20px; }
+.period-mode-label { font-size: 12px; color: var(--color-text-secondary); }
+.period-mode-buttons { gap: 2px; background: var(--color-bg-elevated); padding: 3px; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.period-btn { min-height: 32px; padding: 5px 10px; font-size: 12px; color: var(--color-text-secondary); border: 0; border-radius: 5px; background: transparent; }
+.period-btn.active { background: var(--color-primary); color: var(--color-on-primary); }
+.table-container { border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); }
+.table { font-variant-numeric: tabular-nums; }
+.table-header { border-bottom: 1px solid var(--color-border); }
+.table-header-cell { text-transform: none; letter-spacing: 0; font-size: 11px; font-weight: 600; padding: 13px 16px; }
+.table-cell { font-size: 12px; padding: 15px 16px; line-height: 1.5; }
+.table-row { border-color: var(--color-border-light); }
+.table-row:last-child { border-bottom: none; }
+.table-card { box-shadow: var(--shadow-xs); border-radius: var(--radius-lg); }
+.table-card-header { padding: 16px; background: var(--color-bg-surface); align-items: center; }
+.table-card-title { white-space: normal; overflow-wrap: anywhere; font-size: 14px; font-weight: 650; }
+.table-card-row { grid-template-columns: minmax(95px, .8fr) minmax(0, 1.2fr); }
+.table-card-value { font-variant-numeric: tabular-nums; }
+.table-empty { padding: 48px 24px; font-size: 13px; }
+.kpi-card { padding: 20px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); }
+.kpi-card:hover { transform: none; border-color: var(--color-gray-300); box-shadow: var(--shadow-sm); }
+.kpi-card-header { flex-direction: row-reverse; justify-content: flex-end; gap: 10px; }
+.kpi-card-title { font-size: 12px; font-weight: 550; text-transform: none; letter-spacing: 0; }
+.kpi-card-icon { width: 32px; height: 32px; border-radius: 8px; background: color-mix(in srgb, var(--accent-color) 12%, transparent); color: var(--accent-color); opacity: 1; }
+.kpi-card-icon svg { width: 18px; height: 18px; }
+.kpi-card-value { font-size: 27px; letter-spacing: -.9px; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; margin-top: 4px; }
+.kpi-card-subtitle { font-size: 11px; }
+.dashboard .dashboard-kpi { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
+.dashboard .dashboard-kpi > .kpi-card { grid-column: span 3; }
+.dashboard .dashboard-kpi > .kpi-card:nth-child(n+5) { grid-column: span 4; padding: 16px 20px; }
+.dashboard .dashboard-kpi > .kpi-card:nth-child(n+5) .kpi-card-value { font-size: 23px; }
+.dashboard { gap: 22px; }
+.dashboard-header { margin-bottom: 0; }
+.dashboard-filters-wrap { margin-bottom: 0; }
+.dashboard-filters-toggle { min-height: 40px; padding: 9px 14px; font-size: 12px; }
+.dashboard-filters-content { display: none; max-height: none; overflow: visible; transition: none; }
+.dashboard-filters-content.open { display: block; max-height: none; }
+.dashboard-grid { gap: 20px; }
+.dashboard-top-bar-fill-success { background: var(--color-chart-1); }
+.dashboard-top-bar-fill-primary { background: var(--color-chart-2); }
+.dashboard-top-bar-row { padding: 10px 0; }
+.dashboard-top-bar-label { font-size: 12px; }
+.dashboard-top-bar-value { font-size: 12px; font-variant-numeric: tabular-nums; }
+.recharts-text, .recharts-legend-item-text { font-family: var(--font-sans); font-size: 11px; fill: var(--color-text-muted); }
+.recharts-cartesian-grid line { stroke: var(--color-border-light); }
+.recharts-default-tooltip { color: var(--color-text-primary); border-radius: var(--radius-md); box-shadow: var(--shadow-md); }
+:is(.branches-header, .teachers-header, .teacher-accounts-header, .departments-header, .lessons-header, .instructions-header, .slots-header, .schedule-header, .analytics-header) { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+:is(.branches-title, .teachers-title, .teacher-accounts-title, .departments-title, .lessons-title, .instructions-title, .slots-title, .schedule-title, .analytics-title, .salary-title, .settings-title) { margin: 0; }
+:is(.schedule-day-tab, .slots-tab, .accounting-tab, .analytics-tab) { border-radius: var(--radius-md); font-size: 13px; font-weight: 550; min-height: 40px; }
+:is(.schedule-day-tab, .slots-tab, .accounting-tab, .analytics-tab).active { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
+.schedule-day-block-title { color: var(--color-text-primary); font-size: 14px; }
+.schedule-slot-card, .slots-slot-card, .slots-slot-item, .slots-my-item, .lessons-group-card { border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); }
+.schedule-segment-free { background: var(--color-bg-surface); border-style: dashed; }
+.lessons-calendar-day { background: var(--color-bg-surface); border-radius: var(--radius-lg); }
+.lessons-calendar-day-header { font-size: 13px; padding: 12px; }
+.lessons-calendar-event { background: var(--color-bg-elevated); border-radius: var(--radius-md); }
+.lesson-badge, .chip { border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 550; }
+html.theme-dark .lesson-badge-free { color: var(--color-error); background: var(--color-error-light); }
+html.theme-dark .lesson-badge-paid { color: var(--color-success); background: var(--color-success-light); }
+.curriculum-plans-list, .curriculum-workspace, .curriculum-module { border-radius: var(--radius-lg); }
+.curriculum-lesson-index { border-radius: 8px; }
+.curriculum-module { box-shadow: none; }
+.curriculum-form label, .curriculum-detail label { font-size: 12px; font-weight: 550; }
+.curriculum-plan-nav { font-size: 13px; min-height: 58px; }
+.action-menu-popover { border-radius: var(--radius-lg); padding: 6px; max-width: calc(100vw - 24px); overflow-y: auto; }
+.action-menu-item { min-height: 38px; padding: 8px 12px; font-size: 13px; }
+.action-menu-trigger { min-width: 34px; font-size: 20px; line-height: 20px; padding: 4px 8px; }
+.instructions-card, .instruction-card { border-radius: var(--radius-lg); }
+.instruction-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.instruction-card__title { font-size: 14px; font-weight: 650; }
+@media(min-width: 1000px) { .dashboard-filters-toggle { display: none; } .dashboard-filters-content { display: block; } .dashboard-filters-content.open .dashboard-filters { margin-top: 0; } }
+@media(max-width: 1200px) { .dashboard .dashboard-kpi { gap: 12px; } .kpi-card { padding: 16px; } .kpi-card-value { font-size: 24px; } }
+@media(max-width: 1000px) { .dashboard .dashboard-kpi { grid-template-columns: repeat(2, minmax(0, 1fr)); } .dashboard .dashboard-kpi > .kpi-card, .dashboard .dashboard-kpi > .kpi-card:nth-child(n+5) { grid-column: auto; padding: 16px; } .dashboard .dashboard-kpi > .kpi-card:last-child:nth-child(odd) { grid-column: 1 / -1; } }
+@media(max-width: 768px) {
+  .layout-content h1 { font-size: 23px; letter-spacing: -.6px; }
+  .layout-content h2 { font-size: 19px; }
+  .page-description { font-size: 12px; }
+  .card-body { padding: 16px; }
+  .card-header { padding: 16px 16px 0; }
+  .btn { min-height: 44px; padding: 10px 14px; }
+  .btn-small { min-height: 40px; padding: 8px 12px; }
+  .input, .select, .textarea, textarea { font-size: 16px; min-height: 44px; }
+  .form-row { grid-template-columns: 1fr; }
+  .form-actions { flex-wrap: wrap; }
+  .form-actions > .btn { flex: 1; }
+  .filters-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 10px; }
+  .filters-actions { grid-column: 1 / -1; }
+  .filters-actions > .btn { flex: 1; }
+  :is(.dashboard-filters, .lessons-filters, .branches-filters, .instructions-filters, .schedule-filters, .salary-filters, .analytics-filters, .accounting-filters) .card-body { padding: 16px; }
+  .dashboard { gap: 18px; }
+  .dashboard .dashboard-kpi { gap: 10px; }
+  .kpi-card-title { font-size: 11px; }
+  .kpi-card-icon { width: 27px; height: 27px; }
+  .kpi-card-header { gap: 7px; }
+  .kpi-card-value, .dashboard .dashboard-kpi > .kpi-card:nth-child(n+5) .kpi-card-value { font-size: 22px; }
+  .kpi-card-subtitle { font-size: 10px; }
+  .dashboard-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .dashboard-top-bar-row { gap: 8px; }
+  .dashboard-top-bar-label { max-width: 130px; }
+  .action-menu-item { min-height: 44px; }
+  .table-card-actions .btn { min-height: 40px; }
+  .table-card-body { gap: 10px; }
+  .curriculum-lesson { grid-template-columns: 1fr; }
+  .curriculum-actions { width: 100%; }
+  .curriculum-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .curriculum-header, .curriculum-plan-header, .curriculum-module-header { gap: 12px; }
+  .curriculum-instruction { flex-wrap: wrap; }
+  .curriculum-workspace { padding: 16px; }
+  .curriculum-empty { padding: 24px 12px; }
+  .schedule-days-tabs, .slots-tabs, .analytics-tabs { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 6px; max-width: 100%; }
+  .schedule-day-tab, .slots-tab, .analytics-tab { white-space: nowrap; flex-shrink: 0; }
+  .sheet-timeline-scroll { margin: 0; padding: 0; }
+  .owner-row-label { width: 140px; }
+  .accounting-filters-grid > *, .salary-filters-grid > * { min-width: 0; max-width: 100%; }
+  .accounting-filters-grid .department-selector { min-width: 0; }
+  .accounting-filters-actions { margin-left: 0; }
+}
+@media(max-width: 380px) { .filters-grid { grid-template-columns: minmax(0, 1fr); } .kpi-card-header { align-items: flex-start; } .kpi-card-value { font-size: 21px; } .dashboard .dashboard-kpi > .kpi-card { padding: 12px; } }
+
+.card:hover, html.theme-dark .card:hover { border-color: var(--color-border); box-shadow: var(--shadow-xs); }

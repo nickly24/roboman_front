@@ -21,10 +21,8 @@ jest.mock('./services/authService', () => ({
   },
 }));
 
-jest.mock('react-markdown', () => () => null);
-
 test('redirects an unauthenticated user to login', async () => {
   render(<App />);
-  expect(await screen.findByRole('heading', { name: 'RoboMan' })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: 'С возвращением' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Войти' })).toBeInTheDocument();
 });

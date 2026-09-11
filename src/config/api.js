@@ -107,24 +107,9 @@ export const API_ENDPOINTS = {
   ACCOUNTING_TRANSFERS: (sheetId) => `/accounting/sheets/${sheetId}/transfers`,
   ACCOUNTING_TRANSFER: (id) => `/accounting/transfers/${id}`,
 
-  // CRM (Telegram)
+  // CRM
   CRM_BRANCHES: '/crm/branches',
   CRM_BRANCH: (branchId) => `/crm/branches/${branchId}`,
-  CRM_BRANCH_CHATS: (branchId) => `/crm/branches/${branchId}/chats`,
-  CRM_CHATS: '/crm/chats',
-  CRM_CHAT: (chatId) => `/crm/chats/${chatId}`,
-  CRM_CHAT_READ: (chatId) => `/crm/chats/${chatId}/read`,
-  CRM_CHAT_MESSAGES: (chatId) => `/crm/chats/${chatId}/messages`,
-  CRM_CHAT_SUMMARIZE: (chatId) => `/crm/chats/${chatId}/summarize`,
-  CRM_CHAT_AI_CHAT: (chatId) => `/crm/chats/${chatId}/ai-chat`,
-  CRM_NCHATS_AI_CHAT: '/crm/nchats/ai-chat',
-  CRM_TRANSCRIBE_VOICE: '/crm/transcribe-voice',
-  CRM_CHAT_COMMENTS: (chatId) => `/crm/chats/${chatId}/comments`,
-  CRM_REGISTRATION_REQUESTS: '/crm/registration-requests',
-  CRM_REGISTRATION_REQUEST_APPROVE: (id) => `/crm/registration-requests/${id}/approve`,
-  CRM_REGISTRATION_REQUEST_REJECT: (id) => `/crm/registration-requests/${id}/reject`,
-  CRM_NOTIFICATION_SUBSCRIBERS: '/crm/notification-subscribers',
-  CRM_NOTIFICATION_SUBSCRIBER: (id) => `/crm/notification-subscribers/${id}`,
   CRM_SETTINGS: '/crm/settings',
 
   // CRM Поиск (детские сады без робототехники)

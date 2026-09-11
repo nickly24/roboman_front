@@ -23,7 +23,7 @@
   --space-content-padding-mobile: var(--space-4);
 
   /* === Layout === */
-  --sidebar-width: 260px;
-  --sidebar-width-collapsed: 80px;
+  --sidebar-width: 244px;
+  --sidebar-width-collapsed: 76px;
   --content-max-width: 1440px;
 }

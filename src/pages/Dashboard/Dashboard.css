@@ -60,7 +60,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .dashboard-filters-toggle-icon svg {
@@ -140,7 +140,7 @@
   padding: 10px 12px;
   font-size: 14px;
   cursor: pointer;
-  color: #4b5563;
+  color: var(--color-text-secondary);
 }
 
 .period-btn:hover {
@@ -149,7 +149,7 @@
 
 .period-btn.active {
   background: var(--color-primary);
-  color: var(--color-text-inverse);
+  color: var(--color-on-primary);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -310,13 +310,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   flex-shrink: 0;
   transition: transform 0.2s;
 }
 
 .lessons-branch-header.open .lessons-branch-chevron {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .lessons-branch-chevron svg {
@@ -488,7 +488,7 @@
 }
 
 .dashboard-lesson-stat-total .dashboard-lesson-stat-value {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .dashboard-lesson-card-instruction {

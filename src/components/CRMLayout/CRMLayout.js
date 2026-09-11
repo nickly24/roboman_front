@@ -4,11 +4,7 @@ import { useTheme } from '../../context/ThemeContext';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import {
   IconBuilding,
-  IconChat,
-  IconClipboardList,
-  IconNotifications,
   IconSettings,
-  IconAI,
   IconSearch,
   IconLeads,
   IconDatabase,
@@ -55,14 +51,10 @@ const CRMLayout = ({ children }) => {
 
   const menuItems = [
     { path: '/crm', label: 'Филиалы в CRM', Icon: IconBuilding },
-    { path: '/crm/requests', label: 'Заявки', Icon: IconClipboardList },
-    { path: '/crm/chats', label: 'Чаты', Icon: IconChat },
-    { path: '/crm/nchats', label: 'ИИ-ассистент', Icon: IconAI },
     { path: '/crm/search', label: 'Поиск', Icon: IconSearch },
     { path: '/crm/leads', label: 'Лиды', Icon: IconLeads },
     { path: '/crm/prospects', label: 'Холодная база', Icon: IconDatabase },
-    { path: '/crm/notifications', label: 'Уведомления', Icon: IconNotifications },
-    { path: '/crm/settings', label: 'Настройки бота', Icon: IconSettings },
+    { path: '/crm/settings', label: 'Настройки CRM', Icon: IconSettings },
   ];
 
   return (
@@ -71,14 +63,14 @@ const CRMLayout = ({ children }) => {
       <aside className={`crm-sidebar ${mobileNavOpen ? 'open' : ''} ${!isMobile && !sidebarExpanded ? 'collapsed' : ''}`}>
         <div className="crm-sidebar-header">
           <h1 className="crm-sidebar-logo">CRM</h1>
-          <p className="crm-sidebar-desc">Telegram-чаты филиалов</p>
+          <p className="crm-sidebar-desc">Филиалы и привлечение клиентов</p>
         </div>
         <nav className="crm-sidebar-nav">
           {menuItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`crm-sidebar-item ${location.pathname === item.path || (item.path === '/crm/chats' && location.pathname.startsWith('/crm/chats/')) || (item.path === '/crm/requests' && location.pathname.startsWith('/crm/requests')) || (item.path === '/crm/nchats' && location.pathname.startsWith('/crm/nchats')) || (item.path === '/crm/search' && location.pathname.startsWith('/crm/search')) || (item.path === '/crm/leads' && location.pathname.startsWith('/crm/leads')) || (item.path === '/crm/prospects' && location.pathname.startsWith('/crm/prospects')) ? 'active' : ''}`}
+              className={`crm-sidebar-item ${location.pathname === item.path || (item.path !== '/crm' && location.pathname.startsWith(`${item.path}/`)) ? 'active' : ''}`}
               onClick={() => setMobileNavOpen(false)}
             >
               <span className="crm-sidebar-icon">{item.Icon ? <item.Icon /> : null}</span>
@@ -127,7 +119,7 @@ const CRMLayout = ({ children }) => {
           </button>
         </div>
       </aside>
-      <main className={`layout-main ${location.pathname.match(/^\/crm\/chats(\/|$)/) ? 'layout-main-chat' : ''}`}>
+      <main className="layout-main">
         <div className="layout-mobile-header">
           <button
             type="button"
@@ -139,7 +131,7 @@ const CRMLayout = ({ children }) => {
           </button>
           <div className="layout-mobile-title">CRM</div>
         </div>
-        <div className={`layout-content ${location.pathname.match(/^\/crm\/chats(\/|$)/) ? 'layout-content-chat-view' : ''} ${location.pathname.startsWith('/crm/nchats') ? 'layout-content-nchats' : ''}`}>{children}</div>
+        <div className="layout-content">{children}</div>
       </main>
     </div>
   );

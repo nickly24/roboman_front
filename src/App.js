@@ -1,12 +1,12 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import Login from './pages/Login/Login';
 import OwnerDashboard from './pages/Dashboard/OwnerDashboard';
 import TeacherDashboard from './pages/Dashboard/TeacherDashboard';
 import Lessons from './pages/Lessons/Lessons';
-import Schedule from './pages/Schedule/Schedule';
+import Calendar from './pages/Calendar/Calendar';
 import Branches from './pages/Branches/Branches';
 import Departments from './pages/Departments/Departments';
 import Teachers from './pages/Teachers/Teachers';
@@ -16,12 +16,7 @@ import Settings from './pages/Settings/Settings';
 import Salary from './pages/Salary/Salary';
 import Slots from './pages/Slots/Slots';
 import CRMBranches from './pages/CRM/CRMBranches';
-import CRMBranchChats from './pages/CRM/CRMBranchChats';
-import CRMChatsMessenger from './pages/CRM/CRMChatsMessenger';
-import CRMNchats from './pages/CRM/CRMNchats';
-import CRMNotifications from './pages/CRM/CRMNotifications';
 import CRMSettings from './pages/CRM/CRMSettings';
-import CRMRegistrationRequests from './pages/CRM/CRMRegistrationRequests';
 import CRMSearch from './pages/CRM/CRMSearch';
 import CRMLeads from './pages/CRM/CRMLeads';
 import CRMProspects from './pages/CRM/CRMProspects';
@@ -30,11 +25,6 @@ import Analytics from './pages/Analytics/Analytics';
 import CurriculumPlans from './pages/Curriculum/CurriculumPlans';
 import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
-
-const BranchChatsRedirect = () => {
-  const { branchId } = useParams();
-  return <Navigate to={`/crm/chats?branch_id=${branchId}`} replace />;
-};
 
 const DashboardRoute = () => {
   const { isOwner } = useAuth();
@@ -67,11 +57,13 @@ function App() {
             }
           />
 
+          <Route path="/schedule" element={<Navigate to="/calendar" replace />} />
+
           <Route
-            path="/schedule"
+            path="/calendar"
             element={
               <ProtectedRoute>
-                <Schedule />
+                <Calendar />
               </ProtectedRoute>
             }
           />
@@ -166,50 +158,10 @@ function App() {
             }
           />
           <Route
-            path="/crm/requests"
-            element={
-              <ProtectedRoute requireCrmAccess>
-                <CRMRegistrationRequests />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/crm/notifications"
-            element={
-              <ProtectedRoute requireCrmAccess>
-                <CRMNotifications />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/crm/settings"
             element={
               <ProtectedRoute requireCrmAccess>
                 <CRMSettings />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/crm/branches/:branchId/chats"
-            element={
-              <ProtectedRoute requireCrmAccess>
-                <BranchChatsRedirect />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/crm/chats"
-            element={
-              <ProtectedRoute requireCrmAccess>
-                <CRMChatsMessenger />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/crm/nchats"
-            element={
-              <ProtectedRoute requireCrmAccess>
-                <CRMNchats />
               </ProtectedRoute>
             }
           />
@@ -234,14 +186,6 @@ function App() {
             element={
               <ProtectedRoute requireCrmAccess>
                 <CRMProspects />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/crm/chats/:chatId"
-            element={
-              <ProtectedRoute requireCrmAccess>
-                <CRMChatsMessenger />
               </ProtectedRoute>
             }
           />

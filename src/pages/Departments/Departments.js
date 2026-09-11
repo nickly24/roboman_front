@@ -46,7 +46,7 @@ const Departments = () => {
     <Layout>
       <div className="departments-page">
         <div className="departments-header">
-          <h1 className="departments-title">Отделы</h1>
+          <div><h1 className="departments-title">Отделы</h1><p className="page-description">Структура клуба и распределение филиалов</p></div>
         </div>
 
         <Card>

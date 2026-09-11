@@ -78,7 +78,7 @@
 .slots-day-tab.active {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: var(--color-text-inverse);
+  color: var(--color-on-primary);
 }
 
 .slots-content-card {

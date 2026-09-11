@@ -1,90 +1,12 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Modal from '../../components/Modal/Modal';
-import Button from '../../components/Button/Button';
-import Input from '../../components/Input/Input';
-import DepartmentSelector from '../../components/DepartmentSelector/DepartmentSelector';
-
-const CreateSheetModal = ({ isOpen, onClose, onSuccess, departments }) => {
-  const currentYear = new Date().getFullYear();
-  const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
-  const [year, setYear] = useState(currentYear);
-  const [month, setMonth] = useState(currentMonth);
-  const [departmentId, setDepartmentId] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    if (!departmentId) {
-      setError('Выберите отдел');
-      return;
-    }
-    setSaving(true);
-    try {
-      await onSuccess({ year: parseInt(year, 10), month: parseInt(month, 10), department_id: parseInt(departmentId, 10) });
-      onClose();
-    } catch (err) {
-      setError(err.response?.data?.error?.message || 'Ошибка создания листа');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const monthOptions = Array.from({ length: 12 }, (_, i) => ({
-    value: String(i + 1),
-    label: new Date(2000, i).toLocaleString('ru-RU', { month: 'long' }),
-  }));
-
-  const yearOptions = Array.from({ length: 6 }, (_, i) => currentYear - 2 + i);
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Создать денежный лист" size="medium">
-      <form onSubmit={handleSubmit} className="create-sheet-form">
-        <div className="form-row">
-          <div className="form-group">
-            <label className="input-label">Год</label>
-            <select
-              className="select"
-              value={year}
-              onChange={(e) => setYear(parseInt(e.target.value, 10))}
-              required
-            >
-              {yearOptions.map((y) => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label className="input-label">Месяц</label>
-            <select
-              className="select"
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-              required
-            >
-              {monthOptions.map((m) => (
-                <option key={m.value} value={m.value}>{m.label}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <DepartmentSelector
-          value={departmentId}
-          onChange={(e) => setDepartmentId(e.target.value)}
-          label="Отдел"
-          showAll={false}
-        />
-        {error && <p className="form-error">{error}</p>}
-        <div className="modal-actions">
-          <Button type="button" variant="secondary" onClick={onClose}>Отмена</Button>
-          <Button type="submit" variant="primary" disabled={saving}>
-            {saving ? 'Создание…' : 'Создать'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
-  );
-};
-
-export default CreateSheetModal;
+import { Choice } from '../Calendar/CalendarFields';
+import Icon from './AccountingIcons';
+import { currentPeriod, errorText, periodName } from './accountingData';
+export default function CreateSheetModal({ isOpen, onClose, onSuccess, departments = [], initialPeriod = currentPeriod(), initialDepartment = '' }) {
+  const [year, setYear] = useState(initialPeriod.slice(0, 4)), [month, setMonth] = useState(initialPeriod.slice(5)), [department, setDepartment] = useState(initialDepartment);
+  const [saving, setSaving] = useState(false), [error, setError] = useState(''); const busy = useRef(false);
+  const close = () => { if (!busy.current) onClose(); };
+  const submit = async e => { e.preventDefault(); if (busy.current) return; if (!department) { setError('Выберите отдел'); return; } busy.current = true; setSaving(true); setError(''); try { await onSuccess({ year: Number(year), month: Number(month), department_id: Number(department) }); } catch (err) { setError(errorText(err)); } finally { busy.current = false; setSaving(false); } };
+  return <Modal isOpen={isOpen} title="Новый денежный лист" onClose={close} size="accounting-form"><form className="ac-form" onSubmit={submit}><div className="ac-form-context"><Icon name="sheet" /><span>Один лист — один отдел и один месяц</span></div><div className="ac-form-grid"><Choice label="Месяц" required value={month} onChange={setMonth} disabled={saving} options={Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1).padStart(2, '0'), label: periodName(`2000-${String(i + 1).padStart(2, '0')}`).replace(' 2000', '') }))} /><label className="ac-field">Год<input required type="number" min="2000" max="2100" value={year} onChange={e => setYear(e.target.value)} disabled={saving} /></label></div><Choice label="Отдел" required value={department} onChange={setDepartment} disabled={saving} options={departments.map(d => ({ value: String(d.id), label: d.name }))} placeholder="Выберите отдел" />{!departments.length && <p className="ac-muted">Список отделов ещё не загружен. Закройте форму и обновите листы.</p>}{error && <div className="ac-error" role="alert">{error}</div>}<footer className="ac-form-footer"><button className="od-control" type="button" disabled={saving} onClick={close}>Отмена</button><button className="od-primary-btn" disabled={saving || !departments.length}>{saving ? 'Создаём…' : 'Создать лист'}</button></footer></form></Modal>;
+}

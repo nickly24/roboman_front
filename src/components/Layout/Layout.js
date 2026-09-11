@@ -1,80 +1,53 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { IconMenu } from '../Icons/SidebarIcons';
+import Brand from '../Brand/Brand';
+import { IconMenu, IconSun, IconMoon } from '../Icons/SidebarIcons';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import { useTheme } from '../../context/ThemeContext';
 import './Layout.css';
-
-const BG_DARK = `${process.env.PUBLIC_URL || ''}/bg/dark-bg.jpg`;
-const BG_LIGHT = `${process.env.PUBLIC_URL || ''}/bg/light-bg.jpg`;
-
-const STORAGE_KEY = 'main-sidebar-expanded';
-
-const Layout = ({ children }) => {
-  const { theme } = useTheme();
+const SECTIONS = { dashboard: 'Обзор', lessons: 'Занятия', schedule: 'Календарь', calendar: 'Календарь', slots: 'Слоты', curriculum: 'Учебные планы', instructions: 'Инструкции', branches: 'Филиалы', departments: 'Отделы', teachers: 'Преподаватели', 'teacher-accounts': 'Учётные записи', salary: 'Зарплата', accounting: 'Бухгалтерия', analytics: 'Аналитика', settings: 'Настройки' };
+export default function Layout({ children, dashboard = false, headerTitle, className = '' }) {
+  const { theme, setTheme } = useTheme();
+  const { pathname } = useLocation();
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [sidebarExpanded, setSidebarExpanded] = useState(true);
-
+  const menuRef = useRef(null);
+  useEffect(() => { setMobileNavOpen(false); }, [pathname, isMobile]);
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === 'false') setSidebarExpanded(false);
-      if (saved === 'true') setSidebarExpanded(true);
-    } catch (_) {}
-  }, []);
-
-  const handleToggleSidebar = () => {
-    setSidebarExpanded((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem(STORAGE_KEY, String(next));
-      } catch (_) {}
-      return next;
-    });
-  };
-
-  // На мобиле: кнопка «Свернуть» полностью закрывает сайдбар. На десктопе: сворачивает до иконок.
-  const handleCollapseClick = () => {
-    if (isMobile) setMobileNavOpen(false);
-    else handleToggleSidebar();
-  };
-
-  return (
-    <div className="layout">
-      <div className={`layout-overlay ${mobileNavOpen ? 'open' : ''}`} onClick={() => setMobileNavOpen(false)} />
-      <Sidebar
-        isOpen={mobileNavOpen}
-        onClose={() => setMobileNavOpen(false)}
-        expanded={isMobile ? true : sidebarExpanded}
-        onToggleCollapse={handleCollapseClick}
-        isMobile={isMobile}
-      />
-      <main
-          className={`layout-main ${!isMobile && !sidebarExpanded ? 'sidebar-collapsed' : ''} layout-main-with-bg`}
-          style={{
-            backgroundImage: `url(${theme === 'dark' ? BG_DARK : BG_LIGHT})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundAttachment: 'fixed',
-          }}
-        >
-        <div className="layout-mobile-header">
-          <button
-            type="button"
-            className="layout-burger"
-            onClick={() => setMobileNavOpen((v) => !v)}
-            aria-label={mobileNavOpen ? 'Закрыть меню' : 'Открыть меню'}
-          >
-            <IconMenu />
-          </button>
+    if (!mobileNavOpen) return;
+    const previous = document.body.style.overflow;
+    const menuButton = menuRef.current;
+    document.body.style.overflow = 'hidden';
+    const aside = document.getElementById('app-navigation');
+    const focusable = () => Array.from(aside.querySelectorAll('a, button')).filter(el => el.getClientRects().length);
+    focusable()[0]?.focus();
+    const onKey = e => {
+      if (e.key === 'Escape') setMobileNavOpen(false);
+      if (e.key === 'Tab') {
+        const items = focusable(), first = items[0], last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+        if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => { document.body.style.overflow = previous; document.removeEventListener('keydown', onKey); menuButton?.focus(); };
+  }, [mobileNavOpen]);
+  return <div className={`layout ${dashboard ? 'layout-owner-dashboard' : className}`}>
+    <a className="skip-link" href="#main-content">Перейти к содержимому</a>
+    <div className={`layout-overlay ${mobileNavOpen ? 'open' : ''}`} onClick={() => setMobileNavOpen(false)} aria-hidden="true" />
+    <Sidebar isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} isMobile={isMobile} />
+    <main className={`layout-main ${!isMobile ? 'sidebar-collapsed' : ''}`} inert={mobileNavOpen ? true : undefined}>
+      <header className="app-topbar">
+        <button ref={menuRef} type="button" className="icon-button layout-burger" onClick={() => setMobileNavOpen(true)} aria-label="Открыть меню" aria-expanded={mobileNavOpen} aria-controls="app-navigation"><IconMenu /></button>
+        <div className="topbar-mobile-brand"><Brand /></div>
+        {dashboard || headerTitle ? <h1 className="od-desktop-title">{headerTitle || 'Обзор клуба'}</h1> : <div className="topbar-breadcrumb"><span>Рабочее пространство</span><span aria-hidden="true">/</span><strong>{SECTIONS[pathname.split('/')[1]] || 'АЙТИ КЛУБ'}</strong></div>}
+        <div className="topbar-actions">
+          <span className="topbar-date">{new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</span>
+          <button type="button" className="icon-button theme-toggle" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} title={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'} aria-label={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}>{theme === 'dark' ? <IconSun /> : <IconMoon />}</button>
         </div>
-        <div className="layout-content">
-          {children}
-        </div>
-      </main>
-    </div>
-  );
-};
-
-export default Layout;
+      </header>
+      <div id="main-content" className="layout-content" tabIndex={-1}>{children}</div>
+    </main>
+  </div>;
+}

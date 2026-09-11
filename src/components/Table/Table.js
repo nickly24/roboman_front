@@ -41,7 +41,8 @@ const Table = ({
       <div className={`table-cards ${className}`}>
         {data.map((row, index) => {
           const titleKey = mobileTitleKey || nonActionColumns[0]?.key;
-          const titleValue = titleKey ? (row?.[titleKey] ?? '') : '';
+          const titleColumn = nonActionColumns.find(col => col.key === titleKey);
+          const titleValue = titleColumn?.render ? titleColumn.render(row?.[titleKey], row) : (row?.[titleKey] ?? '');
 
           return (
             <div
@@ -50,7 +51,7 @@ const Table = ({
               onClick={() => onRowClick && onRowClick(row)}
             >
               <div className="table-card-header">
-                <div className="table-card-title">{String(titleValue || '')}</div>
+                <div className="table-card-title">{titleValue || '—'}</div>
                 {row.id !== undefined && row.id !== null && (
                   <div className="table-card-id">#{row.id}</div>
                 )}

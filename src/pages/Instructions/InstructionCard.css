@@ -60,7 +60,7 @@
 
 .instruction-card__section {
   font-size: var(--font-size-xs);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-weight: var(--font-weight-medium);
 }
 
@@ -87,7 +87,7 @@
 }
 
 .instruction-card__built-item {
-  color: var(--color-success, #10b981);
+  color: var(--color-success);
 }
 
 .instruction-card__built--none {
@@ -111,7 +111,7 @@
 }
 
 .instruction-card__not-built-item {
-  color: var(--color-warning, #f59e0b);
+  color: var(--color-warning);
 }
 
 .instruction-card__not-built-more {
