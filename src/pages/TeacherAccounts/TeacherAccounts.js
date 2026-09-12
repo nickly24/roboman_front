@@ -9,6 +9,7 @@ import Button from '../../components/Button/Button';
 import Modal from '../../components/Modal/Modal';
 import LoadingSpinner from '../../components/Loading/LoadingSpinner';
 import TeacherAccountForm from './TeacherAccountForm';
+import TeacherPasswordReset from './TeacherPasswordReset';
 import './TeacherAccounts.css';
 
 const TeacherAccounts = () => {
@@ -16,6 +17,10 @@ const TeacherAccounts = () => {
   const [accounts, setAccounts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [passwordTarget, setPasswordTarget] = useState(null);
+  const [creating, setCreating] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
 
   const loadAccounts = async () => {
     setLoading(true);
@@ -49,21 +54,26 @@ const TeacherAccounts = () => {
   };
 
   const closeModal = () => {
+    if (creating) return;
     setIsModalOpen(false);
     setSelectedTeacher(null);
   };
 
   const handleCreated = () => {
-    closeModal();
+    setIsModalOpen(false);
+    setSelectedTeacher(null);
+    setCreating(false);
+    setNotice('Учётная запись создана. Передайте преподавателю пароль отдельно.');
     loadAccounts();
   };
 
   const copyToClipboard = async (text, successMessage) => {
+    setError('');
     try {
       await navigator.clipboard.writeText(text);
-      alert(successMessage);
+      setNotice(successMessage);
     } catch (error) {
-      alert('Не удалось скопировать');
+      setError('Не удалось скопировать. Проверьте разрешение на доступ к буферу обмена.');
     }
   };
 
@@ -71,7 +81,7 @@ const TeacherAccounts = () => {
     return `Приглашение в систему АЙТИ КЛУБ
 Ссылка для входа: https://it-club-system.tps-eco.ru/login
 Логин: ${row.login}
-Пароль: ${row.password}`;
+Пароль администратор передаст отдельно.`;
   };
 
   const columns = [
@@ -85,11 +95,6 @@ const TeacherAccounts = () => {
     {
       key: 'login',
       title: 'Логин',
-      render: (value, row) => (row.user_id ? value : '—'),
-    },
-    {
-      key: 'password',
-      title: 'Пароль',
       render: (value, row) => (row.user_id ? value : '—'),
     },
     {
@@ -111,9 +116,10 @@ const TeacherAccounts = () => {
               <Button
                 size="small"
                 variant="secondary"
-                onClick={() => copyToClipboard(row.password, 'Пароль скопирован')}
+                onClick={() => setPasswordTarget(row)}
+                aria-label={`Изменить пароль: ${row.full_name}`}
               >
-                Копировать пароль
+                Изменить пароль
               </Button>
               <Button
                 size="small"
@@ -129,6 +135,7 @@ const TeacherAccounts = () => {
             </Button>
           )}
         </div>
+
       ),
     },
   ];
@@ -148,6 +155,8 @@ const TeacherAccounts = () => {
           </Button>
         </div>
 
+        {notice && <p className="teacher-accounts-note" role="status">{notice}</p>}
+        {error && <div className="form-error" role="alert">{error}</div>}
         <Card>
           {loading ? (
             <LoadingSpinner size="medium" text="Загрузка учёток..." />
@@ -172,8 +181,13 @@ const TeacherAccounts = () => {
             initialTeacher={selectedTeacher}
             onSuccess={handleCreated}
             onCancel={closeModal}
+            onSavingChange={setCreating}
           />
         </Modal>
+        {passwordTarget && <TeacherPasswordReset account={passwordTarget} onClose={() => setPasswordTarget(null)} onSuccess={() => {
+          setPasswordTarget(null);
+          setNotice('Пароль изменён. Передайте новый пароль преподавателю отдельно.');
+        }} />}
       </div>
     </Layout>
   );

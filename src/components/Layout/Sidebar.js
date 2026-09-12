@@ -8,14 +8,19 @@ import { IconDashboard, IconLessons, IconSchedule, IconSlots, IconBranches, Icon
 import './Sidebar.css';
 
 export default function Sidebar({ isOpen = false, onClose, isMobile = false }) {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const navigate = useNavigate();
-  const { user, logout, isOwner, isTeacher } = useAuth();
+  const { user, logout, isOwner, isTeacher, isBranch } = useAuth();
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const expanded = isMobile || hovered || focused;
   const [referencesOpen, setReferencesOpen] = useState(false);
-  const links = [
+  const links = isBranch ? [
+    ['/branch/overview', 'Обзор', IconDashboard],
+    ['/branch/lessons', 'Занятия', IconLessons],
+    ['/branch/invoices', 'Счета', IconAccounting],
+    ['/branch/analytics', 'Аналитика', IconAnalytics],
+  ] : [
     ['/dashboard', 'Дашборд', IconDashboard],
     ['/lessons', isTeacher ? 'Мои занятия' : 'Занятия', IconLessons],
     ['/calendar', 'Календарь', IconSchedule],
@@ -26,13 +31,15 @@ export default function Sidebar({ isOpen = false, onClose, isMobile = false }) {
   const references = [
     ['/branches', 'Филиалы', IconBranches], ['/departments', 'Отделы', IconDepartments],
     ['/teachers', 'Преподаватели', IconTeachers], ['/teacher-accounts', 'Учётные записи', IconTeacherAccounts],
+    ['/branch-accounts', 'Доступ садов', IconBranches],
   ];
-  const name = user?.profile?.full_name || user?.user?.login || 'Пользователь';
+  const name = user?.profile?.full_name || user?.profile?.name || user?.user?.login || 'Пользователь';
   const initials = name.split(/\s+/).slice(0, 2).map(word => word[0]).join('').toUpperCase();
   const closeAfterNavigation = () => { setHovered(false); setFocused(false); setReferencesOpen(false); onClose?.(); };
-  const renderLink = ([path, label, Icon]) => <Link key={path} to={path} title={!expanded ? label : undefined}
-    className={`sidebar-nav-item ${pathname === path ? 'active' : ''}`}
-    aria-current={pathname === path ? 'page' : undefined} onClick={closeAfterNavigation}>
+  const portalMonth = new URLSearchParams(search).get('month');
+  const renderLink = ([path, label, Icon]) => <Link key={path} to={isBranch && portalMonth ? `${path}?month=${encodeURIComponent(portalMonth)}` : path} title={!expanded ? label : undefined}
+    className={`sidebar-nav-item ${pathname === path || (path === '/accounting' && pathname.startsWith('/accounting/')) ? 'active' : ''}`}
+    aria-current={pathname === path || (path === '/accounting' && pathname.startsWith('/accounting/')) ? 'page' : undefined} onClick={closeAfterNavigation}>
     <Icon /><span className="sidebar-nav-label">{label}</span>
   </Link>;
   return <aside id="app-navigation" className={`sidebar ${isOpen ? 'open' : ''} ${!expanded ? 'collapsed' : ''}`}
@@ -40,11 +47,11 @@ export default function Sidebar({ isOpen = false, onClose, isMobile = false }) {
     onFocusCapture={e => { if (e.target.matches(':focus-visible')) setFocused(true); }} onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) { setFocused(false); if (!hovered) setReferencesOpen(false); } }}
     aria-label="Боковая панель" inert={isMobile && !isOpen ? true : undefined}>
     <div className="sidebar-header">
-      <Link to="/dashboard" className="sidebar-brand" onClick={closeAfterNavigation}><Brand compact={!expanded} /></Link>
+      <Link to={isBranch ? '/branch/overview' : '/dashboard'} className="sidebar-brand" onClick={closeAfterNavigation}><Brand compact={!expanded} /></Link>
       {isMobile && <button type="button" className="icon-button sidebar-close" aria-label="Закрыть меню" onClick={onClose}>×</button>}
     </div>
     <nav className="sidebar-nav" aria-label="Основная навигация">
-      <div className="sidebar-section-label">Обучение</div>
+      <div className="sidebar-section-label">{isBranch ? 'Кабинет сада' : 'Обучение'}</div>
       {links.map(renderLink)}
       {isOwner && <>
         <div className="sidebar-section-label">Управление</div>
@@ -66,7 +73,7 @@ export default function Sidebar({ isOpen = false, onClose, isMobile = false }) {
     <div className="sidebar-footer">
       <div className="sidebar-account" title={name}>
         <span className="user-avatar">{initials}</span>
-        <div className="sidebar-user"><span className="sidebar-user-name">{name}</span><span className="sidebar-user-role">{isOwner ? 'Владелец' : 'Преподаватель'}</span></div>
+        <div className="sidebar-user"><span className="sidebar-user-name">{name}</span><span className="sidebar-user-role">{isOwner ? 'Владелец' : isBranch ? 'Кабинет сада' : 'Преподаватель'}</span></div>
         <button type="button" className="icon-button sidebar-logout" aria-label="Выйти" title="Выйти" onClick={async () => { await logout(); navigate('/login'); }}><IconLogout /></button>
       </div>
 

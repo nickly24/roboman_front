@@ -23,6 +23,12 @@
   margin-bottom: 8px;
 }
 
+.branches-header-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.branches-access-link { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-bg-surface); color: var(--color-text-secondary); font-size: 13px; font-weight: 550; text-decoration: none; transition: background .15s; }
+.branches-access-link:hover { color: var(--color-text-primary); background: var(--color-bg-hover); }
+@media (max-width: 768px) { .branches-header-actions { flex-wrap: wrap; } .branches-header-actions > * { flex: 1; } }
+@media (min-width: 769px) and (max-width: 1050px) { .branches-header { align-items: flex-start; flex-direction: column; gap: 14px; } }
+
 .row-actions {
   display: inline-flex;
   justify-content: flex-end;

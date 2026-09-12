@@ -1,9 +1,10 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const ProtectedRoute = ({ children, requireRole, requireCrmAccess }) => {
   const { isAuthenticated, loading, user, crmAccess } = useAuth();
+  const { pathname } = useLocation();
 
   if (loading) {
     return <div style={{ padding: '48px', textAlign: 'center' }}>Загрузка...</div>;
@@ -13,8 +14,12 @@ const ProtectedRoute = ({ children, requireRole, requireCrmAccess }) => {
     return <Navigate to="/login" replace />;
   }
 
+  if (user?.role === 'BRANCH' && !pathname.startsWith('/branch/')) {
+    return <Navigate to="/branch/overview" replace />;
+  }
+
   if (requireRole && user?.role !== requireRole) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={user?.role === 'BRANCH' ? '/branch/overview' : '/dashboard'} replace />;
   }
 
   if (requireCrmAccess && !crmAccess) {

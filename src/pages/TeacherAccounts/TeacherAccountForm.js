@@ -6,7 +6,7 @@ import Select from '../../components/Select/Select';
 import Button from '../../components/Button/Button';
 import './TeacherAccounts.css';
 
-const TeacherAccountForm = ({ teachers, initialTeacher, onSuccess, onCancel }) => {
+const TeacherAccountForm = ({ teachers, initialTeacher, onSuccess, onCancel, onSavingChange }) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({
@@ -30,7 +30,9 @@ const TeacherAccountForm = ({ teachers, initialTeacher, onSuccess, onCancel }) =
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (saving) return;
     setSaving(true);
+    onSavingChange?.(true);
     setError('');
     try {
       const payload = {
@@ -45,16 +47,20 @@ const TeacherAccountForm = ({ teachers, initialTeacher, onSuccess, onCancel }) =
         setSaving(false);
         return;
       }
+      if (payload.password.length < 8 || payload.password.length > 256) {
+        setError('Пароль должен содержать от 8 до 256 символов');
+        return;
+      }
 
-      await apiClient.post(API_ENDPOINTS.TEACHER_ACCOUNTS, payload);
+      const response = await apiClient.post(API_ENDPOINTS.TEACHER_ACCOUNTS, payload);
+      if (!response.data?.ok) throw new Error(response.data?.error?.message || 'Не удалось создать учётку');
       onSuccess?.();
     } catch (e2) {
-      const msg = e2?.response?.data?.error?.message || e2?.response?.data?.message;
+      const msg = e2?.response?.data?.error?.message || e2?.response?.data?.message || e2?.message;
       setError(msg || 'Не удалось создать учётку');
-      // eslint-disable-next-line no-console
-      console.error(e2);
     } finally {
       setSaving(false);
+      onSavingChange?.(false);
     }
   };
 
@@ -67,8 +73,8 @@ const TeacherAccountForm = ({ teachers, initialTeacher, onSuccess, onCancel }) =
   }
 
   return (
-    <form onSubmit={handleSubmit} className="teacher-accounts-form">
-      {error && <div className="form-error">{error}</div>}
+    <form onSubmit={handleSubmit} className="teacher-accounts-form" aria-label="Создать учетку преподавателя">
+      {error && <div className="form-error" role="alert">{error}</div>}
 
       <Select
         label="Преподаватель"
@@ -83,6 +89,8 @@ const TeacherAccountForm = ({ teachers, initialTeacher, onSuccess, onCancel }) =
         label="Логин"
         value={form.login}
         onChange={(e) => setForm({ ...form, login: e.target.value })}
+        maxLength={64}
+        autoComplete="username"
         required
         disabled={saving}
       />
@@ -92,6 +100,9 @@ const TeacherAccountForm = ({ teachers, initialTeacher, onSuccess, onCancel }) =
         type="text"
         value={form.password}
         onChange={(e) => setForm({ ...form, password: e.target.value })}
+        minLength={8}
+        maxLength={256}
+        autoComplete="new-password"
         required
         disabled={saving}
       />
@@ -106,7 +117,7 @@ const TeacherAccountForm = ({ teachers, initialTeacher, onSuccess, onCancel }) =
       </div>
 
       <div className="teacher-accounts-note">
-        Логин и пароль будут доступны администратору для копирования.
+        Сохраните введённый пароль до закрытия окна и передайте преподавателю отдельно. После сохранения пароль можно только изменить.
       </div>
     </form>
   );

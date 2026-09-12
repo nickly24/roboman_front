@@ -8,10 +8,12 @@ import { PeriodControl } from '../Dashboard/DashboardControls';
 import CreateSheetModal from './CreateSheetModal';
 import AccountingSheetView, { SheetSummary } from './AccountingSheetView';
 import Icon from './AccountingIcons';
+import { AccountingNav } from '../Invoices/InvoiceUI';
 import { currentPeriod, errorText, money, operationCount, periodName, sheetPeriod, shiftMonth, unpack, validPeriod } from './accountingData';
 import '../Dashboard/OwnerDashboard.css';
 import '../Calendar/Calendar.css';
 import './Accounting.css';
+import '../Invoices/Invoices.css';
 
 export default function Accounting() {
   const [params, setParams] = useSearchParams();
@@ -70,6 +72,7 @@ export default function Accounting() {
     setCreating(false); setRefresh(n => n + 1); setParams({ month: sheetPeriod(payload), sheet: String(data.id) });
   };
   return <Layout headerTitle="Бухгалтерия" className="layout-accounting"><div className="accounting-page">
+    <AccountingNav month={period} />
     <div className="ac-period-bar"><div className="ac-month-tabs" role="tablist" aria-label="Месяц бухгалтерии">{tabs.map(m => <button role="tab" aria-selected={m === period} key={m} onClick={() => goMonth(m)}><span>{periodName(m)}</span><small>{m === current ? 'Текущий месяц' : m === previous ? 'Предыдущий месяц' : 'Выбранный период'}</small></button>)}</div><PeriodControl value={{ start: period, end: period }} onChange={p => goMonth(p.start)} allowRange={false} showArrows={false} title="Выбрать месяц бухгалтерии" triggerLabel="Другой месяц" /></div>
     {sheetId ? <>
       <div className="ac-sheet-nav"><button className="od-text-btn" onClick={() => setParams({ month: period })}><Icon name="left" />Листы месяца</button><span>/</span><strong>{detail?.sheet.department_name || 'Денежный лист'}</strong><button className="od-icon-btn" aria-label="Обновить лист" disabled={detailLoading} onClick={() => setDetailRefresh(n => n + 1)}><Icon name="repeat" /></button></div>

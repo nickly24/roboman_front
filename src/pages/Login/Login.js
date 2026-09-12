@@ -25,9 +25,9 @@ const Login = () => {
     try {
       const userData = await authLogin(login, password);
       // Редирект в зависимости от роли
-      navigate(userData.role === 'OWNER' ? '/dashboard' : '/dashboard');
+      navigate(userData.role === 'BRANCH' ? '/branch/overview' : '/dashboard', { replace: true });
     } catch (err) {
-      setError(err.message || 'Ошибка авторизации. Проверьте логин и пароль.');
+      setError(err.response?.data?.error?.message || 'Не удалось войти. Проверьте логин, пароль и подключение.');
     } finally {
       setLoading(false);
     }

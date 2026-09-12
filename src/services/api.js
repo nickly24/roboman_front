@@ -32,7 +32,7 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !error.config?.url?.endsWith('/auth/login')) {
       // Неавторизован - очищаем токен и редиректим на логин
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user_data');

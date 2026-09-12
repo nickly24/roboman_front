@@ -21,13 +21,17 @@ import CRMSearch from './pages/CRM/CRMSearch';
 import CRMLeads from './pages/CRM/CRMLeads';
 import CRMProspects from './pages/CRM/CRMProspects';
 import Accounting from './pages/Accounting/Accounting';
+import Invoices from './pages/Invoices/Invoices';
+import BranchPortal from './pages/BranchPortal/BranchPortal';
+import BranchAccounts from './pages/BranchAccounts/BranchAccounts';
 import Analytics from './pages/Analytics/Analytics';
 import CurriculumPlans from './pages/Curriculum/CurriculumPlans';
 import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
 const DashboardRoute = () => {
-  const { isOwner } = useAuth();
+  const { isOwner, isBranch } = useAuth();
+  if (isBranch) return <Navigate to="/branch/overview" replace />;
   return isOwner ? <OwnerDashboard /> : <TeacherDashboard />;
 };
 
@@ -38,6 +42,10 @@ function App() {
         <ThemeProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/branch" element={<Navigate to="/branch/overview" replace />} />
+          <Route path="/branch/:section" element={<ProtectedRoute requireRole="BRANCH"><BranchPortal /></ProtectedRoute>} />
+          <Route path="/branch-accounts" element={<ProtectedRoute requireRole="OWNER"><BranchAccounts /></ProtectedRoute>} />
+          <Route path="/accounting/invoices" element={<ProtectedRoute requireRole="OWNER"><Invoices /></ProtectedRoute>} />
           
           <Route
             path="/dashboard"
@@ -209,6 +217,7 @@ function App() {
           />
 
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
         </ThemeProvider>
       </Router>
