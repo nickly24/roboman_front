@@ -1,5 +1,6 @@
 import apiClient from '../../services/api';
 import { API_ENDPOINTS } from '../../config/api';
+import { wallDateKey } from '../../utils/wallClock';
 
 export const number = value => Number(value) || 0;
 export const lessonRevenue = lesson => lesson.revenue != null ? number(lesson.revenue) : number(lesson.price_snapshot) * number(lesson.paid_children);
@@ -36,11 +37,7 @@ export async function loadDashboardData(period, filters, signal) {
   if (!response.data?.ok) throw new Error('Не удалось получить данные');
   return { ...response.data.data, lessons };
 }
-export function dateKey(value) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}
+export const dateKey = wallDateKey;
 export function summarizeLessons(lessons) {
   const branches = new Map(), teachers = new Map(), days = new Map(), months = new Map();
   let salary = 0;

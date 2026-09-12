@@ -7,6 +7,7 @@ import Layout from '../../components/Layout/Layout';
 import Modal from '../../components/Modal/Modal';
 import { IconLessons, IconPeople, IconBranches, IconTeachers } from '../../components/Icons/SidebarIcons';
 import { formatCurrency, formatNumber, getCurrentMonth } from '../../utils/format';
+import { formatWallDate, wallDateTime, wallTime } from '../../utils/wallClock';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import { chartSeries, countLabel, itemsFrom, lessonRevenue, loadDashboardData, monthLabel, number, periodLabel, summarizeLessons } from './dashboardData';
 import { FiltersControl, Hint, PeriodControl } from './DashboardControls';
@@ -20,8 +21,8 @@ const MONEY_SERIES = [
   { key: 'salary', label: 'Зарплаты', color: 'var(--color-chart-3)' },
 ];
 const shortDate = value => new Date(value.length === 7 ? `${value}-01T12:00:00` : `${value}T12:00:00`).toLocaleDateString('ru-RU', value.length === 7 ? { month: 'short', year: '2-digit' } : { day: 'numeric', month: 'short' });
-const lessonDate = value => new Date(value).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-const lessonTime = value => new Date(value).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+const lessonDate = value => formatWallDate(value, { day: 'numeric', month: 'short' });
+const lessonTime = wallTime;
 const compactMoney = value => Math.abs(value) >= 1000000 ? `${(value / 1000000).toLocaleString('ru-RU', { maximumFractionDigits: 1 })} млн` : Math.abs(value) >= 1000 ? `${(value / 1000).toLocaleString('ru-RU', { maximumFractionDigits: 1 })} тыс.` : value;
 const instruction = lesson => lesson.is_creative ? 'Творческое занятие' : lesson.instruction_title || lesson.instruction_name || 'Тема не указана';
 
@@ -36,7 +37,7 @@ function EmptyState({ children }) { return <div className="od-empty"><IconLesson
 
 function DetailPanel({ detail, period, onClose }) {
   const [page, setPage] = useState(0), [query, setQuery] = useState('');
-  const lessons = useMemo(() => [...detail.lessons].sort((a, b) => new Date(b.starts_at) - new Date(a.starts_at)), [detail.lessons]);
+  const lessons = useMemo(() => [...detail.lessons].sort((a, b) => wallDateTime(b.starts_at).localeCompare(wallDateTime(a.starts_at))), [detail.lessons]);
   const filtered = lessons.filter(lesson => `${lesson.branch_name} ${lesson.teacher_name} ${instruction(lesson)}`.toLocaleLowerCase('ru').includes(query.toLocaleLowerCase('ru')));
   const revenue = lessons.reduce((sum, lesson) => sum + lessonRevenue(lesson), 0);
   const salary = lessons.reduce((sum, lesson) => sum + number(lesson.teacher_salary), 0);
@@ -90,7 +91,7 @@ export default function OwnerDashboard() {
   const monthly = summary.days.length > 62;
   const chart = useMemo(() => chartSeries(monthly ? summary.months : summary.days, cumulative), [summary, monthly, cumulative]);
   const ranked = useMemo(() => [...summary[rankType]].sort((a, b) => rankType === 'branches' ? b.revenue - a.revenue : b.count - a.count), [summary, rankType]);
-  const recent = useMemo(() => [...lessons].sort((a, b) => new Date(b.starts_at) - new Date(a.starts_at)).slice(0, 5), [lessons]);
+  const recent = useMemo(() => [...lessons].sort((a, b) => wallDateTime(b.starts_at).localeCompare(wallDateTime(a.starts_at))).slice(0, 5), [lessons]);
   const kpi = data?.kpi || {};
   const revenue = number(kpi.revenue_sum), profit = revenue - summary.salary;
   const paid = number(kpi.paid_sum), trial = number(kpi.trial_sum), visits = paid + trial;

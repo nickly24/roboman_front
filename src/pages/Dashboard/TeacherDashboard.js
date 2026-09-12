@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import apiClient from '../../services/api';
 import { API_ENDPOINTS } from '../../config/api';
 import { formatCurrency, formatNumber, getCurrentMonth } from '../../utils/format';
+import { formatWallDateTime, wallDateKey } from '../../utils/wallClock';
 import Layout from '../../components/Layout/Layout';
 import Card from '../../components/Card/Card';
 import KPICard from '../../components/KPICard/KPICard';
@@ -147,8 +148,7 @@ const TeacherDashboard = () => {
   // Разбивка по периодам 1–15 и 16–конец месяца, с разбивкой по отделам внутри каждого периода
   const salarySplit = lessons.reduce(
     (acc, lesson) => {
-      const d = new Date(lesson.starts_at);
-      const day = d.getDate();
+      const day = Number(wallDateKey(lesson.starts_at).slice(8, 10));
       const salary = Number(lesson.teacher_salary ?? 0) || 0;
       const depId = lesson.department_id ?? 0;
       const depName = lesson.department_name || 'Без отдела';
@@ -175,7 +175,7 @@ const TeacherDashboard = () => {
   const secondByDept = Array.from(salarySplit.second.byDept.values()).sort((a, b) => (a.department_name || '').localeCompare(b.department_name || ''));
 
   const tableColumns = [
-    { key: 'starts_at', title: 'Дата/Время', render: (value) => new Date(value).toLocaleString('ru-RU') },
+    { key: 'starts_at', title: 'Дата/Время', render: formatWallDateTime },
     { key: 'branch_name', title: 'Филиал' },
     { key: 'paid_children', title: 'Платные', align: 'center' },
     { key: 'trial_children', title: 'Пробные', align: 'center' },

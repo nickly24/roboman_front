@@ -1,11 +1,13 @@
+import { formatWallDate, wallTime } from '../../utils/wallClock';
+
 export const pad = value => String(value).padStart(2, '0');
 export const dateObject = key => new Date(`${String(key).slice(0, 10)}T12:00:00`);
 export const dateKey = value => `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
 export const addDays = (key, days) => { const d = dateObject(key); d.setDate(d.getDate() + days); return dateKey(d); };
 export const monday = key => addDays(key, -((dateObject(key).getDay() + 6) % 7));
 export const moscowToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Moscow', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-export const timeText = value => String(value).slice(11, 16);
-export const dayText = (key, options = {}) => dateObject(key).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', ...options });
+export const timeText = wallTime;
+export const dayText = (key, options = {}) => formatWallDate(key, { day: 'numeric', month: 'long', ...options });
 export const weekText = week => `${dayText(week, { month: 'short' })} — ${dayText(addDays(week, 6), { month: 'short' })}`;
 export const endTime = item => { const [h, m] = timeText(item.starts_at).split(':').map(Number); const total = h * 60 + m + Number(item.duration_minutes); return `${pad(Math.floor(total / 60) % 24)}:${pad(total % 60)}`; };
 export const eventUrl = item => item.is_journal_only ? `/calendar/recorded-lessons/${item.journal_lesson_id}` : `/calendar/occurrences/${item.series_id}/${item.week_start}`;

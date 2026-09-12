@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import apiClient from '../../services/api';
 import { API_ENDPOINTS } from '../../config/api';
 import { formatCurrency, formatNumber, getCurrentMonth } from '../../utils/format';
+import { formatWallDate, wallDateKey, wallWeekday } from '../../utils/wallClock';
 import Layout from '../../components/Layout/Layout';
 import Card from '../../components/Card/Card';
 import Button from '../../components/Button/Button';
@@ -197,8 +198,7 @@ const Analytics = () => {
   const revenueByDay = useMemo(() => {
     const byDay = new Map();
     lessons.forEach((l) => {
-      const d = new Date(l.starts_at);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const key = wallDateKey(l.starts_at);
       const rev = Number(l.revenue) || (l.price_snapshot && l.paid_children ? l.price_snapshot * l.paid_children : 0);
       if (!byDay.has(key)) byDay.set(key, { dateKey: key, revenue: 0, children: 0, lessons: 0 });
       const row = byDay.get(key);
@@ -212,7 +212,7 @@ const Analytics = () => {
   const attendanceByMonthChart = useMemo(() => {
     return attendanceByMonth.map((a) => ({
       month: a.month,
-      label: a.month ? new Date(a.month + '-01').toLocaleDateString('ru-RU', { month: 'short', year: '2-digit' }) : a.month,
+      label: a.month ? formatWallDate(a.month + '-01', { month: 'short', year: '2-digit' }) : a.month,
       children: Number(a.total_children_sum) || 0,
       paid: Number(a.paid_sum) || 0,
       trial: Number(a.trial_sum) || 0,
@@ -222,8 +222,7 @@ const Analytics = () => {
   const byDayOfMonth = useMemo(() => {
     const byDay = new Array(31).fill(0).map((_, i) => ({ day: i + 1, revenue: 0, children: 0, lessons: 0 }));
     lessons.forEach((l) => {
-      const d = new Date(l.starts_at);
-      const day = d.getDate();
+      const day = Number(wallDateKey(l.starts_at).slice(8, 10));
       if (day >= 1 && day <= 31) {
         const idx = day - 1;
         byDay[idx].revenue += Number(l.revenue) || (l.price_snapshot && l.paid_children ? l.price_snapshot * l.paid_children : 0);
@@ -237,8 +236,8 @@ const Analytics = () => {
   const byDayOfWeek = useMemo(() => {
     const byWday = WEEKDAYS.map((name, i) => ({ weekday: i, name, revenue: 0, children: 0, lessons: 0 }));
     lessons.forEach((l) => {
-      const d = new Date(l.starts_at);
-      const w = d.getDay();
+      const w = wallWeekday(l.starts_at);
+      if (Number.isNaN(w)) return;
       byWday[w].revenue += Number(l.revenue) || (l.price_snapshot && l.paid_children ? l.price_snapshot * l.paid_children : 0);
       byWday[w].children += Number(l.total_children) || 0;
       byWday[w].lessons += 1;

@@ -5,16 +5,10 @@ import Modal from '../../components/Modal/Modal';
 import Button from '../../components/Button/Button';
 import LoadingSpinner from '../../components/Loading/LoadingSpinner';
 import './InstructionDetailsModal.css';
+import { formatWallDate } from '../../utils/wallClock';
 
 function formatLastAt(iso) {
-  if (!iso) return '';
-  try {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return '';
-    return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  } catch {
-    return '';
-  }
+  return formatWallDate(iso);
 }
 
 const InstructionDetailsModal = ({ isOpen, onClose, instruction, allBranches = [] }) => {
@@ -233,4 +227,3 @@ const InstructionDetailsModal = ({ isOpen, onClose, instruction, allBranches = [
 };
 
 export default InstructionDetailsModal;
-

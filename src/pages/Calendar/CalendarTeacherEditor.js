@@ -29,7 +29,7 @@ export default function CalendarTeacherEditor({ editor, context, saving, error, 
       : 'Вы подтверждаете, что выбранный преподаватель придёт на эту дату. Команда увидит, что отметку поставил администратор.';
   return <form className="cal-editor" onSubmit={e => { e.preventDefault(); if (!unavailable && (isPlan || teacherId)) onSubmit({ teacher_id: teacherId || null, note }); }}>
     <div className={`cal-editor-intro ${isDecline ? 'cal-warning' : ''}`}><CalIcon name={isPlan ? 'people' : isDecline ? 'replace' : 'check'} /><p>{description}</p></div>
-    <div className="cal-editor-origin"><strong>{item.branch_name}</strong><span>{dayText(item.starts_at)} · {timeText(item.starts_at)}–{endTime(item)} МСК</span></div>
+    <div className="cal-editor-origin"><strong>{item.branch_name}</strong><span>{dayText(item.starts_at)} · {timeText(item.starts_at)}–{endTime(item)}</span></div>
     <Choice label={isPlan ? 'Плановый преподаватель' : 'Преподаватель'} value={teacherId} options={options} required={!isPlan} emptyLabel="Без назначения" placeholder={unavailable ? `${isPlan ? item.planned_teacher_name : item.confirmed_teacher_name || item.planned_teacher_name} · недоступен` : isPlan ? 'Без назначения' : 'Выберите преподавателя'} disabled={saving} onChange={setTeacherId} />
     {unavailable && <p className="cal-error">Этот преподаватель больше не доступен для назначения. Выберите работающего преподавателя{isPlan ? ' или снимите плановое назначение' : ''}.</p>}
     {!isDecline && !!options.length && <p className="cal-muted cal-small">Все работающие преподаватели. Привязка к саду не требуется.</p>}

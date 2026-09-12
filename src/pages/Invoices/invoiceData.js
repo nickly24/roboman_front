@@ -1,4 +1,5 @@
 /* global BigInt */
+import { formatWallDate, wallTime } from '../../utils/wallClock';
 export { currentPeriod, validPeriod, periodName, money, errorText } from '../Accounting/accountingData';
 export const invoiceStatuses = {
   draft: { label: 'Черновик', tone: 'muted', icon: 'edit' },
@@ -8,13 +9,8 @@ export const invoiceStatuses = {
   cancelled: { label: 'Отменён', tone: 'muted', icon: 'close' },
 };
 export const invoiceNumber = invoice => invoice?.number || `Черновик № ${invoice?.id || '—'}`;
-export const localDate = (value, options = {}) => {
-  if (!value) return '—';
-  const normalized = /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T12:00:00` : value;
-  const d = new Date(normalized);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', ...options });
-};
-export const localTime = value => value ? new Date(value).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '—';
+export const localDate = (value, options = {}) => formatWallDate(value, { day: 'numeric', month: 'short', ...options }) || '—';
+export const localTime = value => wallTime(value) || '—';
 export const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Moscow', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 export const overdue = invoice => ['issued', 'payment_reported'].includes(invoice.status) && invoice.due_date && invoice.due_date.slice(0, 10) < today();
 // Match the API's Decimal ROUND_HALF_UP without binary floating point multiplication.

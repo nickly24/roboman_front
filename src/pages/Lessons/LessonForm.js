@@ -162,7 +162,7 @@ const LessonForm = ({ lesson, onSuccess, onCancel, initialValues = {} }) => {
     try {
       const payload = {
         branch_id: parseInt(formData.branch_id),
-        starts_at: new Date(formData.starts_at).toISOString(),
+        starts_at: formData.starts_at,
         paid_children: parseInt(formData.paid_children),
         trial_children: parseInt(formData.trial_children),
         is_creative: formData.is_creative,

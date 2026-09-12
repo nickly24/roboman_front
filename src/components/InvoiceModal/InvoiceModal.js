@@ -1,7 +1,8 @@
 import React from 'react';
 import Modal from '../Modal/Modal';
 import Button from '../Button/Button';
-import { formatDate, formatCurrency } from '../../utils/format';
+import { formatCurrency } from '../../utils/format';
+import { formatWallDate, wallTime } from '../../utils/wallClock';
 import './InvoiceModal.css';
 
 const InvoiceModal = ({ isOpen, onClose, branchName, lessons, month }) => {
@@ -13,8 +14,7 @@ const InvoiceModal = ({ isOpen, onClose, branchName, lessons, month }) => {
   const totalRevenue = lessons.reduce((sum, l) => sum + (l.revenue || 0), 0);
 
   // Форматируем месяц
-  const monthDate = month ? new Date(month + '-01') : new Date();
-  const monthName = monthDate.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+  const monthName = formatWallDate(month ? month + '-01' : new Date(), { month: 'long', year: 'numeric' });
 
   // Формируем текст счета
   const invoiceText = `Уважаемые коллеги!
@@ -24,9 +24,8 @@ const InvoiceModal = ({ isOpen, onClose, branchName, lessons, month }) => {
 Детализация занятий:
 
 ${lessons.map((lesson, index) => {
-  const date = new Date(lesson.starts_at);
-  const dateStr = date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  const timeStr = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  const dateStr = formatWallDate(lesson.starts_at);
+  const timeStr = wallTime(lesson.starts_at);
   const paid = lesson.paid_children || 0;
   const trial = lesson.trial_children || 0;
   const revenue = lesson.revenue || 0;
@@ -82,9 +81,8 @@ IT Клуб`;
             
             <h2>Детализация занятий:</h2>
             ${lessons.map((lesson, index) => {
-              const date = new Date(lesson.starts_at);
-              const dateStr = date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-              const timeStr = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+              const dateStr = formatWallDate(lesson.starts_at);
+              const timeStr = wallTime(lesson.starts_at);
               const paid = lesson.paid_children || 0;
               const trial = lesson.trial_children || 0;
               const revenue = lesson.revenue || 0;
@@ -138,9 +136,8 @@ IT Клуб`;
             <h3>Детализация занятий:</h3>
             <div className="invoice-lessons">
               {lessons.map((lesson, index) => {
-                const date = new Date(lesson.starts_at);
-                const dateStr = date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                const timeStr = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                const dateStr = formatWallDate(lesson.starts_at);
+                const timeStr = wallTime(lesson.starts_at);
                 const paid = lesson.paid_children || 0;
                 const trial = lesson.trial_children || 0;
                 const revenue = lesson.revenue || 0;

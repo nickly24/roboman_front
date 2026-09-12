@@ -1,16 +1,14 @@
 import apiClient from '../../services/api';
 import { API_ENDPOINTS } from '../../config/api';
+import { wallDateKey, wallDateTime } from '../../utils/wallClock';
 export const pad = value => String(value).padStart(2, '0');
-export function localDateKey(value) {
-  const date = new Date(value);
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-}
-export const localDateTime = value => { const d = new Date(value); return `${localDateKey(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+export const localDateKey = wallDateKey;
+export const localDateTime = value => wallDateTime(value).slice(0, 16);
 export const monthOf = value => localDateKey(value).slice(0, 7);
 export function addDays(value, count) { const d = new Date(value); d.setDate(d.getDate() + count); return d; }
 export function startOfWeek(value) { const d = new Date(value); d.setHours(0, 0, 0, 0); return addDays(d, -((d.getDay() + 6) % 7)); }
 export const monthBounds = month => { const [y, m] = month.split('-').map(Number); return { start: new Date(y, m - 1, 1), end: new Date(y, m, 1) }; };
-export const inPeriod = (lesson, start, end) => { const time = new Date(lesson.starts_at); return time >= start && time < end; };
+export const inPeriod = (lesson, start, end) => { const time = wallDateTime(lesson.starts_at); return time >= wallDateTime(start) && time < wallDateTime(end); };
 export const totalsFor = lessons => lessons.reduce((total, lesson) => ({ count: total.count + 1, paid: total.paid + (Number(lesson.paid_children) || 0), trial: total.trial + (Number(lesson.trial_children) || 0), revenue: total.revenue + (Number(lesson.revenue) || 0), salary: total.salary + (Number(lesson.teacher_salary) || 0) }), { count: 0, paid: 0, trial: 0, revenue: 0, salary: 0 });
 export const weekLabel = value => {
   const end = addDays(value, 6);

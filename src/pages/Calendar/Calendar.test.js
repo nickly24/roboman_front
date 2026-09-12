@@ -34,7 +34,7 @@ test('owner sees a weekly calendar, switches weeks and opens distinct single-dat
   await click(screen.getByRole('button', { name: 'Перенести / изменить' }));
   const move = within(screen.getByRole('dialog', { name: 'Перенести эту дату' }));
   expect(move.getByText(/Изменится только эта дата/)).toBeInTheDocument();
-  expect(move.getByLabelText(/Начало · МСК/)).toHaveValue('15:00');
+  expect(move.getByLabelText(/Начало/)).toHaveValue('15:00');
   await click(move.getByRole('button', { name: 'Отмена' }));
   await click(await screen.findByRole('button', { name: 'Эта и следующие недели' }));
   expect(screen.getByRole('button', { name: 'Начиная с недели' })).toBeInTheDocument();
@@ -117,7 +117,7 @@ test('planned teacher editor changes only the selected date and can clear assign
   await openEvent();
   await click(screen.getByRole('button', { name: 'Плановый преподаватель' }));
   const form = within(screen.getByRole('dialog', { name: 'Плановый преподаватель на эту дату' }));
-  expect(form.queryByLabelText(/Начало · МСК/)).not.toBeInTheDocument();
+  expect(form.queryByLabelText(/Начало/)).not.toBeInTheDocument();
   expect(form.getByText(/Для следующих недель останется регулярное правило/)).toBeInTheDocument();
   await click(form.getByRole('button', { name: 'Плановый преподаватель' }));
   await click(form.getByRole('option', { name: 'Без назначения' }));
@@ -182,7 +182,7 @@ test.each([
   if (method === 'post') {
     await click(screen.getByRole('button', { name: /Сад \/ филиал/ }));
     await click(screen.getByRole('option', { name: 'Академия Старт' }));
-    fireEvent.change(screen.getByLabelText(/Начало · МСК/), { target: { value: '17:00' } });
+    fireEvent.change(screen.getByLabelText(/Начало/), { target: { value: '17:00' } });
   }
   await click(screen.getByRole('button', { name: 'Плановый преподаватель' }));
   expect(screen.queryByRole('option', { name: /В отпуске/ })).not.toBeInTheDocument();

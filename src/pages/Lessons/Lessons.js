@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import apiClient from '../../services/api';
 import { API_ENDPOINTS } from '../../config/api';
 import { formatCurrency, getCurrentMonth } from '../../utils/format';
+import { formatWallDate, wallTime } from '../../utils/wallClock';
 import Layout from '../../components/Layout/Layout';
 import Modal from '../../components/Modal/Modal';
 import { useNavigate } from 'react-router-dom';
@@ -21,9 +22,9 @@ const Plus = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" s
 const Edit = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m16 3 5 5-12 12H4v-5L16 3Zm-3 3 5 5" /></svg>;
 const Trash = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7" /></svg>;
 const FILTER_FIELDS = [{ key: 'branch_id', label: 'Филиалы', all: 'Все филиалы' }, { key: 'department_id', label: 'Отделы', all: 'Все отделы' }, { key: 'teacher_id', label: 'Преподаватели', all: 'Все преподаватели' }];
-const timeLabel = value => new Date(value).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-const dayLabel = value => new Date(value).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-const fullDayLabel = value => new Date(value).toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+const timeLabel = wallTime;
+const dayLabel = value => formatWallDate(value, { day: 'numeric', month: 'short' });
+const fullDayLabel = value => formatWallDate(value, { weekday: 'long', day: 'numeric', month: 'long' });
 const modeNames = { PLAN: 'По учебному плану', REPEAT: 'Повтор', OFF_PLAN_REPLACE: 'Вне плана · замена', OFF_PLAN_PAUSE: 'Вне плана · без продвижения' };
 
 function LessonEvent({ lesson, isOwner, onOpen }) {
