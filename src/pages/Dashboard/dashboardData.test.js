@@ -29,3 +29,14 @@ test('a failed lesson page fails the report instead of showing partial profit', 
   apiClient.get.mockImplementation(async url => url.startsWith('/dashboard') ? { data: { ok: true, data: { kpi: {} } } } : { data: { ok: false } });
   await expect(loadDashboardData({ start: '2026-01', end: '2026-01' }, {}, new AbortController().signal)).rejects.toThrow();
 });
+
+test('help pay reduces profit across every dashboard grouping without adding lessons or visits', () => {
+  const result = summarizeLessons([
+    { id: 1, starts_at: '2026-09-01T10:00:00', branch_id: 1, teacher_id: 2, revenue: 3000, paid_children: 5, teacher_salary: 1200 },
+    { id: 2, lesson_type: 'HELP', starts_at: '2026-09-01T00:00:00', branch_id: 1, teacher_id: 2, help_rate_snapshot: 500, teacher_salary: 500 },
+  ]);
+  expect(result.salary).toBe(1700);
+  for (const grouping of ['branches', 'teachers', 'days', 'months']) {
+    expect(result[grouping][0]).toMatchObject({ revenue: 3000, salary: 1700, profit: 1300, count: 1, helpCount: 1, paid: 5, trial: 0 });
+  }
+});

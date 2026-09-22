@@ -1,8 +1,11 @@
+import { fetchAllLessons } from '../../services/lessonService';
+import { isHelp } from '../../utils/lessonTypes';
+import { lessonTopic } from '../Lessons/lessonCalendarData';
 import React, { useState, useEffect } from 'react';
 import apiClient from '../../services/api';
 import { API_ENDPOINTS } from '../../config/api';
 import { formatCurrency, formatNumber, getCurrentMonth } from '../../utils/format';
-import { formatWallDateTime, wallDateKey } from '../../utils/wallClock';
+import { formatWallDate, formatWallDateTime, wallDateKey } from '../../utils/wallClock';
 import Layout from '../../components/Layout/Layout';
 import Card from '../../components/Card/Card';
 import KPICard from '../../components/KPICard/KPICard';
@@ -70,9 +73,9 @@ const TeacherDashboard = () => {
     setLoading(true);
     setLessonsLoading(true);
     try {
-      const [dashResp, lessonsResp, salaryResp] = await Promise.all([
+      const [dashResp, loadedLessons, salaryResp] = await Promise.all([
         apiClient.get(`${API_ENDPOINTS.DASHBOARD_TEACHER}?month=${month}`),
-        apiClient.get(`${API_ENDPOINTS.LESSONS}?${new URLSearchParams({ month, limit: '200', offset: '0', sort: 'starts_at', order: 'desc' }).toString()}`),
+        fetchAllLessons({ month, sort: 'starts_at', order: 'desc' }),
         apiClient.get(`${API_ENDPOINTS.SALARY_TEACHER_BY_DEPARTMENT}?month=${month}`),
       ]);
 
@@ -80,13 +83,7 @@ const TeacherDashboard = () => {
         setDashboardData(dashResp.data.data);
       }
 
-      if (lessonsResp.data.ok) {
-        const data = lessonsResp.data.data;
-        const items = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
-        setLessons(items);
-      } else {
-        setLessons([]);
-      }
+      setLessons(loadedLessons);
 
       if (salaryResp.data?.ok && salaryResp.data.data) {
         setSalaryByDept(salaryResp.data.data);
@@ -154,14 +151,14 @@ const TeacherDashboard = () => {
       const depName = lesson.department_name || 'Без отдела';
       if (day <= 15) {
         acc.first.sum += salary;
-        acc.first.count += 1;
+        if (isHelp(lesson)) acc.first.helpCount += 1; else acc.first.count += 1;
         if (!acc.first.byDept.has(depId)) acc.first.byDept.set(depId, { department_id: depId, department_name: depName, sum: 0, count: 0 });
         const row = acc.first.byDept.get(depId);
         row.sum += salary;
         row.count += 1;
       } else {
         acc.second.sum += salary;
-        acc.second.count += 1;
+        if (isHelp(lesson)) acc.second.helpCount += 1; else acc.second.count += 1;
         if (!acc.second.byDept.has(depId)) acc.second.byDept.set(depId, { department_id: depId, department_name: depName, sum: 0, count: 0 });
         const row = acc.second.byDept.get(depId);
         row.sum += salary;
@@ -169,21 +166,21 @@ const TeacherDashboard = () => {
       }
       return acc;
     },
-    { first: { sum: 0, count: 0, byDept: new Map() }, second: { sum: 0, count: 0, byDept: new Map() } }
+    { first: { sum: 0, count: 0, helpCount: 0, byDept: new Map() }, second: { sum: 0, count: 0, helpCount: 0, byDept: new Map() } }
   );
   const firstByDept = Array.from(salarySplit.first.byDept.values()).sort((a, b) => (a.department_name || '').localeCompare(b.department_name || ''));
   const secondByDept = Array.from(salarySplit.second.byDept.values()).sort((a, b) => (a.department_name || '').localeCompare(b.department_name || ''));
 
   const tableColumns = [
-    { key: 'starts_at', title: 'Дата/Время', render: formatWallDateTime },
+    { key: 'starts_at', title: 'Дата/Время', render: (value, row) => isHelp(row) ? formatWallDate(value) : formatWallDateTime(value) },
     { key: 'branch_name', title: 'Филиал' },
-    { key: 'paid_children', title: 'Платные', align: 'center' },
-    { key: 'trial_children', title: 'Пробные', align: 'center' },
-    { key: 'total_children', title: 'Всего', align: 'center' },
+    { key: 'paid_children', render: (value, row) => isHelp(row) ? '—' : value, title: 'Платные', align: 'center' },
+    { key: 'trial_children', render: (value, row) => isHelp(row) ? '—' : value, title: 'Пробные', align: 'center' },
+    { key: 'total_children', render: (value, row) => isHelp(row) ? '—' : value, title: 'Всего', align: 'center' },
     {
       key: 'instruction',
-      title: 'Инструкция',
-      render: (_, row) => (row.is_creative ? 'Творческое' : row.instruction_name || 'По инструкции'),
+      title: 'Занятие',
+      render: (_, row) => lessonTopic(row),
     },
     { key: 'teacher_salary', title: 'Зарплата', render: (value) => formatCurrency(value), align: 'right' },
   ];
@@ -249,6 +246,7 @@ const TeacherDashboard = () => {
               <KPICard
                 title="Занятий за период"
                 value={formatNumber(kpi.lessons_count)}
+                subtitle={Number(kpi.help_count) > 0 ? `Помощь: ${kpi.help_count}` : undefined}
                 icon={<IconLessons />}
                 color="var(--color-chart-1)"
               />
@@ -264,7 +262,7 @@ const TeacherDashboard = () => {
             <KPICard
               title="Всего занятий проведено"
               value={formatNumber(total.total_lessons_count)}
-              subtitle="Накопительно"
+              subtitle={Number(total.total_help_count) > 0 ? `Помощь за всё время: ${total.total_help_count}` : 'Накопительно'}
               icon={<IconStar />}
               color="var(--color-orange)"
             />
@@ -276,7 +274,7 @@ const TeacherDashboard = () => {
             <div className="salary-split-item">
               <div className="salary-split-title">1–15</div>
               <div className="salary-split-value">{formatCurrency(salarySplit.first.sum)}</div>
-              <div className="salary-split-meta">{salarySplit.first.count} занятий</div>
+              <div className="salary-split-meta">{salarySplit.first.count} занятий{salarySplit.first.helpCount > 0 && ` · помощь: ${salarySplit.first.helpCount}`}</div>
               {firstByDept.length > 0 && (
                 <ul className="salary-split-by-dept">
                   {firstByDept.map((row) => (
@@ -291,7 +289,7 @@ const TeacherDashboard = () => {
             <div className="salary-split-item">
               <div className="salary-split-title">16–{lastDay || '…'}</div>
               <div className="salary-split-value">{formatCurrency(salarySplit.second.sum)}</div>
-              <div className="salary-split-meta">{salarySplit.second.count} занятий</div>
+              <div className="salary-split-meta">{salarySplit.second.count} занятий{salarySplit.second.helpCount > 0 && ` · помощь: ${salarySplit.second.helpCount}`}</div>
               {secondByDept.length > 0 && (
                 <ul className="salary-split-by-dept">
                   {secondByDept.map((row) => (
@@ -317,6 +315,7 @@ const TeacherDashboard = () => {
                   { key: 'department_name', title: 'Отдел' },
                   { key: 'salary_sum', title: 'Зарплата', render: (v) => formatCurrency(v), align: 'right' },
                   { key: 'lessons_count', title: 'Занятий', align: 'center' },
+                  { key: 'help_count', title: 'Помощь', render: value => value || 0, align: 'center' },
                 ]}
                 data={salaryByDept.by_department}
               />

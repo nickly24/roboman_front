@@ -53,3 +53,18 @@ test('issuing an invoice opens the new accounting editor for the selected branch
   fireEvent.click(dialog.getByRole('button', { name: /Академия Старт/ }));
   expect(screen.getByTestId('location')).toHaveTextContent('/accounting/invoices?month=2026-09&branch_id=1&create=1');
 });
+
+test('help is visible in the journal and salary without attendance or invoice charges', async () => {
+  const help = { ...lesson, lesson_type: 'HELP', instruction_name: null, paid_children: 0, trial_children: 0, revenue: 0, teacher_salary: 500, help_rate_snapshot: 500 };
+  apiClient.get.mockImplementation(async url => ({ data: { ok: true, data: { items: url.startsWith('/lessons?') ? [help] : [] } } }));
+  setup();
+  const event = await screen.findByRole('button', { name: 'Помощь, Академия Старт, Демьян' });
+  expect(within(event).getByText('Помощь')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Выставить счета/ })).toBeDisabled();
+  fireEvent.click(event);
+  const preview = within(screen.getByRole('dialog', { name: 'Помощь' }));
+  expect(preview.queryByText('Платные')).not.toBeInTheDocument();
+  expect(preview.queryByText('Пробные')).not.toBeInTheDocument();
+  expect(preview.getByText('Стоимость помощи при создании')).toBeInTheDocument();
+  expect(preview.getByText('Зарплата преподавателя')).toBeInTheDocument();
+});

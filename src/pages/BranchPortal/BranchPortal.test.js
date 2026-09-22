@@ -59,3 +59,15 @@ test('a failed report loads as an error with retry, never as an empty successful
   await click(screen.getByRole('button', { name: 'Повторить' }));
   expect(await screen.findByRole('heading', { name: 'Как проходит месяц' })).toBeInTheDocument();
 });
+
+test('help appears by teacher and date without children or a charge for the garden', async () => {
+  service.overview.mockResolvedValue({ ...overview, lessons: [{ ...lesson, lesson_type: 'HELP', instruction_name: null, paid_children: 0, trial_children: 0, total_children: 0, price_snapshot: 0, amount: 0 }] });
+  await setup('/branch/lessons?month=2026-08');
+  await click(await screen.findByRole('button', { name: /Помощь/ }));
+  const dialog = within(screen.getByRole('dialog', { name: 'Помощь' }));
+  expect(dialog.getByText('Анна')).toBeInTheDocument();
+  expect(dialog.getByText(/Помощь преподавателя в саду/)).toBeInTheDocument();
+  expect(dialog.queryByText('Платных посещений')).not.toBeInTheDocument();
+  expect(dialog.queryByText('Стоимость за платное посещение')).not.toBeInTheDocument();
+  expect(dialog.queryByText('Стоимость занятия')).not.toBeInTheDocument();
+});

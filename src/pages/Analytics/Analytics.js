@@ -1,3 +1,5 @@
+import { fetchAllLessons } from '../../services/lessonService';
+import { isHelp, lessonChildren, lessonRevenue } from '../../utils/lessonTypes';
 import React, { useEffect, useMemo, useState } from 'react';
 import apiClient from '../../services/api';
 import { API_ENDPOINTS } from '../../config/api';
@@ -92,6 +94,7 @@ const Analytics = () => {
   const [revenueByMonth, setRevenueByMonth] = useState([]);
   const [attendanceByMonth, setAttendanceByMonth] = useState([]);
   const [lessons, setLessons] = useState([]);
+  const regularLessons = useMemo(() => lessons.filter(lesson => !isHelp(lesson)), [lessons]);
 
   // Моделирование: базовые значения для расчёта
   const [modelPrice, setModelPrice] = useState(1500);
@@ -142,20 +145,17 @@ const Analytics = () => {
       lessonsParams.append('sort', 'starts_at');
       lessonsParams.append('order', 'asc');
 
-      const [dashResp, revResp, attResp, lessonsResp] = await Promise.all([
+      const [dashResp, revResp, attResp, loadedLessons] = await Promise.all([
         apiClient.get(`${API_ENDPOINTS.DASHBOARD_OWNER}?${params}`),
         apiClient.get(`${API_ENDPOINTS.REPORTS_REVENUE_BY_MONTH}?${params}`),
         apiClient.get(`${API_ENDPOINTS.REPORTS_ATTENDANCE_BY_MONTH}?${params}`),
-        apiClient.get(`${API_ENDPOINTS.LESSONS}?${lessonsParams}`),
+        fetchAllLessons(lessonsParams),
       ]);
 
       if (dashResp.data?.ok) setDashboardData(dashResp.data.data);
       if (revResp.data?.ok) setRevenueByMonth(revResp.data.data?.items || []);
       if (attResp.data?.ok) setAttendanceByMonth(attResp.data.data?.items || []);
-      if (lessonsResp.data?.ok) {
-        const data = lessonsResp.data.data;
-        setLessons(Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []));
-      }
+      setLessons(loadedLessons);
     } catch (err) {
       console.error('Ошибка загрузки аналитики:', err);
     } finally {
@@ -168,11 +168,11 @@ const Analytics = () => {
   }, [params.toString()]);
 
   useEffect(() => {
-    if (lessons.length > 0) {
-      const avg = lessons.reduce((s, l) => s + Number(l.price_snapshot || 0), 0) / lessons.length;
+    if (regularLessons.length > 0) {
+      const avg = regularLessons.reduce((s, l) => s + Number(l.price_snapshot || 0), 0) / regularLessons.length;
       if (avg > 0) setModelPrice(Math.round(avg));
     }
-  }, [lessons.length]);
+  }, [regularLessons]);
 
   const kpi = dashboardData?.kpi;
   const topBranches = dashboardData?.top_branches || [];
@@ -180,7 +180,7 @@ const Analytics = () => {
 
   const totalRevenue = useMemo(() => {
     let s = 0;
-    lessons.forEach((l) => { s += Number(l.revenue) || (l.price_snapshot && l.paid_children ? l.price_snapshot * l.paid_children : 0); });
+    lessons.forEach((l) => { s += lessonRevenue(l); });
     return s;
   }, [lessons]);
   const totalSalary = useMemo(() => {
@@ -191,7 +191,7 @@ const Analytics = () => {
   const totalProfit = totalRevenue - totalSalary;
   const totalChildren = useMemo(() => {
     let s = 0;
-    lessons.forEach((l) => { s += Number(l.total_children) || 0; });
+    lessons.forEach((l) => { s += lessonChildren(l); });
     return s;
   }, [lessons]);
 
@@ -199,12 +199,12 @@ const Analytics = () => {
     const byDay = new Map();
     lessons.forEach((l) => {
       const key = wallDateKey(l.starts_at);
-      const rev = Number(l.revenue) || (l.price_snapshot && l.paid_children ? l.price_snapshot * l.paid_children : 0);
+      const rev = lessonRevenue(l);
       if (!byDay.has(key)) byDay.set(key, { dateKey: key, revenue: 0, children: 0, lessons: 0 });
       const row = byDay.get(key);
       row.revenue += rev;
-      row.children += Number(l.total_children) || 0;
-      row.lessons += 1;
+      row.children += lessonChildren(l);
+      row.lessons += isHelp(l) ? 0 : 1;
     });
     return Array.from(byDay.values()).sort((a, b) => a.dateKey.localeCompare(b.dateKey));
   }, [lessons]);
@@ -225,9 +225,9 @@ const Analytics = () => {
       const day = Number(wallDateKey(l.starts_at).slice(8, 10));
       if (day >= 1 && day <= 31) {
         const idx = day - 1;
-        byDay[idx].revenue += Number(l.revenue) || (l.price_snapshot && l.paid_children ? l.price_snapshot * l.paid_children : 0);
-        byDay[idx].children += Number(l.total_children) || 0;
-        byDay[idx].lessons += 1;
+        byDay[idx].revenue += lessonRevenue(l);
+        byDay[idx].children += lessonChildren(l);
+        byDay[idx].lessons += isHelp(l) ? 0 : 1;
       }
     });
     return byDay;
@@ -238,37 +238,37 @@ const Analytics = () => {
     lessons.forEach((l) => {
       const w = wallWeekday(l.starts_at);
       if (Number.isNaN(w)) return;
-      byWday[w].revenue += Number(l.revenue) || (l.price_snapshot && l.paid_children ? l.price_snapshot * l.paid_children : 0);
-      byWday[w].children += Number(l.total_children) || 0;
-      byWday[w].lessons += 1;
+      byWday[w].revenue += lessonRevenue(l);
+      byWday[w].children += lessonChildren(l);
+      byWday[w].lessons += isHelp(l) ? 0 : 1;
     });
     return byWday;
   }, [lessons]);
 
   const fillCoeffByBranch = useMemo(() => {
     const map = new Map();
-    lessons.forEach((l) => {
+    regularLessons.forEach((l) => {
       const bid = l.branch_id;
       const name = l.branch_name || `Филиал #${bid}`;
       if (!map.has(bid)) map.set(bid, { branch_id: bid, branch_name: name, totalChildren: 0, lessonsCount: 0 });
       const row = map.get(bid);
-      row.totalChildren += Number(l.total_children) || 0;
+      row.totalChildren += lessonChildren(l);
       row.lessonsCount += 1;
     });
     return Array.from(map.values()).map((r) => ({
       ...r,
       avgPerLesson: r.lessonsCount ? (r.totalChildren / r.lessonsCount).toFixed(1) : 0,
     })).sort((a, b) => Number(b.avgPerLesson) - Number(a.avgPerLesson));
-  }, [lessons]);
+  }, [regularLessons]);
 
   const branchAvgChildren = useMemo(() => {
     const map = new Map();
-    lessons.forEach((l) => {
+    regularLessons.forEach((l) => {
       const bid = l.branch_id;
       const name = l.branch_name || `#${bid}`;
       if (!map.has(bid)) map.set(bid, { branch_id: bid, branch_name: name, totalChildren: 0, lessonsCount: 0 });
       const row = map.get(bid);
-      row.totalChildren += Number(l.total_children) || 0;
+      row.totalChildren += lessonChildren(l);
       row.lessonsCount += 1;
     });
     const result = new Map();
@@ -276,18 +276,18 @@ const Analytics = () => {
       result.set(k, v.lessonsCount ? v.totalChildren / v.lessonsCount : 0);
     });
     return result;
-  }, [lessons]);
+  }, [regularLessons]);
 
   const teacherVsBranchAvg = useMemo(() => {
     const teacherMap = new Map();
-    lessons.forEach((l) => {
+    regularLessons.forEach((l) => {
       const key = `${l.teacher_id}-${l.branch_id}`;
       const tname = l.teacher_name || `#${l.teacher_id}`;
       const bname = l.branch_name || `#${l.branch_id}`;
       if (!teacherMap.has(key)) teacherMap.set(key, { teacher_id: l.teacher_id, teacher_name: tname, branch_id: l.branch_id, branch_name: bname, children: 0, lessons: 0 });
       const row = teacherMap.get(key);
-      row.children += Number(l.total_children) || 0;
-      row.lessons += 1;
+      row.children += lessonChildren(l);
+      row.lessons += isHelp(l) ? 0 : 1;
     });
     return Array.from(teacherMap.values())
       .filter((r) => r.lessons >= 2)
@@ -298,7 +298,7 @@ const Analytics = () => {
         return { ...r, teacherAvg: teacherAvg.toFixed(1), branchAvg: branchAvg.toFixed(1), diffPct: diff.toFixed(0) };
       })
       .sort((a, b) => Number(b.diffPct) - Number(a.diffPct));
-  }, [lessons, branchAvgChildren]);
+  }, [regularLessons, branchAvgChildren]);
 
   const branchComparison = useMemo(() => {
     const map = new Map();
@@ -307,9 +307,9 @@ const Analytics = () => {
       const name = l.branch_name || `#${bid}`;
       if (!map.has(bid)) map.set(bid, { branch_id: bid, name, revenue: 0, children: 0, lessons: 0, salary: 0 });
       const row = map.get(bid);
-      row.revenue += Number(l.revenue) || (l.price_snapshot && l.paid_children ? l.price_snapshot * l.paid_children : 0);
-      row.children += Number(l.total_children) || 0;
-      row.lessons += 1;
+      row.revenue += lessonRevenue(l);
+      row.children += lessonChildren(l);
+      row.lessons += isHelp(l) ? 0 : 1;
       row.salary += Number(l.teacher_salary) || 0;
     });
     return Array.from(map.values()).sort((a, b) => b.revenue - a.revenue);
@@ -324,29 +324,29 @@ const Analytics = () => {
       : null;
     const avgPrice = totalChildren ? totalRevenue / totalChildren : 0;
     const margin = totalRevenue ? (totalProfit / totalRevenue) * 100 : 0;
-    const revenuePerLesson = lessons.length ? totalRevenue / lessons.length : 0;
+    const revenuePerLesson = regularLessons.length ? totalRevenue / regularLessons.length : 0;
     return {
       momGrowth,
       avgPricePerChild: avgPrice,
       profitMargin: margin,
       revenuePerLesson,
     };
-  }, [revenueByMonth, totalRevenue, totalChildren, totalProfit, lessons.length]);
+  }, [revenueByMonth, totalRevenue, totalChildren, totalProfit, regularLessons.length]);
 
   const modelingBase = useMemo(() => {
     const filtered = modelExcludeBranchId ? lessons.filter((l) => String(l.branch_id) !== modelExcludeBranchId) : lessons;
     let rev = 0, sal = 0;
     filtered.forEach((l) => {
-      rev += Number(l.revenue) || (l.price_snapshot && l.paid_children ? l.price_snapshot * l.paid_children : 0);
+      rev += lessonRevenue(l);
       sal += Number(l.teacher_salary) || 0;
     });
-    return { revenue: rev, salary: sal, lessonsCount: filtered.length };
+    return { revenue: rev, salary: sal, lessonsCount: filtered.filter(lesson => !isHelp(lesson)).length };
   }, [lessons, modelExcludeBranchId]);
 
   const avgModelPrice = useMemo(() => {
-    const filtered = modelExcludeBranchId ? lessons.filter((l) => String(l.branch_id) !== modelExcludeBranchId) : lessons;
+    const filtered = modelExcludeBranchId ? regularLessons.filter((l) => String(l.branch_id) !== modelExcludeBranchId) : regularLessons;
     return filtered.length ? filtered.reduce((s, l) => s + Number(l.price_snapshot || 0), 0) / filtered.length : 1500;
-  }, [lessons, modelExcludeBranchId]);
+  }, [regularLessons, modelExcludeBranchId]);
 
   const modelingResults = useMemo(() => {
     const { revenue: baseRev, salary: baseSal } = modelingBase;
@@ -595,7 +595,7 @@ const Analytics = () => {
             <div className="analytics-metric-card">
               <div className="analytics-metric-label">Среднее детей/занятие (общее)</div>
               <div className="analytics-metric-value">
-                {lessons.length ? (totalChildren / lessons.length).toFixed(1) : '—'}
+                {regularLessons.length ? (totalChildren / regularLessons.length).toFixed(1) : '—'}
               </div>
             </div>
             <div className="analytics-metric-card">

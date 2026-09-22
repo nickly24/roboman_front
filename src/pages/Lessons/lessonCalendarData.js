@@ -1,6 +1,7 @@
 import apiClient from '../../services/api';
 import { API_ENDPOINTS } from '../../config/api';
 import { wallDateKey, wallDateTime } from '../../utils/wallClock';
+import { isHelp, lessonChildren, lessonRevenue } from '../../utils/lessonTypes';
 export const pad = value => String(value).padStart(2, '0');
 export const localDateKey = wallDateKey;
 export const localDateTime = value => wallDateTime(value).slice(0, 16);
@@ -9,7 +10,7 @@ export function addDays(value, count) { const d = new Date(value); d.setDate(d.g
 export function startOfWeek(value) { const d = new Date(value); d.setHours(0, 0, 0, 0); return addDays(d, -((d.getDay() + 6) % 7)); }
 export const monthBounds = month => { const [y, m] = month.split('-').map(Number); return { start: new Date(y, m - 1, 1), end: new Date(y, m, 1) }; };
 export const inPeriod = (lesson, start, end) => { const time = wallDateTime(lesson.starts_at); return time >= wallDateTime(start) && time < wallDateTime(end); };
-export const totalsFor = lessons => lessons.reduce((total, lesson) => ({ count: total.count + 1, paid: total.paid + (Number(lesson.paid_children) || 0), trial: total.trial + (Number(lesson.trial_children) || 0), revenue: total.revenue + (Number(lesson.revenue) || 0), salary: total.salary + (Number(lesson.teacher_salary) || 0) }), { count: 0, paid: 0, trial: 0, revenue: 0, salary: 0 });
+export const totalsFor = lessons => lessons.reduce((total, lesson) => ({ count: total.count + (isHelp(lesson) ? 0 : 1), helpCount: total.helpCount + (isHelp(lesson) ? 1 : 0), paid: total.paid + lessonChildren(lesson, 'paid_children'), trial: total.trial + lessonChildren(lesson, 'trial_children'), revenue: total.revenue + lessonRevenue(lesson), salary: total.salary + (Number(lesson.teacher_salary) || 0) }), { count: 0, helpCount: 0, paid: 0, trial: 0, revenue: 0, salary: 0 });
 export const weekLabel = value => {
   const end = addDays(value, 6);
   if (value.getMonth() === end.getMonth()) return `${value.getDate()}–${end.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}`;
@@ -39,7 +40,11 @@ export async function fetchCalendarLessons(month, week, filters, signal) {
     if (items.length < 500) return all;
   }
 }
-export const lessonTopic = lesson => lesson.is_creative ? 'Творческое занятие' : lesson.instruction_name || (lesson.curriculum_mode?.startsWith('OFF_PLAN') ? 'Внеплановое занятие' : lesson.curriculum_lesson_name || 'Без инструкции');
+export const lessonTopic = lesson => {
+  if (isHelp(lesson)) return 'Помощь';
+  if (['PLAN', 'REPEAT', 'SKIP_TO_NEXT'].includes(lesson.curriculum_mode) && lesson.curriculum_lesson_name) return lesson.curriculum_lesson_name;
+  return lesson.is_creative ? 'Творческое занятие' : lesson.instruction_name || (lesson.curriculum_mode?.startsWith('OFF_PLAN') ? 'Внеплановое занятие' : lesson.curriculum_lesson_name || 'Без инструкции');
+};
 export function teacherColor(lesson) {
   const raw = String(lesson.teacher_color || '').trim();
   return /^#?[0-9a-f]{6}$/i.test(raw) ? `#${raw.replace('#', '')}` : 'var(--color-secondary)';

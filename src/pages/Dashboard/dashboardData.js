@@ -1,9 +1,10 @@
 import apiClient from '../../services/api';
 import { API_ENDPOINTS } from '../../config/api';
 import { wallDateKey } from '../../utils/wallClock';
+import { isHelp, lessonChildren, lessonRevenue } from '../../utils/lessonTypes';
+export { lessonRevenue };
 
 export const number = value => Number(value) || 0;
-export const lessonRevenue = lesson => lesson.revenue != null ? number(lesson.revenue) : number(lesson.price_snapshot) * number(lesson.paid_children);
 export const itemsFrom = response => {
   if (!response.data?.ok) throw new Error('Не удалось получить данные');
   const data = response.data.data;
@@ -43,14 +44,16 @@ export function summarizeLessons(lessons) {
   let salary = 0;
   lessons.forEach(lesson => {
     const revenue = lessonRevenue(lesson), pay = number(lesson.teacher_salary);
-    const paid = number(lesson.paid_children), trial = number(lesson.trial_children);
+    const paid = lessonChildren(lesson, 'paid_children'), trial = lessonChildren(lesson, 'trial_children');
     salary += pay;
     const key = dateKey(lesson.starts_at);
     const add = (map, id, name) => {
-      if (!map.has(id)) map.set(id, { id, name, revenue: 0, salary: 0, profit: 0, paid: 0, trial: 0, count: 0, lessons: [] });
+      if (!map.has(id)) map.set(id, { id, name, revenue: 0, salary: 0, profit: 0, paid: 0, trial: 0, count: 0, helpCount: 0, lessons: [] });
       const row = map.get(id);
       row.revenue += revenue; row.salary += pay; row.profit += revenue - pay;
-      row.paid += paid; row.trial += trial; row.count += 1; row.lessons.push(lesson);
+      row.paid += paid; row.trial += trial;
+      if (isHelp(lesson)) row.helpCount += 1; else row.count += 1;
+      row.lessons.push(lesson);
     };
     add(branches, String(lesson.branch_id), lesson.branch_name || 'Без филиала');
     add(teachers, String(lesson.teacher_id), lesson.teacher_name || 'Без преподавателя');
@@ -64,7 +67,7 @@ export function summarizeLessons(lessons) {
     const end = daily[daily.length - 1].id;
     while (dateKey(cursor) <= end) {
       const id = dateKey(cursor);
-      calendar.push(days.get(id) || { id, revenue: 0, salary: 0, profit: 0, count: 0, paid: 0, trial: 0, lessons: [] });
+      calendar.push(days.get(id) || { id, revenue: 0, salary: 0, profit: 0, count: 0, helpCount: 0, paid: 0, trial: 0, lessons: [] });
       cursor.setDate(cursor.getDate() + 1);
     }
   }

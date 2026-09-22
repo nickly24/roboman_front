@@ -257,3 +257,17 @@ test('recorded history shows actual teacher and lesson on mobile without schedul
   expect(detail.queryByText('Нет подтверждения')).not.toBeInTheDocument();
   expect(apiClient.post).not.toHaveBeenCalled(); expect(apiClient.put).not.toHaveBeenCalled();
 });
+
+test('help in the schedule is dated without a lesson time and has a separate count', async () => {
+  const help = { ...item, key: 'lesson:68', lesson_type: 'HELP', is_journal_only: true, journal_lesson_id: 68, starts_at: `${item.starts_at.slice(0, 10)}T00:00:00`, scheduled_starts_at: `${item.starts_at.slice(0, 10)}T00:00:00`, duration_minutes: null, is_past: true, can_confirm: false, status: 'recorded', learning: { kind: 'actual', lesson_type: 'HELP', title: 'Помощь', teacher_id: 98, teacher_name: 'Помощник' } };
+  apiClient.get.mockImplementation(async url => ok(url === '/calendar/context' ? context : url.startsWith('/calendar/week') ? { items: [help], today: context.today } : help));
+  await act(async () => { render(<Calendar />); });
+  const card = await screen.findByRole('button', { name: 'Академия Старт, Помощь, Проведено' });
+  expect(within(card).queryByText('00:00')).not.toBeInTheDocument();
+  expect(screen.getByText('0 проведено по журналу · помощь: 1')).toBeInTheDocument();
+  await click(card);
+  const detail = within(await screen.findByRole('dialog', { name: 'Занятие в календаре' }));
+  expect(await detail.findByText('Помогал')).toBeInTheDocument();
+  expect(detail.queryByText('00:00')).not.toBeInTheDocument();
+  expect(detail.queryByText('Провёл занятие')).not.toBeInTheDocument();
+});

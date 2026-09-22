@@ -3,9 +3,11 @@ import Modal from '../Modal/Modal';
 import Button from '../Button/Button';
 import { formatCurrency } from '../../utils/format';
 import { formatWallDate, wallTime } from '../../utils/wallClock';
+import { isHelp } from '../../utils/lessonTypes';
 import './InvoiceModal.css';
 
-const InvoiceModal = ({ isOpen, onClose, branchName, lessons, month }) => {
+const InvoiceModal = ({ isOpen, onClose, branchName, lessons: records, month }) => {
+  const lessons = records?.filter(lesson => !isHelp(lesson));
   if (!isOpen || !lessons || lessons.length === 0) return null;
 
   // Группируем занятия по датам и считаем итоги

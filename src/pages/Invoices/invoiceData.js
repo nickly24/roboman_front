@@ -1,4 +1,5 @@
 /* global BigInt */
+import { isHelp } from '../../utils/lessonTypes';
 import { formatWallDate, wallTime } from '../../utils/wallClock';
 export { currentPeriod, validPeriod, periodName, money, errorText } from '../Accounting/accountingData';
 export const invoiceStatuses = {
@@ -29,7 +30,7 @@ export const lineAmount = item => {
   return Number(negative ? -rounded : rounded) / 100;
 };
 export const sumLines = items => Number(items.reduce((sum, item) => sum + cents(lineAmount(item)), BigInt(0))) / 100;
-export const lessonTitle = lesson => lesson.curriculum_lesson_name || lesson.instruction_name || (lesson.is_creative ? 'Творческое занятие' : 'Занятие по робототехнике');
+export const lessonTitle = lesson => isHelp(lesson) ? 'Помощь' : lesson.curriculum_lesson_name || lesson.instruction_name || (lesson.is_creative ? 'Творческое занятие' : 'Занятие по робототехнике');
 export function filterInvoices(items, { search = '', status = '', month = '' } = {}) {
   const q = search.trim().toLocaleLowerCase('ru');
   return items.filter(i => (!status || i.status === status) && (!month || i.month === month) && (!q || [i.number, i.title, i.branch_name, i.total_amount].join(' ').toLocaleLowerCase('ru').includes(q)));

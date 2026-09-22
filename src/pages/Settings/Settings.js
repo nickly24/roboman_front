@@ -14,6 +14,7 @@ const Settings = () => {
     teacher_base_rate: 1200,
     teacher_threshold_children: 4,
     teacher_bonus_per_child: 100,
+    teacher_help_rate: '',
   });
 
   useEffect(() => {
@@ -25,11 +26,15 @@ const Settings = () => {
     try {
       const response = await apiClient.get(API_ENDPOINTS.SETTINGS_SALARY);
       if (response.data.ok) {
-        const data = response.data.data;
+        const responseData = response.data.data;
+        const data = Array.isArray(responseData?.items)
+          ? Object.fromEntries(responseData.items.map(item => [item.key, item]))
+          : responseData || {};
         setSettings({
-          teacher_base_rate: data.teacher_base_rate?.value_int || 1200,
-          teacher_threshold_children: data.teacher_threshold_children?.value_int || 4,
-          teacher_bonus_per_child: data.teacher_bonus_per_child?.value_int || 100,
+          teacher_base_rate: data.teacher_base_rate?.value_int ?? 1200,
+          teacher_threshold_children: data.teacher_threshold_children?.value_int ?? 4,
+          teacher_bonus_per_child: data.teacher_bonus_per_child?.value_int ?? 100,
+          teacher_help_rate: data.teacher_help_rate?.value_int ?? '',
         });
       }
     } catch (error) {
@@ -43,7 +48,9 @@ const Settings = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      await apiClient.put(API_ENDPOINTS.SETTINGS_SALARY, settings);
+      const payload = { ...settings };
+      if (payload.teacher_help_rate === '') delete payload.teacher_help_rate;
+      await apiClient.put(API_ENDPOINTS.SETTINGS_SALARY, payload);
       alert('Настройки сохранены');
     } catch (error) {
       alert('Ошибка сохранения настроек');
@@ -96,6 +103,17 @@ const Settings = () => {
               min="0"
               required
             />
+
+            <Input
+              type="number"
+              label="Стоимость помощи (₽)"
+              value={settings.teacher_help_rate}
+              onChange={(e) => setSettings({ ...settings, teacher_help_rate: e.target.value === '' ? '' : Number(e.target.value) })}
+              min="0"
+              step="1"
+              placeholder="Укажите стоимость помощи"
+            />
+            <p className="form-hint">Стоимость фиксируется в каждой новой записи «Помощь». Уже внесённые записи сохраняют прежнюю стоимость. Пока стоимость не задана, помощь добавить нельзя.</p>
 
             <div className="form-actions">
               <Button type="submit" variant="primary" disabled={saving}>

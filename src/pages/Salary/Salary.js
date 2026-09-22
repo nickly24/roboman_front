@@ -51,7 +51,7 @@ const Salary = () => {
       render: (_, row) => (
         <span className="salary-period-cell">
           {formatCurrency(row.salary_1_15)}
-          <span className="salary-period-meta">({row.lessons_1_15} зан.)</span>
+          <span className="salary-period-meta">({row.lessons_1_15} зан.{Number(row.help_1_15) > 0 && ` · помощь: ${row.help_1_15}`})</span>
         </span>
       ),
       align: 'right',
@@ -62,7 +62,7 @@ const Salary = () => {
       render: (_, row) => (
         <span className="salary-period-cell">
           {formatCurrency(row.salary_16_end)}
-          <span className="salary-period-meta">({row.lessons_16_end} зан.)</span>
+          <span className="salary-period-meta">({row.lessons_16_end} зан.{Number(row.help_16_end) > 0 && ` · помощь: ${row.help_16_end}`})</span>
         </span>
       ),
       align: 'right',
@@ -73,7 +73,7 @@ const Salary = () => {
       render: (v, row) => (
         <span className="salary-total-cell">
           {formatCurrency(v)}
-          <span className="salary-period-meta">({row.lessons_count} зан.)</span>
+          <span className="salary-period-meta">({row.lessons_count} зан.{Number(row.help_count) > 0 && ` · помощь: ${row.help_count}`})</span>
         </span>
       ),
       align: 'right',
