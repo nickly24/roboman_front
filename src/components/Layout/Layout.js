@@ -6,7 +6,7 @@ import { IconMenu, IconSun, IconMoon } from '../Icons/SidebarIcons';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import { useTheme } from '../../context/ThemeContext';
 import './Layout.css';
-const SECTIONS = { dashboard: 'Обзор', lessons: 'Занятия', schedule: 'Календарь', calendar: 'Календарь', slots: 'Слоты', curriculum: 'Учебные планы', instructions: 'Инструкции', branches: 'Филиалы', branch: 'Кабинет сада', 'branch-accounts': 'Доступ садов', departments: 'Отделы', teachers: 'Преподаватели', 'teacher-accounts': 'Учётные записи', salary: 'Зарплата', accounting: 'Бухгалтерия', analytics: 'Аналитика', settings: 'Настройки' };
+const SECTIONS = { dashboard: 'Обзор', lessons: 'Занятия', schedule: 'Календарь', calendar: 'Календарь', slots: 'Слоты', curriculum: 'Учебные планы', instructions: 'Инструкции', branches: 'Филиалы', branch: 'Кабинет сада', 'branch-accounts': 'Доступ садов', departments: 'Отделы', teachers: 'Преподаватели', 'teacher-accounts': 'Учётные записи', 'teacher-certificates': 'Сертификаты преподавателей', 'my-certificate': 'Мой сертификат', salary: 'Зарплата', accounting: 'Бухгалтерия', analytics: 'Аналитика', settings: 'Настройки' };
 export default function Layout({ children, dashboard = false, headerTitle, className = '' }) {
   const { theme, setTheme } = useTheme();
   const { pathname } = useLocation();

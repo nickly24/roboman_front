@@ -26,6 +26,9 @@ import BranchPortal from './pages/BranchPortal/BranchPortal';
 import BranchAccounts from './pages/BranchAccounts/BranchAccounts';
 import Analytics from './pages/Analytics/Analytics';
 import CurriculumPlans from './pages/Curriculum/CurriculumPlans';
+import PublicCertificate from './pages/Certificates/PublicCertificate';
+import MyCertificate from './pages/Certificates/MyCertificate';
+import TeacherCertificates from './pages/Certificates/TeacherCertificates';
 import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
@@ -35,17 +38,17 @@ const DashboardRoute = () => {
   return isOwner ? <OwnerDashboard /> : <TeacherDashboard />;
 };
 
-function App() {
+function AuthenticatedRoutes() {
   return (
     <AuthProvider>
-      <Router>
-        <ThemeProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/branch" element={<Navigate to="/branch/overview" replace />} />
           <Route path="/branch/:section" element={<ProtectedRoute requireRole="BRANCH"><BranchPortal /></ProtectedRoute>} />
           <Route path="/branch-accounts" element={<ProtectedRoute requireRole="OWNER"><BranchAccounts /></ProtectedRoute>} />
           <Route path="/accounting/invoices" element={<ProtectedRoute requireRole="OWNER"><Invoices /></ProtectedRoute>} />
+          <Route path="/my-certificate" element={<ProtectedRoute requireRole="TEACHER"><MyCertificate /></ProtectedRoute>} />
+          <Route path="/teacher-certificates" element={<ProtectedRoute requireRole="OWNER"><TeacherCertificates /></ProtectedRoute>} />
           
           <Route
             path="/dashboard"
@@ -219,10 +222,15 @@ function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
-        </ThemeProvider>
-      </Router>
     </AuthProvider>
   );
+}
+
+function App() {
+  return <Router><ThemeProvider><Routes>
+    <Route path="/certificates/:token" element={<PublicCertificate />} />
+    <Route path="*" element={<AuthenticatedRoutes />} />
+  </Routes></ThemeProvider></Router>;
 }
 
 export default App;

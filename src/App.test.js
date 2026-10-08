@@ -21,6 +21,8 @@ jest.mock('./services/authService', () => ({
   },
 }));
 
+jest.mock('./services/certificateService', () => ({ __esModule: true, default: {} }));
+
 test('redirects an unauthenticated user to login', async () => {
   render(<App />);
   expect(await screen.findByRole('heading', { name: 'С возвращением' })).toBeInTheDocument();

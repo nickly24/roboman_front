@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import apiClient from '../../services/api';
 import { API_ENDPOINTS } from '../../config/api';
 import { TEACHER_STATUS_LABELS } from '../../utils/constants';
@@ -13,6 +14,7 @@ import TeacherForm from './TeacherForm';
 import './Teachers.css';
 
 const Teachers = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [teachers, setTeachers] = useState([]);
   const [showArchive, setShowArchive] = useState(false);
@@ -144,6 +146,7 @@ const Teachers = () => {
           </Button>
           <ActionMenu
             items={[
+              { label: 'Сертификат', icon: '▤', onClick: () => navigate(`/teacher-certificates?teacher=${row.id}`) },
               {
                 label: row.is_salary_free ? 'Сделать платным' : 'Сделать бесплатным',
                 icon: row.is_salary_free ? '💳' : '🆓',
@@ -206,6 +209,7 @@ const Teachers = () => {
           </Button>
           <ActionMenu
             items={[
+              { label: 'Сертификат', icon: '▤', onClick: () => navigate(`/teacher-certificates?teacher=${row.id}`) },
               { label: 'Редактировать', icon: '✏️', onClick: () => openEdit(row) },
               {
                 label: row.is_salary_free ? 'Сделать платным' : 'Сделать бесплатным',

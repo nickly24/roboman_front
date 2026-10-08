@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import Brand from '../Brand/Brand';
 import { IconDashboard, IconLessons, IconSchedule, IconSlots, IconBranches, IconDepartments,
   IconSalary, IconTeachers, IconTeacherAccounts, IconAnalytics, IconInstructions, IconSettings,
-  IconAccounting, IconLogout, IconChevronDown } from '../Icons/SidebarIcons';
+  IconAccounting, IconLogout, IconChevronDown, IconCertificate } from '../Icons/SidebarIcons';
 import './Sidebar.css';
 
 export default function Sidebar({ isOpen = false, onClose, isMobile = false }) {
@@ -27,6 +27,7 @@ export default function Sidebar({ isOpen = false, onClose, isMobile = false }) {
     ['/slots', 'Слоты', IconSlots],
     ['/curriculum', 'Учебные планы', IconLessons],
     ['/instructions', 'Инструкции', IconInstructions],
+    ...(isTeacher ? [['/my-certificate', 'Мой сертификат', IconCertificate]] : []),
   ];
   const references = [
     ['/branches', 'Филиалы', IconBranches], ['/departments', 'Отделы', IconDepartments],
@@ -65,6 +66,7 @@ export default function Sidebar({ isOpen = false, onClose, isMobile = false }) {
           {references.map(renderLink)}
         </div>
         {[
+          ['/teacher-certificates', 'Сертификаты', IconCertificate],
           ['/salary', 'Зарплата', IconSalary], ['/accounting', 'Бухгалтерия', IconAccounting],
           ['/analytics', 'Аналитика', IconAnalytics], ['/settings', 'Настройки', IconSettings],
         ].map(renderLink)}
